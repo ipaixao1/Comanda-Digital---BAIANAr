@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BAIANAr – Sistema de Gestão
 
 Projeto Angular 17 com Firebase.
@@ -117,3 +118,5 @@ Acesse: `http://localhost:4200`
 - **Firebase 10** via `@angular/fire`
 - **TypeScript 5.4**
 - **SCSS** para estilos
+
+
