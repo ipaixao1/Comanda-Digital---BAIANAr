@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:       #302C40;
+$color-sidebar:  #302C40;
+$color-topbar:   #302C40;
+$color-card:     #3A3550;
+$color-accent:   #F29F05;
+$color-accent2:  #F28705;
+$color-brown:    #734002;
+$color-white:    #FFFFFF;
+
+$sidebar-expanded:  260px;
+$sidebar-collapsed: 72px;
+$topbar-h:          64px;
+
+$font-title: 'Cormorant Garamond', serif;
+$font-body:  'Poppins', sans-serif;
+
+// ── Layout raiz ──────────────────────────────────────────────
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: $color-bg;
+  font-family: $font-body;
+}
+
+// ── Sidebar ──────────────────────────────────────────────────
+.sidebar {
+  width: $sidebar-expanded;
+  min-width: $sidebar-expanded;
+  height: 100vh;
+  background: $color-sidebar;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(.4,0,.2,1),
+              min-width 0.3s cubic-bezier(.4,0,.2,1);
+  z-index: 100;
+  border-right: 1px solid rgba($color-accent, 0.12);
+
+  // ── Estado COLAPSADO ─────────────────────────────────────
+  &.sidebar--collapsed {
+    width: $sidebar-collapsed;
+    min-width: $sidebar-collapsed;
+
+    // Logo: fica centralizada e menor, sem quebrar
+    .sidebar__logo {
+      justify-content: center;
+      padding: 14px 0;
+
+      .logo-img {
+        height: 38px;        // menor para caber na largura 72px
+        width: 56px;         // largura máxima dentro da sidebar colapsada
+        object-fit: contain;
+        object-position: center;
+      }
+    }
+
+    // Esconde os labels de texto
+    .nav-label    { opacity: 0; width: 0; overflow: hidden; }
+    .logout-label { opacity: 0; width: 0; overflow: hidden; }
+
+    // Itens de nav: centralizados, sem borda esquerda
+    .nav-item {
+      justify-content: center;
+      padding: 13px 0;
+      border-left: 3px solid transparent;
+
+      // Ativo colapsado: fundo dourado + borda direita
+      &.nav-item--active {
+        border-left: 3px solid transparent;
+        border-right: 3px solid $color-accent;
+        background: rgba($color-brown, 0.45);
+
+        .nav-icon {
+          background: rgba($color-accent, 0.18);
+          border-radius: 10px;
+        }
+      }
+    }
+
+    // Ícone maior no estado colapsado
+    .nav-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      transition: background 0.2s;
+
+      svg { width: 20px; height: 20px; }
+    }
+
+    // Footer centralizado
+    .sidebar__footer {
+      padding: 16px 0 24px;
+      border-top: 1px solid rgba($color-accent, 0.1);
+    }
+
+    .logout-btn {
+      justify-content: center;
+      padding: 10px 0;
+      gap: 0;
+    }
+  }
+}
+
+// ── Logo ──────────────────────────────────────────────────────
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;     // centralizada em ambos os estados
+  padding: 16px 16px 12px;
+  min-height: 80px;
+  transition: padding 0.3s ease, justify-content 0.3s ease;
+
+  .logo-img {
+    height: 52px;
+    width: auto;
+    max-width: 180px;
+    object-fit: contain;
+    display: block;
+    transition: height 0.3s ease, width 0.3s ease;
+    flex-shrink: 0;
+  }
+}
+
+// ── Nav ───────────────────────────────────────────────────────
+.sidebar__nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb { background: rgba($color-accent, 0.2); border-radius: 2px; }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  color: rgba($color-white, 0.65);
+  text-decoration: none;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 14px;
+  white-space: nowrap;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;   // reserva espaço para a borda do estado colapsado
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+  cursor: pointer;
+
+  &:hover {
+    color: $color-white;
+    background: rgba($color-accent, 0.07);
+  }
+
+  &.nav-item--active {
+    color: $color-accent;
+    background: rgba($color-brown, 0.45);
+    border-left-color: $color-accent;
+
+    .nav-icon svg { stroke: $color-accent; }
+  }
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  transition: background 0.2s, width 0.3s, height 0.3s, border-radius 0.2s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    flex-shrink: 0;
+    transition: width 0.3s, height 0.3s;
+  }
+}
+
+.nav-label {
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.15s ease, width 0.3s ease;
+  white-space: nowrap;
+}
+
+// ── Footer / Logout ───────────────────────────────────────────
+.sidebar__footer {
+  padding: 14px 20px 22px;
+  border-top: 1px solid rgba($color-accent, 0.1);
+  transition: padding 0.3s;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  background: none;
+  border: none;
+  color: rgba($color-white, 0.55);
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 0;
+  white-space: nowrap;
+  width: 100%;
+  transition: color 0.18s, justify-content 0.3s, gap 0.3s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    flex-shrink: 0;
+  }
+
+  &:hover { color: $color-accent2; }
+}
+
+.logout-label {
+  opacity: 1;
+  overflow: hidden;
+  transition: opacity 0.15s ease, width 0.3s ease;
+  white-space: nowrap;
+}
+
+// ── Área principal ────────────────────────────────────────────
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+// ── Topbar ────────────────────────────────────────────────────
+.topbar {
+  height: $topbar-h;
+  min-height: $topbar-h;
+  background: $color-topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid rgba($color-accent, 0.1);
+  z-index: 50;
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $color-accent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: $color-white;
+  }
+
+  &:hover {
+    background: $color-accent2;
+    transform: scale(1.07);
+  }
+}
+
+.topbar__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $color-accent;
+  color: $color-white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.user-name {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 14px;
+  color: $color-white;
+  white-space: nowrap;
+}
+
+.user-role {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 11px;
+  color: $color-accent;
+  white-space: nowrap;
+}
+
+// ── Conteúdo ──────────────────────────────────────────────────
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 36px 36px 48px;
+  min-width: 0;
+
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: $color-bg; }
+  &::-webkit-scrollbar-thumb { background: rgba($color-accent, 0.25); border-radius: 3px; }
+}

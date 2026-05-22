@@ -1,0 +1,73 @@
+<div class="login-page">
+  <div class="login-container">
+
+    <!-- Logo -->
+    <div class="logo-wrapper">
+      <img
+        src="assets/images/logoBAIANAr.png"
+        alt="BAIANAr"
+        class="logo"
+      />
+    </div>
+
+    <!-- Card do Formulário -->
+    <div class="form-card">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Campo Matrícula -->
+        <div class="field-group">
+          <label for="matricula" class="field-label">Matrícula</label>
+          <input
+            id="matricula"
+            type="text"
+            formControlName="matricula"
+            class="field-input"
+            [class.field-input--error]="matriculaInvalid"
+            placeholder="Digite sua matrícula"
+            autocomplete="username"
+          />
+          <span class="field-error" *ngIf="matriculaInvalid">
+            Matrícula é obrigatória
+          </span>
+        </div>
+
+        <!-- Campo Senha -->
+        <div class="field-group">
+          <label for="senha" class="field-label">Senha</label>
+          <input
+            id="senha"
+            type="password"
+            formControlName="senha"
+            class="field-input"
+            [class.field-input--error]="senhaInvalid"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+          />
+          <span class="field-error" *ngIf="senhaInvalid">
+            Senha é obrigatória
+          </span>
+        </div>
+
+        <!-- Mensagem de erro geral -->
+        <div class="error-banner" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Botão Entrar -->
+        <button
+          type="submit"
+          class="btn-entrar"
+          [class.btn-entrar--loading]="isLoading"
+          [disabled]="isLoading"
+        >
+          <span *ngIf="!isLoading">Entrar</span>
+          <span *ngIf="isLoading" class="loading-dots">
+            <span></span><span></span><span></span>
+          </span>
+        </button>
+
+      </form>
+    </div>
+
+  </div>
+</div>

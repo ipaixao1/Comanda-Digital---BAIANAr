@@ -1,0 +1,82 @@
+<div class="app-layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar" [class.sidebar--collapsed]="!sidebarOpen()">
+
+    <!-- Logo — sempre a imagem PNG, centralizada -->
+    <div class="sidebar__logo">
+      <img src="assets/images/logoBAIANAr.png" alt="BAIANAr" class="logo-img" />
+    </div>
+
+    <!-- Navegação -->
+    <nav class="sidebar__nav">
+      <ul>
+        <li *ngFor="let item of navItems">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="nav-item--active"
+            class="nav-item"
+            [title]="!sidebarOpen() ? item.label : ''"
+          >
+            <span class="nav-icon">
+              <svg *ngIf="item.icon === 'home'"         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+              <svg *ngIf="item.icon === 'cardapio'"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="6" x2="21" y2="6"/><path d="M3 12h15M3 18h9"/><path d="M19 12v6m0 0l-2-2m2 2l2-2"/></svg>
+              <svg *ngIf="item.icon === 'pedidos'"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              <svg *ngIf="item.icon === 'funcionarios'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0114 0v2"/><path d="M19 11l2 2 4-4" stroke-width="1.8"/></svg>
+              <svg *ngIf="item.icon === 'admins'"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3.5"/><path d="M2 20v-1.5A5.5 5.5 0 0113.5 13"/><circle cx="18" cy="17" r="4"/><path d="M18 15v2l1.5 1.5"/></svg>
+              <svg *ngIf="item.icon === 'estoque'"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <svg *ngIf="item.icon === 'fornecedores'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              <svg *ngIf="item.icon === 'avaliacoes'"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </span>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Logout -->
+    <div class="sidebar__footer">
+      <button class="logout-btn" (click)="logout()" [title]="!sidebarOpen() ? 'Logout' : ''">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span class="logout-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Área principal ───────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Header fixo -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <button class="toggle-btn" (click)="toggleSidebar()">
+          <svg *ngIf="sidebarOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          <svg *ngIf="!sidebarOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="topbar__user" *ngIf="currentUser()">
+        <div class="user-info">
+          <span class="user-name">{{ currentUser()!.nomeCompleto || currentUser()!.matricula }}</span>
+          <span class="user-role">{{ currentUser()!.cargo || 'Administrador' }}</span>
+        </div>
+        <div class="user-avatar">
+          {{ getInitials(currentUser()!.nomeCompleto || currentUser()!.matricula) }}
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo dinâmico -->
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

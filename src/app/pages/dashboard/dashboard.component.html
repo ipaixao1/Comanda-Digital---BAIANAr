@@ -1,0 +1,161 @@
+<div class="dashboard">
+
+  <!-- Saudação + título -->
+  <div class="dash-header">
+    <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Visão geral do restaurante - Ano atual</p>
+  </div>
+
+  <!-- ── KPI Cards ─────────────────────────────────────────── -->
+  <div class="kpi-grid">
+
+    <!-- Faturamento -->
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+      </div>
+      <p class="kpi-label">Faturamento do Ano</p>
+      <p class="kpi-value">R$ {{ formatCurrency(kpi().faturamentoAno) }}</p>
+      <p class="kpi-sub">+{{ kpi().faturamentoVariacao }}% em relação ao ano anterior</p>
+    </div>
+
+    <!-- Total Pedidos -->
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.96-1.62L23 6H6"/>
+        </svg>
+      </div>
+      <p class="kpi-label">Total de Pedidos no Ano</p>
+      <p class="kpi-value">{{ formatCurrency(kpi().totalPedidosAno) }}</p>
+      <p class="kpi-sub">{{ formatCurrency(kpi().pedidosMesMedia) }} pedidos/mês em média</p>
+    </div>
+
+    <!-- Média Avaliações -->
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </div>
+      <p class="kpi-label">Média de Avaliações</p>
+      <p class="kpi-value">{{ kpi().mediaAvaliacoes }}</p>
+      <p class="kpi-sub">De 5 estrelas</p>
+    </div>
+
+    <!-- Total Avaliações -->
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      </div>
+      <p class="kpi-label">Total de Avaliações no Ano</p>
+      <p class="kpi-value">{{ formatCurrency(kpi().totalAvaliacoes) }}</p>
+      <p class="kpi-sub">Recebidas este ano</p>
+    </div>
+
+  </div>
+
+  <!-- ── Gráficos principais ───────────────────────────────── -->
+  <div class="charts-row">
+
+    <div class="chart-card chart-card--wide">
+      <h2 class="chart-title">Faturamento Anual</h2>
+      <div class="chart-wrapper">
+        <canvas #chartFaturamento></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card chart-card--wide">
+      <h2 class="chart-title">Pedidos por Mês</h2>
+      <div class="chart-wrapper">
+        <canvas #chartPedidos></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Avaliações + Status ───────────────────────────────── -->
+  <div class="charts-row charts-row--single">
+
+    <div class="chart-card chart-card--full">
+      <h2 class="chart-title">Média de Avaliações Mensais</h2>
+      <div class="chart-wrapper chart-wrapper--tall">
+        <canvas #chartAvaliacoes></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Status Operacional ─────────────────────────────────── -->
+  <div class="status-section">
+    <h2 class="section-title">Status Operacional</h2>
+
+    <div class="status-grid">
+
+      <div class="status-card">
+        <div class="status-icon status-icon--orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <p class="status-value">{{ status().aguardandoPreparo }}</p>
+        <p class="status-label">Aguardando preparo</p>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-icon--yellow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <p class="status-value">{{ status().emPreparo }}</p>
+        <p class="status-label">Em preparo</p>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <p class="status-value">{{ status().prontoEntrega }}</p>
+        <p class="status-label">Pronto para entrega</p>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <p class="status-value">{{ status().finalizadosHoje }}</p>
+        <p class="status-label">Finalizados hoje</p>
+      </div>
+
+      <div class="status-card">
+        <div class="status-icon status-icon--red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <p class="status-value">{{ status().canceladosHoje }}</p>
+        <p class="status-label">Cancelados hoje</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
