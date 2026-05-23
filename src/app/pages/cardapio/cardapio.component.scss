@@ -1,0 +1,483 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:        #302C40;
+$color-card:      #3A3550;
+$color-card-row:  #3A3550;
+$color-accent:    #F29F05;
+$color-accent2:   #F28705;
+$color-brown:     #734002;
+$color-white:     #FFFFFF;
+
+// Categorias
+$color-principal: #F29F05;
+$color-entrada:   #F29F05;
+$color-sobremesa: #D966A0;
+$color-bebidas:   #6A9BD4;
+$color-drinks:    #9B72CF;
+
+$font-title: 'Cormorant Garamond', serif;
+$font-body:  'Poppins', sans-serif;
+
+@mixin gold-border($opacity: 0.3) {
+  border: 1.5px solid rgba($color-accent, $opacity);
+}
+
+// ── Página ────────────────────────────────────────────────────
+.cardapio-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  font-family: $font-body;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header__text { display: flex; flex-direction: column; gap: 4px; }
+
+.greeting {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 18px;
+  color: $color-accent;
+}
+
+.page-title {
+  font-family: $font-title;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 42px;
+  color: $color-white;
+  line-height: 1.1;
+}
+
+.page-subtitle {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: rgba($color-white, 0.5);
+}
+
+.btn-adicionar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: $color-accent;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 22px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 15px;
+  color: $color-white;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+
+  svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  &:hover {
+    background: $color-accent2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba($color-accent, 0.35);
+  }
+}
+
+// ── Tabela card ────────────────────────────────────────────────
+.table-card {
+  background: $color-card;
+  border-radius: 14px;
+  @include gold-border(0.3);
+  overflow: hidden;
+  transition: border-color 0.22s, box-shadow 0.22s;
+
+  &:hover {
+    border-color: $color-accent;
+    box-shadow: 0 0 0 1px rgba($color-accent, 0.1);
+  }
+}
+
+.pratos-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: $font-body;
+
+  // ── Cabeçalho ──────────────────────────────────────────────
+  thead tr {
+    background: rgba($color-brown, 0.55);
+    border-bottom: 1px solid rgba($color-accent, 0.2);
+  }
+
+  th {
+    font-family: $font-title;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 16px;
+    color: $color-accent;
+    padding: 16px 14px;
+    text-align: left;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+
+  // ── Linhas ─────────────────────────────────────────────────
+  tbody tr.prato-row {
+    border-bottom: 1px solid rgba($color-accent, 0.08);
+    transition: background 0.18s;
+
+    &:last-child { border-bottom: none; }
+
+    &:hover { background: rgba($color-accent, 0.04); }
+  }
+
+  td {
+    padding: 16px 14px;
+    vertical-align: middle;
+  }
+}
+
+// Colunas
+.col-imagem     { width: 72px; }
+.col-nome       { width: 160px; }
+.col-categoria  { width: 110px; }
+.col-preco      { width: 90px; }
+.col-descricao  { }
+.col-destaques  { width: 150px; }
+.col-acoes      { width: 80px; }
+
+// ── Imagem do prato ────────────────────────────────────────────
+.prato-img-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  @include gold-border(0.2);
+}
+
+.prato-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.prato-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: rgba($color-bg, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    stroke: rgba($color-white, 0.2);
+  }
+}
+
+// ── Nome ───────────────────────────────────────────────────────
+.prato-nome {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13.5px;
+  color: $color-white;
+  line-height: 1.4;
+}
+
+// ── Preço ──────────────────────────────────────────────────────
+.prato-preco {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: $color-white;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+// ── Descrição ──────────────────────────────────────────────────
+.prato-descricao {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 12.5px;
+  color: rgba($color-white, 0.7);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ── Badges de categoria ─────────────────────────────────────────
+.categoria-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 11.5px;
+  white-space: nowrap;
+
+  &.cat--principal  { background: rgba($color-principal, 0.18); color: $color-principal;  border: 1px solid rgba($color-principal, 0.4); }
+  &.cat--entrada    { background: rgba($color-entrada,   0.18); color: $color-entrada;    border: 1px solid rgba($color-entrada, 0.4); }
+  &.cat--sobremesa  { background: rgba($color-sobremesa, 0.18); color: $color-sobremesa;  border: 1px solid rgba($color-sobremesa, 0.4); }
+  &.cat--bebidas    { background: rgba($color-bebidas,   0.18); color: $color-bebidas;    border: 1px solid rgba($color-bebidas, 0.4); }
+  &.cat--drinks     { background: rgba($color-drinks,    0.18); color: $color-drinks;     border: 1px solid rgba($color-drinks, 0.4); }
+}
+
+// ── Badges de destaque ─────────────────────────────────────────
+.destaques-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.destaque-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 11px;
+  white-space: nowrap;
+
+  &.dest--casa {
+    background: rgba($color-brown, 0.7);
+    color: $color-accent;
+    border: 1px solid rgba($color-accent, 0.35);
+  }
+
+  &.dest--chef {
+    background: rgba($color-brown, 0.7);
+    color: $color-accent;
+    border: 1px solid rgba($color-accent, 0.35);
+  }
+}
+
+// ── Ações ──────────────────────────────────────────────────────
+.acoes-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-acao {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, opacity 0.15s;
+
+  svg { width: 18px; height: 18px; }
+
+  &:hover { transform: scale(1.18); opacity: 0.85; }
+}
+
+.btn-editar  svg { stroke: $color-accent; }
+.btn-excluir svg { stroke: #E74C3C; }
+
+// ── Modal ──────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-card {
+  background: #3A3550;
+  border-radius: 16px;
+  @include gold-border(0.4);
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modal-in 0.22s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid rgba($color-accent, 0.12);
+}
+
+.modal-title {
+  font-family: $font-title;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 26px;
+  color: $color-white;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba($color-white, 0.5);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+
+  svg { width: 20px; height: 20px; stroke: currentColor; }
+
+  &:hover { color: $color-white; }
+}
+
+.modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 12.5px;
+  color: rgba($color-white, 0.65);
+}
+
+.field-input {
+  background: rgba($color-bg, 0.6);
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: $color-white;
+  outline: none;
+  transition: border-color 0.18s;
+  width: 100%;
+
+  &::placeholder { color: rgba($color-white, 0.25); }
+
+  &:focus { border-color: $color-accent; }
+}
+
+.field-select {
+  cursor: pointer;
+  option { background: #3A3550; color: $color-white; }
+}
+
+.field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.checkboxes {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: $color-accent;
+    cursor: pointer;
+  }
+}
+
+.checkbox-text {
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: rgba($color-white, 0.75);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 22px;
+  border-top: 1px solid rgba($color-accent, 0.1);
+}
+
+.btn-cancelar {
+  background: none;
+  border: 1.5px solid rgba($color-white, 0.15);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: rgba($color-white, 0.6);
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s;
+
+  &:hover { border-color: rgba($color-white, 0.4); color: $color-white; }
+}
+
+.btn-salvar {
+  background: $color-accent;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-family: $font-body;
+  font-style: italic;
+  font-weight: 200;
+  font-size: 13px;
+  color: $color-white;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+
+  &:hover { background: $color-accent2; transform: translateY(-1px); }
+}

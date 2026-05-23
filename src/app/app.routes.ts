@@ -26,37 +26,43 @@ export const routes: Routes = [
       {
         path: 'cardapio',
         loadComponent: () =>
-          import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+          import('./pages/cardapio/cardapio.component').then(m => m.CardapioComponent)
       },
       {
         path: 'pedidos',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: PedidosComponent
       },
       {
         path: 'funcionarios',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: FuncionariosComponent
       },
       {
         path: 'administradores',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: AdministradoresComponent
       },
       {
         path: 'estoque',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: EstoqueComponent
       },
       {
         path: 'fornecedores',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: FornecedoresComponent
       },
       {
         path: 'avaliacoes',
         loadComponent: () =>
           import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        // TODO: AvaliacoesComponent
       }
     ]
   },

@@ -1,0 +1,211 @@
+<div class="cardapio-page">
+
+  <!-- ── Header da página ──────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header__text">
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Cardápio</h1>
+      <p class="page-subtitle">Gerencie os pratos e bebidas do restaurante</p>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Prato
+    </button>
+  </div>
+
+  <!-- ── Tabela ─────────────────────────────────────────────── -->
+  <div class="table-card">
+    <table class="pratos-table">
+      <thead>
+        <tr>
+          <th class="col-imagem">Imagem</th>
+          <th class="col-nome">Nome do Prato</th>
+          <th class="col-categoria">Categoria</th>
+          <th class="col-preco">Preço</th>
+          <th class="col-descricao">Descrição</th>
+          <th class="col-destaques">Destaques</th>
+          <th class="col-acoes">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let prato of pratos()" class="prato-row">
+
+          <!-- Imagem -->
+          <td class="col-imagem">
+            <div class="prato-img-wrap">
+              <img
+                *ngIf="prato.imagem"
+                [src]="prato.imagem"
+                [alt]="prato.nome"
+                class="prato-img"
+              />
+              <div *ngIf="!prato.imagem" class="prato-img-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+            </div>
+          </td>
+
+          <!-- Nome -->
+          <td class="col-nome">
+            <span class="prato-nome">{{ prato.nome }}</span>
+          </td>
+
+          <!-- Categoria -->
+          <td class="col-categoria">
+            <span class="categoria-badge" [ngClass]="getCategoriaClass(prato.categoria)">
+              {{ prato.categoria }}
+            </span>
+          </td>
+
+          <!-- Preço -->
+          <td class="col-preco">
+            <span class="prato-preco">R$<br>{{ formatPreco(prato.preco) }}</span>
+          </td>
+
+          <!-- Descrição -->
+          <td class="col-descricao">
+            <span class="prato-descricao">{{ prato.descricao }}</span>
+          </td>
+
+          <!-- Destaques -->
+          <td class="col-destaques">
+            <div class="destaques-wrap">
+              <span
+                *ngFor="let d of prato.destaques"
+                class="destaque-badge"
+                [ngClass]="getDestaqueClass(d.label)"
+              >
+                {{ d.label }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Ações -->
+          <td class="col-acoes">
+            <div class="acoes-wrap">
+              <button class="btn-acao btn-editar" (click)="abrirModalEditar(prato)" title="Editar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="btn-acao btn-excluir" (click)="excluir(prato.id)" title="Excluir">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ── Modal Adicionar / Editar ───────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2 class="modal-title">
+        {{ editingPrato() ? 'Editar Prato' : 'Adicionar Prato' }}
+      </h2>
+      <button class="modal-close" (click)="fecharModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Nome -->
+      <div class="field-group">
+        <label class="field-label">Nome do Prato</label>
+        <input
+          type="text"
+          class="field-input"
+          [value]="modalNome()"
+          (input)="onInput('nome', $event)"
+          placeholder="Nome do prato"
+        />
+      </div>
+
+      <!-- Categoria + Preço -->
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Categoria</label>
+          <select class="field-input field-select" (change)="onSelectCategoria($event)">
+            <option *ngFor="let cat of categorias" [value]="cat" [selected]="modalCategoria() === cat">
+              {{ cat }}
+            </option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Preço (R$)</label>
+          <input
+            type="number"
+            class="field-input"
+            [value]="modalPreco()"
+            (input)="onInput('preco', $event)"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+          />
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div class="field-group">
+        <label class="field-label">Descrição</label>
+        <textarea
+          class="field-input field-textarea"
+          [value]="modalDescricao()"
+          (input)="onInput('descricao', $event)"
+          placeholder="Descreva o prato..."
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Destaques -->
+      <div class="field-group">
+        <label class="field-label">Destaques</label>
+        <div class="checkboxes">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="modalPratoDaCasa()"
+              (change)="modalPratoDaCasa.set(!modalPratoDaCasa())"
+            />
+            <span class="checkbox-text">Prato da Casa</span>
+          </label>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="modalSugestaoChef()"
+              (change)="modalSugestaoChef.set(!modalSugestaoChef())"
+            />
+            <span class="checkbox-text">Sugestão do Chef</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" (click)="salvar()">
+        {{ editingPrato() ? 'Salvar Alterações' : 'Adicionar Prato' }}
+      </button>
+    </div>
+
+  </div>
+</div>

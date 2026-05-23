@@ -1,7 +1,7 @@
 <<<<<<< HEAD
 # BAIANAr – Sistema de Gestão
 
-Projeto Angular 17 com Firebase.
+Projeto BAIANAr.
 
 ---
 
@@ -48,14 +48,8 @@ baianar/
 npm install
 ```
 
-### 2. Adicionar a logo
 
-Coloque o arquivo `logo-baianar.png` em:
-```
-src/assets/images/logo-baianar.png
-```
-
-### 3. Configurar o Firebase
+### 2. Configurar o Firebase
 
 Edite `src/environments/environment.ts` com as credenciais do seu projeto Firebase:
 
@@ -75,7 +69,7 @@ export const environment = {
 
 > As credenciais estão no Console Firebase → Configurações do projeto → Seus apps.
 
-### 4. Iniciar o servidor de desenvolvimento
+### 3. Iniciar o servidor de desenvolvimento
 
 ```bash
 npm start
