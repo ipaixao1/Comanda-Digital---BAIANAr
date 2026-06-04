@@ -13,6 +13,12 @@ export const routes: Routes = [
       import('./pages/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'kds',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/kds/kds.component').then(m => m.KdsComponent)
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./shared/components/shell/shell.component').then(m => m.ShellComponent),

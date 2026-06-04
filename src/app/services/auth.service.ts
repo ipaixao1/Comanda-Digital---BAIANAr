@@ -24,6 +24,13 @@ export class AuthService {
       nomeCompleto: 'Eliacira Santos',
       cargo: 'Dono',
       role: 'admin'
+    },
+    {
+      matricula: 'KDS001',
+      senha: '123456',
+      nomeCompleto: 'Cozinha',
+      cargo: 'Cozinheiro',
+      role: 'cozinha'
     }
   ];
 

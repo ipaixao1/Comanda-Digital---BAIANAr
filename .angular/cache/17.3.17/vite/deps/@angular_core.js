@@ -452,8 +452,8 @@ import {
   ɵɵviewQuery,
   ɵɵviewQuerySignal
 } from "./chunk-5SA4DDLX.js";
-import "./chunk-3PY3BGUM.js";
 import "./chunk-UMXX4YWX.js";
+import "./chunk-3PY3BGUM.js";
 import "./chunk-ZFVKCQCV.js";
 export {
   ANIMATION_MODULE_TYPE,

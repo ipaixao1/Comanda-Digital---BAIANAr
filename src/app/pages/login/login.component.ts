@@ -25,7 +25,12 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Redirecionar se já estiver logado
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      const user = this.authService.getCurrentUser();
+      if (user?.role === 'cozinha') {
+        this.router.navigate(['/kds']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
     }
 
     this.loginForm = this.fb.group({
@@ -67,7 +72,12 @@ export class LoginComponent implements OnInit {
     this.isLoading = false;
 
     if (result.success) {
-      this.router.navigate(['/dashboard']);
+      const user = this.authService.getCurrentUser();
+      if (user?.role === 'cozinha') {
+        this.router.navigate(['/kds']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
     } else {
       this.errorMessage = result.error || 'Erro ao realizar login.';
     }
