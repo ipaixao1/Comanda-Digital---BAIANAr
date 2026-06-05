@@ -1,0 +1,312 @@
+<div class="func-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Funcionários</h1>
+      <p class="page-subtitle">Gerencie a equipe do restaurante BAIANAr</p>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Funcionário
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-card">
+
+    <!-- Cabeçalho -->
+    <div class="table-head">
+      <span>Foto</span>
+      <span>Nome Completo</span>
+      <span>CPF</span>
+      <span>Carteira</span>
+      <span>Função</span>
+      <span>Horário</span>
+      <span>Salário</span>
+      <span>Férias</span>
+      <span>Atestado</span>
+      <span>Banco Horas</span>
+      <span>Status</span>
+      <span>Ações</span>
+    </div>
+
+    <!-- Linhas -->
+    <div *ngFor="let f of funcionarios()" class="func-group">
+
+      <!-- Linha resumo -->
+      <div class="func-row" [class.func-row--open]="funcionarioAberto() === f.id"
+           (click)="toggleFuncionario(f.id)">
+
+        <!-- Foto -->
+        <div class="cell-foto">
+          <div class="avatar" *ngIf="!f.foto">{{ getInitials(f.nomeCompleto) }}</div>
+          <img class="avatar-img" *ngIf="f.foto" [src]="f.foto" [alt]="f.nomeCompleto" />
+        </div>
+
+        <span class="cell cell--nome">{{ f.nomeCompleto }}</span>
+        <span class="cell">{{ f.cpf }}</span>
+        <span class="cell">{{ f.carteira }}</span>
+        <span class="cell">{{ f.funcao }}</span>
+        <span class="cell">{{ f.horario }}</span>
+        <span class="cell">{{ f.salario }}</span>
+
+        <span class="cell">
+          <span class="mini-badge" [ngClass]="getBoolClass(f.ferias)">{{ f.ferias ? 'Sim' : 'Não' }}</span>
+        </span>
+        <span class="cell">
+          <span class="mini-badge" [ngClass]="getBoolClass(f.atestado)">{{ f.atestado ? 'Sim' : 'Não' }}</span>
+        </span>
+
+        <span class="cell cell--bh" [class.cell--bh-pos]="f.bancoHorasPositivo" [class.cell--bh-neg]="!f.bancoHorasPositivo">
+          {{ f.bancoHoras }}
+        </span>
+
+        <span class="cell">
+          <span class="status-badge" [ngClass]="getStatusClass(f.status)">{{ f.status }}</span>
+        </span>
+
+        <span class="cell cell--acoes" (click)="$event.stopPropagation()">
+          <svg class="chevron" [class.chevron--up]="funcionarioAberto() === f.id"
+            (click)="toggleFuncionario(f.id)"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          <button class="btn-lixo" (click)="confirmarExclusao(f, $event)" title="Excluir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+        </span>
+      </div>
+
+      <!-- Detalhe expandido -->
+      <div class="detalhe-wrap" *ngIf="funcionarioAberto() === f.id">
+        <div class="detalhe-card">
+
+          <p class="detalhe-titulo">Detalhes de {{ f.nomeCompleto }}</p>
+
+          <div class="detalhe-grid">
+
+            <!-- Contato -->
+            <div class="detalhe-col">
+              <p class="detalhe-section-title">Informações de Contato</p>
+              <p class="detalhe-linha"><span class="detalhe-key">Telefone:</span> {{ f.telefone }}</p>
+              <p class="detalhe-linha"><span class="detalhe-key">E-mail:</span> {{ f.email }}</p>
+              <p class="detalhe-linha"><span class="detalhe-key">Endereço:</span> {{ f.endereco }}</p>
+              <p class="detalhe-linha"><span class="detalhe-key">Data de Admissão:</span> {{ f.dataAdmissao }}</p>
+
+              <!-- Banco de Horas -->
+              <p class="detalhe-section-title" style="margin-top:24px">Histórico de Banco de Horas</p>
+              <div *ngIf="f.historicoBH.length === 0" class="detalhe-vazio">Nenhum registro</div>
+              <div *ngFor="let bh of f.historicoBH" class="hist-row">
+                <div>
+                  <p class="hist-data">{{ bh.data }}</p>
+                  <p class="hist-desc">{{ bh.descricao }}</p>
+                </div>
+                <span class="hist-valor" [class.hist-pos]="bh.positivo" [class.hist-neg]="!bh.positivo">
+                  {{ bh.horas }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Obs + Férias -->
+            <div class="detalhe-col">
+              <p class="detalhe-section-title">Observações Administrativas</p>
+              <p class="detalhe-obs">{{ f.observacoes || '—' }}</p>
+
+              <!-- Férias -->
+              <p class="detalhe-section-title" style="margin-top:24px">Histórico de Férias</p>
+              <div *ngIf="f.historicoFerias.length === 0" class="detalhe-vazio">Nenhum registro</div>
+              <div *ngFor="let hf of f.historicoFerias" class="hist-row">
+                <span class="hist-periodo">{{ hf.inicio }} - {{ hf.fim }}</span>
+                <span class="hist-dias">{{ hf.dias }} dias</span>
+              </div>
+
+              <!-- Botão editar -->
+              <button class="btn-editar-func" (click)="abrirModalEditar(f, $event)" style="margin-top:28px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Editar Funcionário
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Input foto oculto -->
+<input type="file" #fileInput accept="image/*" style="display:none" (change)="onFotoSelecionada($event)" />
+
+<!-- Modal Adicionar / Editar Funcionário -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Cabeçalho -->
+    <div class="modal-header">
+      <h2 class="modal-title">{{ editando() ? 'Editar Funcionário' : 'Adicionar Novo Funcionário' }}</h2>
+      <button class="modal-close" (click)="fecharModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-grid">
+
+        <!-- Nome Completo -->
+        <div class="field-group">
+          <label class="field-label">Nome Completo <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mNome()"
+            (input)="onInput('nome',$event)" placeholder="Digite o nome completo" />
+        </div>
+
+        <!-- CPF -->
+        <div class="field-group">
+          <label class="field-label">CPF <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mCpf()"
+            (input)="onInput('cpf',$event)" placeholder="000.000.000-00" />
+        </div>
+
+        <!-- Carteira de Trabalho -->
+        <div class="field-group">
+          <label class="field-label">Carteira de Trabalho <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mCarteira()"
+            (input)="onInput('carteira',$event)" placeholder="CT 00000-00" />
+        </div>
+
+        <!-- Função -->
+        <div class="field-group">
+          <label class="field-label">Função <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mFuncao()"
+            (input)="onInput('funcao',$event)" placeholder="Ex: Garçom, Chef, Caixa" />
+        </div>
+
+        <!-- Horário de Trabalho -->
+        <div class="field-group">
+          <label class="field-label">Horário de Trabalho <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mHorario()"
+            (input)="onInput('horario',$event)" placeholder="00:00 - 00:00" />
+        </div>
+
+        <!-- Salário -->
+        <div class="field-group">
+          <label class="field-label">Salário (R$) <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mSalario()"
+            (input)="onInput('salario',$event)" placeholder="0.00" />
+        </div>
+
+        <!-- Senha de Acesso -->
+        <div class="field-group">
+          <label class="field-label">Senha de Acesso <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mSenha()"
+            (input)="onInput('senha',$event)" placeholder="Digite a senha" />
+        </div>
+
+        <!-- Status -->
+        <div class="field-group">
+          <label class="field-label">Status <span class="req">*</span></label>
+          <select class="field-input field-select" (change)="onSelectStatus($event)">
+            <option *ngFor="let s of statusOpcoes" [value]="s" [selected]="mStatus() === s">{{ s }}</option>
+          </select>
+        </div>
+
+        <!-- Telefone -->
+        <div class="field-group">
+          <label class="field-label">Telefone <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mTelefone()"
+            (input)="onInput('telefone',$event)" placeholder="(00) 00000-0000" />
+        </div>
+
+        <!-- E-mail -->
+        <div class="field-group">
+          <label class="field-label">E-mail <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mEmail()"
+            (input)="onInput('email',$event)" placeholder="email@exemplo.com" />
+        </div>
+
+        <!-- Data de Admissão -->
+        <div class="field-group">
+          <label class="field-label">Data de Admissão <span class="req">*</span></label>
+          <input type="date" class="field-input field-date" [value]="mAdmissaoISO()"
+            (input)="onInput('admissao',$event)" />
+        </div>
+
+        <!-- URL da Foto -->
+        <div class="field-group">
+          <label class="field-label">URL da Foto</label>
+          <input type="text" class="field-input" [value]="mFoto()"
+            (input)="onInput('foto',$event)" placeholder="https://.." />
+        </div>
+
+        <!-- Endereço Completo - full width -->
+        <div class="field-group field-group--full">
+          <label class="field-label">Endereço Completo <span class="req">*</span></label>
+          <input type="text" class="field-input" [value]="mEndereco()"
+            (input)="onInput('endereco',$event)" placeholder="Rua, número, bairro - Cidade/UF" />
+        </div>
+
+        <!-- Observações - full width -->
+        <div class="field-group field-group--full">
+          <label class="field-label">Observações</label>
+          <textarea class="field-input field-textarea" [value]="mObs()"
+            (input)="onInput('obs',$event)" rows="4"
+            placeholder="Informações adicionais sobre o funcionário"></textarea>
+        </div>
+
+        <!-- Checkboxes - full width -->
+        <div class="field-group field-group--full field-group--checks">
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="mFerias()" (change)="mFerias.set(!mFerias())" />
+            <span class="checkbox-text">Está de férias</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [checked]="mAtestado()" (change)="mAtestado.set(!mAtestado())" />
+            <span class="checkbox-text">Possui atestado médico</span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer modal-footer--full">
+      <button class="btn-cancelar btn-cancelar--lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
+      <button class="btn-salvar btn-salvar--lg" (click)="salvar()" [disabled]="isSaving()">
+        <span *ngIf="!isSaving()">{{ editando() ? 'Salvar Alterações' : 'Adicionar Funcionário' }}</span>
+        <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Confirmar Exclusão -->
+<div class="exclusao-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
+  <div class="exclusao-card" (click)="$event.stopPropagation()">
+
+    <h2 class="exclusao-titulo">Confirmar Exclusão</h2>
+    <p class="exclusao-texto">
+      Tem certeza que deseja excluir este funcionário? Esta ação não pode ser desfeita.
+    </p>
+
+    <div class="exclusao-btns">
+      <button class="exclusao-btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
+      <button class="exclusao-btn-excluir" (click)="confirmarExclusaoFinal()">Excluir</button>
+    </div>
+
+  </div>
+</div>

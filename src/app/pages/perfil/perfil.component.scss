@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:      #302C40;
+$color-card:    #3A3550;
+$color-accent:  #F29F05;
+$color-accent2: #F28705;
+$color-brown:   #734002;
+$color-white:   #FFFFFF;
+$font-title:    'Cormorant Garamond', serif;
+$font-body:     'Poppins', sans-serif;
+
+@mixin gold-border($o: 0.3) { border: 1.5px solid rgba($color-accent, $o); }
+@mixin gold-hover { border-color: $color-accent; box-shadow: 0 0 0 1px rgba($color-accent,.15), 0 8px 28px rgba($color-accent,.1); }
+@mixin poppins($s: 13px) { font-family: $font-body; font-style: italic; font-weight: 200; font-size: $s; }
+
+.perfil-page { display: flex; flex-direction: column; gap: 28px; }
+
+// Header
+.page-header    { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.greeting       { @include poppins(18px); color: $color-accent; margin-bottom: 4px; }
+.page-title     { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 46px; color: $color-white; line-height: 1.1; margin-bottom: 6px; }
+.page-subtitle  { @include poppins(13px); color: rgba($color-white,.5); }
+.header-actions { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+
+.btn-editar {
+  display: flex; align-items: center; gap: 8px;
+  background: $color-accent; border: none; border-radius: 8px; padding: 12px 22px;
+  @include poppins(14px); color: $color-white; cursor: pointer;
+  transition: background .2s, transform .15s;
+  svg { width: 16px; height: 16px; }
+  &:hover { background: $color-accent2; transform: translateY(-1px); }
+}
+
+.btn-cancelar {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: 1.5px solid rgba($color-white,.2); border-radius: 8px; padding: 11px 20px;
+  @include poppins(14px); color: rgba($color-white,.7); cursor: pointer;
+  transition: border-color .18s, color .18s;
+  svg { width: 16px; height: 16px; stroke: currentColor; }
+  &:hover { border-color: rgba($color-white,.5); color: $color-white; }
+}
+
+.btn-salvar {
+  display: flex; align-items: center; gap: 8px;
+  background: #2ECC71; border: none; border-radius: 8px; padding: 12px 22px;
+  @include poppins(14px); color: $color-white; cursor: pointer;
+  transition: background .2s, transform .15s;
+  svg { width: 16px; height: 16px; }
+  &:hover { background: darken(#2ECC71, 8%); transform: translateY(-1px); }
+  &:disabled { opacity: .7; cursor: not-allowed; }
+}
+
+// Grid
+.perfil-grid {
+  display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: stretch;
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+// Avatar card
+.avatar-card {
+  background: $color-card; border-radius: 16px; padding: 36px 24px;
+  @include gold-border(.25); display: flex; flex-direction: column; align-items: center; gap: 14px; height: 100%; box-sizing: border-box;
+  transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.avatar-wrap {
+  position: relative; width: 130px; height: 130px; border-radius: 50%; overflow: hidden;
+  background: $color-accent; flex-shrink: 0;
+  &--edit { cursor: pointer; &:hover .avatar-edit-overlay { opacity: 1; } }
+}
+
+.avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.avatar-initials {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: $font-body; font-style: italic; font-weight: 200; font-size: 38px;
+  color: $color-white; letter-spacing: .04em;
+}
+
+.avatar-edit-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+  svg { width: 28px; height: 28px; stroke: $color-white; }
+}
+
+.avatar-nome {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 22px; color: $color-white; text-align: center; margin-top: 4px;
+}
+
+.cargo-badge {
+  display: inline-block; padding: 6px 18px; border-radius: 20px;
+  @include poppins(13px); border: 1.5px solid transparent;
+  &.cargo--dono       { color: $color-accent;  border-color: $color-brown; background: rgba($color-brown,.6); }
+  &.cargo--gerente    { color: #2ECC71;         border-color: #2ECC71;     background: rgba(#2ECC71,.1); }
+  &.cargo--supervisor { color: #3AB4D0;         border-color: #3AB4D0;     background: rgba(#3AB4D0,.1); }
+}
+
+.status-badge {
+  display: inline-block; padding: 5px 18px; border-radius: 20px;
+  @include poppins(12px); color: #2ECC71; border: 1.5px solid #2ECC71; background: rgba(#2ECC71,.1);
+}
+
+// Info card
+.info-card {
+  background: $color-card; border-radius: 16px; padding: 32px 36px;
+  @include gold-border(.25);
+  transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.info-titulo {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 24px; color: $color-accent; margin-bottom: 24px;
+}
+
+// Modo leitura
+.info-lista { display: flex; flex-direction: column; gap: 20px; }
+
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+
+.info-label {
+  display: flex; align-items: center; gap: 7px;
+  @include poppins(12.5px); color: rgba($color-white,.5);
+  svg { width: 14px; height: 14px; stroke: $color-accent; flex-shrink: 0; }
+}
+
+.info-valor {
+  @include poppins(15px); color: $color-white;
+  padding-left: 21px; /* alinha com o texto depois do ícone */
+}
+
+// Modo edição
+.edit-form { display: flex; flex-direction: column; gap: 18px; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-group--readonly {}
+
+.field-label {
+  display: flex; align-items: center; gap: 7px;
+  @include poppins(12.5px); color: rgba($color-white,.5);
+  svg { width: 14px; height: 14px; stroke: $color-accent; flex-shrink: 0; }
+}
+
+.field-input {
+  background: rgba($color-bg,.5); border: 1.5px solid rgba($color-accent,.3);
+  border-radius: 8px; padding: 11px 16px;
+  @include poppins(14px); color: $color-white; outline: none; width: 100%;
+  transition: border-color .18s;
+  &::placeholder { color: rgba($color-white,.25); }
+  &:focus { border-color: $color-accent; }
+}
+
+.field-readonly {
+  @include poppins(14px); color: rgba($color-white,.5);
+  padding: 11px 16px; background: rgba($color-bg,.3);
+  border-radius: 8px; border: 1.5px solid rgba($color-white,.08);
+}

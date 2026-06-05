@@ -36,7 +36,7 @@
 
     <!-- Logout -->
     <div class="sidebar__footer">
-      <button class="logout-btn" (click)="logout()" [title]="!sidebarOpen() ? 'Logout' : ''">
+      <button class="logout-btn" (click)="pedirLogout()" [title]="!sidebarOpen() ? 'Logout' : ''">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -63,7 +63,7 @@
         </button>
       </div>
 
-      <div class="topbar__user" *ngIf="currentUser()">
+      <div class="topbar__user" *ngIf="currentUser()" (click)="irParaPerfil()" style="cursor:pointer">
         <div class="user-info">
           <span class="user-name">{{ currentUser()!.nomeCompleto || currentUser()!.matricula }}</span>
           <span class="user-role">{{ currentUser()!.cargo || 'Administrador' }}</span>
@@ -78,5 +78,24 @@
     <main class="page-content">
       <router-outlet />
     </main>
+  </div>
+</div>
+
+<!-- ── Modal Confirmar Logout ──────────────────────────────── -->
+<div class="logout-overlay" *ngIf="showLogoutConfirm()" (click)="cancelarLogout()">
+  <div class="logout-confirm-card" (click)="$event.stopPropagation()">
+    <div class="logout-confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <h2 class="logout-confirm-titulo">Sair do sistema</h2>
+    <p class="logout-confirm-texto">Tem certeza que deseja sair?<br>Você precisará fazer login novamente para acessar o sistema.</p>
+    <div class="logout-confirm-btns">
+      <button class="logout-btn-cancelar" (click)="cancelarLogout()">Cancelar</button>
+      <button class="logout-btn-sair"     (click)="confirmarLogout()">Sair</button>
+    </div>
   </div>
 </div>

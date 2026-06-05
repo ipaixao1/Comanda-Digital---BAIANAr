@@ -13,10 +13,11 @@ import { User } from '../../../services/auth.service';
 })
 export class ShellComponent implements OnInit {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  private router      = inject(Router);
 
-  sidebarOpen = signal(true);
-  currentUser = signal<User | null>(null);
+  sidebarOpen       = signal(true);
+  currentUser       = signal<User | null>(null);
+  showLogoutConfirm = signal(false);   // ← novo
 
   navItems = [
     { label: 'Início',          icon: 'home',         route: '/dashboard' },
@@ -35,20 +36,21 @@ export class ShellComponent implements OnInit {
     });
   }
 
-  toggleSidebar(): void {
-    this.sidebarOpen.set(!this.sidebarOpen());
-  }
+  toggleSidebar(): void { this.sidebarOpen.set(!this.sidebarOpen()); }
 
   getInitials(name: string): string {
-    return name
-      .split(' ')
-      .slice(0, 2)
-      .map(n => n[0])
-      .join('')
-      .toUpperCase();
+    return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
   }
 
-  logout(): void {
+  // Logout com confirmação
+  pedirLogout(): void    { this.showLogoutConfirm.set(true); }
+  cancelarLogout(): void { this.showLogoutConfirm.set(false); }
+  confirmarLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.authService.logout();
   }
+
+  irParaPerfil(): void { this.router.navigate(['/perfil']); }
+
+  logout(): void { this.pedirLogout(); }
 }

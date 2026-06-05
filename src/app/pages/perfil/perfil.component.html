@@ -1,0 +1,189 @@
+<div class="perfil-page" *ngIf="user()">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Meu Perfil</h1>
+      <p class="page-subtitle">Gerencie suas informações pessoais</p>
+    </div>
+
+    <!-- Botões modo visualização -->
+    <div class="header-actions" *ngIf="!editando()">
+      <button class="btn-editar" (click)="abrirEdicao()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Editar Perfil
+      </button>
+    </div>
+
+    <!-- Botões modo edição -->
+    <div class="header-actions" *ngIf="editando()">
+      <button class="btn-cancelar" (click)="cancelar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Cancelar
+      </button>
+      <button class="btn-salvar" (click)="salvar()" [disabled]="isSaving()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Salvar Alterações
+      </button>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="perfil-grid">
+
+    <!-- Card esquerdo: avatar + nome + badges -->
+    <div class="avatar-card">
+      <div class="avatar-wrap" (click)="editando() ? abrirFoto() : null" [class.avatar-wrap--edit]="editando()">
+        <img *ngIf="(editando() ? fFoto() : user()!.foto)" [src]="editando() ? fFoto() : user()!.foto" class="avatar-img" alt="foto" />
+        <div *ngIf="!(editando() ? fFoto() : user()!.foto)" class="avatar-initials">
+          {{ getInitials() }}
+        </div>
+        <div class="avatar-edit-overlay" *ngIf="editando()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+          </svg>
+        </div>
+      </div>
+
+      <p class="avatar-nome">{{ user()!.nomeCompleto }}</p>
+      <span class="cargo-badge" [ngClass]="getCargoClass(user()!.cargo)">{{ user()!.cargo }}</span>
+      <span class="status-badge">Ativo</span>
+    </div>
+
+    <!-- Card direito: informações -->
+    <div class="info-card">
+      <p class="info-titulo">Informações Pessoais</p>
+
+      <!-- MODO VISUALIZAÇÃO -->
+      <div *ngIf="!editando()" class="info-lista">
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Nome Completo
+          </div>
+          <p class="info-valor">{{ user()!.nomeCompleto }}</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email
+          </div>
+          <p class="info-valor">{{ user()!.email || '—' }}</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            Telefone
+          </div>
+          <p class="info-valor">{{ user()!.telefone || '—' }}</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Senha
+          </div>
+          <p class="info-valor">••••••</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            Matrícula
+          </div>
+          <p class="info-valor">{{ user()!.matricula }}</p>
+        </div>
+
+        <div class="info-item">
+          <div class="info-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Cargo
+          </div>
+          <p class="info-valor">{{ user()!.cargo }}</p>
+        </div>
+
+      </div>
+
+      <!-- MODO EDIÇÃO -->
+      <div *ngIf="editando()" class="edit-form">
+
+        <div class="field-group">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Nome Completo
+          </div>
+          <input type="text" class="field-input" [value]="fNome()" (input)="onInput('nome',$event)" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email
+          </div>
+          <input type="text" class="field-input" [value]="fEmail()" (input)="onInput('email',$event)" placeholder="email@baianar.com" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+            Telefone
+          </div>
+          <input type="text" class="field-input" [value]="fTelefone()" (input)="onInput('telefone',$event)" placeholder="00000000000" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Senha
+          </div>
+          <input type="text" class="field-input" [value]="fSenha()" (input)="onInput('senha',$event)" />
+        </div>
+
+        <div class="field-group field-group--readonly">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            Matrícula
+          </div>
+          <p class="field-readonly">{{ user()!.matricula }}</p>
+        </div>
+
+        <div class="field-group field-group--readonly">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Cargo
+          </div>
+          <p class="field-readonly">{{ user()!.cargo }}</p>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+            URL da Foto
+          </div>
+          <input type="text" class="field-input" [value]="fFoto()" (input)="onInput('foto',$event)" placeholder="https://..." />
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Input foto oculto -->
+<input type="file" #fileInput accept="image/*" style="display:none" (change)="onFotoSelecionada($event)" />

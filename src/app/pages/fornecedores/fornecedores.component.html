@@ -1,0 +1,168 @@
+<div class="fornecedores-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Fornecedores</h1>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Fornecedor
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-card">
+    <div class="table-head">
+      <span></span><span>Nome do Fornecedor</span><span>CNPJ</span>
+      <span>Produtos que Fornece</span><span>Endereço</span><span>Telefone</span>
+      <span>Email</span><span>Valor Médio</span><span>Status</span><span>Ações</span>
+    </div>
+
+    <div *ngFor="let f of fornecedores()" class="forn-row">
+      <div class="cell-icon">
+        <div class="forn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="1" y="3" width="15" height="13" rx="1"/>
+            <path d="M16 8h4l3 5v4h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+      </div>
+      <span class="cell cell--nome">{{ f.nome }}</span>
+      <span class="cell cell--cnpj">{{ f.cnpj }}</span>
+      <span class="cell cell--produtos">{{ f.produtos }}</span>
+      <span class="cell cell--end">
+        <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        {{ f.endereco }}
+      </span>
+      <span class="cell cell--tel">
+        <svg class="tel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        {{ f.telefone }}
+      </span>
+      <span class="cell cell--email">
+        <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        {{ f.email }}
+      </span>
+      <span class="cell cell--valor">
+        <svg class="dol-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        {{ formatValor(f.valorMedio) }}
+      </span>
+      <span class="cell">
+        <span class="status-badge" [class.badge--ativo]="f.status==='Ativo'" [class.badge--inativo]="f.status==='Inativo'">{{ f.status }}</span>
+      </span>
+      <span class="cell cell--acoes">
+        <button class="btn-acao btn-editar" (click)="abrirModalEditar(f, $event)" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-acao btn-excluir" (click)="confirmarExclusao(f, $event)" title="Excluir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal Adicionar / Editar ─────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-scroll">
+
+      <h2 class="modal-title">{{ editando() ? 'Editar Fornecedor' : 'Adicionar Fornecedor' }}</h2>
+
+      <!-- Nome + CNPJ -->
+      <div class="modal-row">
+        <div class="field-group">
+          <label class="field-label">Nome do Fornecedor</label>
+          <input type="text" class="field-input" [value]="mNome()"
+            (input)="onInput('nome',$event)" placeholder="Digite o nome do fornecedor" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">CNPJ</label>
+          <input type="text" class="field-input" [value]="mCnpj()"
+            (input)="onInput('cnpj',$event)" placeholder="00.000.000/0000-00" />
+        </div>
+      </div>
+
+      <!-- Produtos que Fornece -->
+      <div class="field-group">
+        <label class="field-label">Produtos que Fornece</label>
+        <input type="text" class="field-input" [value]="mProdutos()"
+          (input)="onInput('produtos',$event)" placeholder="Liste os produtos fornecidos" />
+      </div>
+
+      <!-- Endereço Completo -->
+      <div class="field-group">
+        <label class="field-label">Endereço Completo</label>
+        <input type="text" class="field-input" [value]="mEndereco()"
+          (input)="onInput('endereco',$event)" placeholder="Rua, número, bairro, cidade, estado, CEP" />
+      </div>
+
+      <!-- Telefone + Email -->
+      <div class="modal-row">
+        <div class="field-group">
+          <label class="field-label">Telefone</label>
+          <input type="text" class="field-input" [value]="mTelefone()"
+            (input)="onInput('telefone',$event)" placeholder="(00) 0000-0000" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="text" class="field-input" [value]="mEmail()"
+            (input)="onInput('email',$event)" placeholder="fornecedor@email.com" />
+        </div>
+      </div>
+
+      <!-- Valor Médio + Status -->
+      <div class="modal-row">
+        <div class="field-group">
+          <label class="field-label">Valor Médio de Fornecimento (R$)</label>
+          <input type="number" class="field-input" [value]="mValor()"
+            (input)="onInput('valor',$event)" min="0" step="100" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Status</label>
+          <select class="field-input field-select" (change)="onSelectStatus($event)">
+            <option value="Ativo"   [selected]="mStatus()==='Ativo'">Ativo</option>
+            <option value="Inativo" [selected]="mStatus()==='Inativo'">Inativo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div class="field-group">
+        <label class="field-label">Observações</label>
+        <textarea class="field-input field-textarea" [value]="mObservacoes()"
+          (input)="onInput('observacoes',$event)" rows="4"
+          placeholder="Informações adicionais sobre o fornecedor"></textarea>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-cancelar-lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn-salvar-lg"   (click)="salvar()"      [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">Salvar Fornecedor</span>
+          <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Excluir ────────────────────────────────────────── -->
+<div class="exclusao-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
+  <div class="exclusao-card" (click)="$event.stopPropagation()">
+    <h2 class="exclusao-titulo">Excluir Fornecedor</h2>
+    <p class="exclusao-texto">Tem certeza que deseja excluir este fornecedor?</p>
+    <p class="exclusao-aviso">Essa ação removerá permanentemente o fornecedor do sistema.</p>
+    <div class="exclusao-btns">
+      <button class="exclusao-btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
+      <button class="exclusao-btn-excluir"  (click)="confirmarExclusaoFinal()">Excluir Fornecedor</button>
+    </div>
+  </div>
+</div>
