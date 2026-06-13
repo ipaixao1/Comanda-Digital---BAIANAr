@@ -1,0 +1,333 @@
+<div class="cardapio-page">
+
+  <!-- Header -->
+  <header class="cardapio-header">
+    <img src="assets/images/logoBAIANAr.png" alt="BAIANAr" class="logo-img"/>
+  </header>
+
+  <!-- Toast -->
+  <div class="toast" *ngIf="toastVisivel()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    Item adicionado ao carrinho!
+  </div>
+
+  <!-- Modal Login/Cadastro -->
+  <div class="modal-overlay" *ngIf="modalLoginAberto()" (click)="fecharModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h2 class="modal-titulo">{{ modalAba === 'login' ? 'Fazer login' : 'Criar conta' }}</h2>
+        <button class="modal-fechar" (click)="fecharModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal-subtitulo">{{ modalAba === 'login' ? 'Faça login para adicionar itens ao carrinho e fazer pedidos' : 'Crie uma conta para adicionar itens ao carrinho e fazer pedidos' }}</p>
+
+      <!-- LOGIN -->
+      <ng-container *ngIf="modalAba === 'login'">
+        <div class="modal-campo">
+          <label>Email</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" placeholder="seu@email.com" [(ngModel)]="loginEmail" (keyup.enter)="fazerLogin()"/>
+          </div>
+        </div>
+        <div class="modal-campo">
+          <label>Senha</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input [type]="senhaVisivel() ? 'text' : 'password'" placeholder="Digite sua senha" [(ngModel)]="loginSenha" (keyup.enter)="fazerLogin()"/>
+            <button class="toggle-senha" (click)="toggleSenhaVisivel()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path *ngIf="!senhaVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!senhaVisivel()" cx="12" cy="12" r="3"/>
+                <path *ngIf="senhaVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="senhaVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- CADASTRO -->
+      <ng-container *ngIf="modalAba === 'cadastro'">
+        <div class="modal-campo">
+          <label>Nome completo</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" placeholder="Seu nome completo" [(ngModel)]="cadastroNome"/>
+          </div>
+        </div>
+        <div class="modal-campo">
+          <label>Email</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" placeholder="seu@email.com" [(ngModel)]="loginEmail"/>
+          </div>
+        </div>
+        <div class="modal-campo">
+          <label>Telefone</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+            <input type="tel" placeholder="(00) 00000-0000" [(ngModel)]="cadastroTelefone"/>
+          </div>
+        </div>
+        <div class="modal-campo">
+          <label>Senha</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input [type]="senhaVisivel() ? 'text' : 'password'" placeholder="Mínimo 6 caracteres" [(ngModel)]="loginSenha"/>
+            <button class="toggle-senha" (click)="toggleSenhaVisivel()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path *ngIf="!senhaVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!senhaVisivel()" cx="12" cy="12" r="3"/>
+                <path *ngIf="senhaVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="senhaVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="modal-campo">
+          <label>Confirmar senha</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input [type]="senhaConfVisivel() ? 'text' : 'password'" placeholder="Digite a senha novamente" [(ngModel)]="cadastroSenhaConf"/>
+            <button class="toggle-senha" (click)="toggleSenhaConfVisivel()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path *ngIf="!senhaConfVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!senhaConfVisivel()" cx="12" cy="12" r="3"/>
+                <path *ngIf="senhaConfVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="senhaConfVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <p class="modal-erro" *ngIf="loginErro">{{ loginErro }}</p>
+
+      <button class="modal-btn-entrar" (click)="modalAba === 'login' ? fazerLogin() : fazerCadastro()">
+        {{ modalAba === 'login' ? 'Entrar' : 'Criar conta' }}
+      </button>
+
+      <p class="modal-cadastro" *ngIf="modalAba === 'login'">
+        Não tem uma conta? <a (click)="modalAba = 'cadastro'" style="cursor:pointer">Cadastre-se</a>
+      </p>
+      <p class="modal-cadastro" *ngIf="modalAba === 'cadastro'">
+        Já tem uma conta? <a (click)="modalAba = 'login'" style="cursor:pointer">Entrar</a>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <main class="cardapio-content">
+
+    <div class="cardapio-top">
+      <h1 class="cardapio-title">Cardápio</h1>
+
+      <!-- Dropdown select customizado -->
+      <div class="select-container">
+        <div class="dropdown-overlay" *ngIf="dropdownAberto()" (click)="fecharDropdown()"></div>
+
+        <div class="select-wrapper" [class.aberto]="dropdownAberto()">
+          <button
+            class="select-trigger"
+            (click)="toggleDropdown()"
+            [attr.aria-expanded]="dropdownAberto()"
+            aria-haspopup="listbox"
+          >
+            <span class="select-valor">{{ categoriaSelecionadaLabel() }}</span>
+            <svg class="select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <ul class="select-dropdown" *ngIf="dropdownAberto()" role="listbox">
+            <li
+              *ngFor="let cat of categorias"
+              class="select-option"
+              [class.selecionada]="categoriaSelecionada() === cat.id"
+              role="option"
+              [attr.aria-selected]="categoriaSelecionada() === cat.id"
+              (click)="selecionarCategoria(cat.id)"
+            >
+              {{ cat.label }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product sections -->
+    <section class="categoria-secao" *ngFor="let cat of categoriasVisiveis()">
+      <h2 class="categoria-titulo">{{ cat.label }}</h2>
+
+      <div class="produtos-lista">
+        <article class="produto-card" *ngFor="let produto of produtosPorCategoria(cat.id)" [routerLink]="['/mobile/produto', produto.id]" style="cursor:pointer">
+
+          <!-- Imagem -->
+          <div class="produto-imagem-wrapper" *ngIf="produto.imagem; else semFoto">
+            <img [src]="produto.imagem" [alt]="produto.nome" class="produto-imagem" loading="lazy"/>
+            <button
+              class="favorito-btn"
+              [class.ativo]="produto.favorito"
+              (click)="$event.stopPropagation(); toggleFavorito(produto)"
+              aria-label="Favoritar"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24"
+                [attr.fill]="produto.favorito ? 'currentColor' : 'none'"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+
+          <ng-template #semFoto>
+            <div class="produto-sem-imagem">
+              <span>{{ cat.emoji }}</span>
+            </div>
+          </ng-template>
+
+          <!-- Info -->
+          <div class="produto-info">
+            <div class="produto-topo">
+              <h3 class="produto-nome">{{ produto.nome }}</h3>
+              <button
+                *ngIf="!produto.imagem"
+                class="favorito-btn favorito-inline"
+                [class.ativo]="produto.favorito"
+                (click)="$event.stopPropagation(); toggleFavorito(produto)"
+                aria-label="Favoritar"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24"
+                  [attr.fill]="produto.favorito ? 'currentColor' : 'none'"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+
+            <p class="produto-descricao">{{ produto.descricao }}</p>
+
+            <div class="produto-rodape">
+              <span class="produto-preco" *ngIf="produto.preco !== null">
+                {{ formatarPreco(produto.preco) }}
+              </span>
+              <span class="produto-preco-consulte" *ngIf="produto.preco === null">
+                Consulte o valor
+              </span>
+
+              <div class="quantidade-control" *ngIf="getQuantidade(produto) > 0; else addBtn">
+                <button class="qty-btn" (click)="$event.stopPropagation(); removerProduto(produto)">−</button>
+                <span class="qty-valor">{{ getQuantidade(produto) }}</span>
+                <button class="qty-btn" (click)="$event.stopPropagation(); adicionarProduto(produto)">+</button>
+              </div>
+
+              <ng-template #addBtn>
+                <button class="adicionar-btn" (click)="$event.stopPropagation(); adicionarProduto(produto)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Adicionar
+                </button>
+              </ng-template>
+            </div>
+          </div>
+
+        </article>
+      </div>
+    </section>
+
+    <!-- Seção de Avaliações -->
+    <section class="avaliacoes-secao">
+
+      <div class="avaliacoes-header">
+        <h2 class="avaliacoes-titulo">Avaliações</h2>
+        <div class="rating-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="star-icone">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span class="rating-numero">{{ mediaAvaliacoes }}</span>
+        </div>
+      </div>
+
+      <div class="avaliacoes-lista">
+        <div class="avaliacao-card" *ngFor="let av of avaliacoes">
+          <div class="avaliacao-topo">
+            <span class="avaliacao-nome">{{ av.nome }}</span>
+            <div class="estrelas">
+              <span
+                *ngFor="let s of [1,2,3,4,5]; let i = index"
+                class="estrela"
+                [class.vazia]="i + 1 > av.nota"
+              >★</span>
+            </div>
+          </div>
+          <p class="avaliacao-texto">{{ av.texto }}</p>
+        </div>
+      </div>
+
+      <button class="ver-avaliacoes-btn" routerLink="/mobile/avaliacao">
+            Ver todas as avaliações
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+    </section>
+
+  </main>
+
+  <!-- Botão flutuante do carrinho -->
+  <a class="fab-carrinho" routerLink="/mobile/carrinho" *ngIf="carrinho.totalItens() > 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="21" r="1"/>
+      <circle cx="20" cy="21" r="1"/>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+    </svg>
+    <span class="fab-badge">{{ carrinho.totalItens() }}</span>
+  </a>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a class="nav-item ativo" routerLink="/mobile/cardapio">
+      <div class="ativo-icon-wrapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span>Início</span>
+    </a>
+    <a class="nav-item" routerLink="/mobile/buscar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span>Buscar</span>
+    </a>
+    <a class="nav-item nav-pedidos" routerLink="/mobile/pedidos">
+      <div class="pedidos-icon-wrapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="badge">{{ totalItens() }}</span>
+      </div>
+      <span>Pedidos</span>
+    </a>
+    <a class="nav-item" routerLink="/mobile/perfil">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Perfil</span>
+    </a>
+  </nav>
+
+</div>

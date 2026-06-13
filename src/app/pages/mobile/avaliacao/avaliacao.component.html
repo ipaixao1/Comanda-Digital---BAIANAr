@@ -1,0 +1,45 @@
+<div class="avaliacoes-page">
+
+  <header class="avaliacoes-header">
+    <button class="btn-voltar" (click)="voltar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="avaliacoes-titulo">Avaliações</h1>
+  </header>
+
+  <main class="avaliacoes-content">
+
+    <!-- Resumo -->
+    <div class="resumo-card">
+      <div class="resumo-topo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="star-icone">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span class="resumo-nota">{{ mediaAvaliacoes }}</span>
+      </div>
+      <p class="resumo-total">{{ avaliacoes.length }} avaliações</p>
+    </div>
+
+    <!-- Lista -->
+    <div class="avaliacoes-lista">
+      <div class="avaliacao-card" *ngFor="let av of avaliacoes">
+        <div class="avaliacao-topo">
+          <span class="avaliacao-nome">{{ av.nome }}</span>
+          <div class="estrelas">
+            <span
+              *ngFor="let s of [1,2,3,4,5]; let i = index"
+              class="estrela"
+              [class.vazia]="i + 1 > av.nota"
+            >★</span>
+          </div>
+        </div>
+        <p class="avaliacao-data">{{ av.data }}</p>
+        <p class="avaliacao-texto">{{ av.texto }}</p>
+      </div>
+    </div>
+
+  </main>
+
+</div>

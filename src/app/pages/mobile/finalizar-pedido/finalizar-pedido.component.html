@@ -1,0 +1,146 @@
+<div class="checkout-page">
+
+  <header class="checkout-header">
+    <button class="btn-voltar" (click)="voltar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="checkout-titulo">Finalizar pedido</h1>
+  </header>
+
+  <main class="checkout-content">
+
+    <!-- Endereço de entrega -->
+    <section class="secao">
+      <p class="secao-titulo">Endereço de entrega</p>
+
+      <div class="lista-opcoes">
+        <div
+          class="opcao-card"
+          *ngFor="let endereco of enderecos"
+          [class.selecionado]="enderecoSelecionado === endereco.id"
+          (click)="selecionarEndereco(endereco.id)"
+        >
+          <div class="opcao-icone">
+            <svg *ngIf="endereco.tipo === 'casa'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>
+            </svg>
+            <svg *ngIf="endereco.tipo === 'trabalho'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              <path d="M2 13h20"/>
+            </svg>
+          </div>
+          <div class="opcao-info">
+            <p class="opcao-nome">{{ endereco.nome }}</p>
+            <p class="opcao-detalhe">{{ endereco.rua }}</p>
+            <p class="opcao-detalhe">{{ endereco.cidade }}</p>
+          </div>
+          <div class="opcao-radio" [class.ativo]="enderecoSelecionado === endereco.id">
+            <svg *ngIf="enderecoSelecionado === endereco.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <button class="btn-adicionar" (click)="adicionarEndereco()">
+          <div class="opcao-icone opcao-icone--add">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <span class="btn-adicionar-texto">Adicionar novo endereço</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Forma de pagamento -->
+    <section class="secao">
+      <p class="secao-titulo">Forma de pagamento</p>
+
+      <div class="lista-opcoes">
+        <div
+          class="opcao-card"
+          *ngFor="let pagamento of pagamentos"
+          [class.selecionado]="pagamentoSelecionado === pagamento.id"
+          (click)="selecionarPagamento(pagamento.id)"
+        >
+          <div class="opcao-icone" [class.opcao-icone--pix]="pagamento.tipo === 'pix'">
+            <svg *ngIf="pagamento.tipo === 'cartao-credito' || pagamento.tipo === 'cartao-debito'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <svg *ngIf="pagamento.tipo === 'pix'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+              <path d="M14 14h3v3h-3z"/>
+              <path d="M21 14v3"/>
+              <path d="M14 21h3"/>
+              <path d="M21 21v.01"/>
+              <path d="M14 17.99h.01"/>
+              <path d="M21 17.99h.01"/>
+            </svg>
+            <svg *ngIf="pagamento.tipo === 'dinheiro'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M6 12h.01M18 12h.01"/>
+            </svg>
+          </div>
+          <div class="opcao-info">
+            <p class="opcao-nome">{{ pagamento.nome }}</p>
+            <p class="opcao-detalhe">{{ pagamento.detalhe }}</p>
+          </div>
+          <div class="opcao-radio" [class.ativo]="pagamentoSelecionado === pagamento.id">
+            <svg *ngIf="pagamentoSelecionado === pagamento.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <button class="btn-adicionar" (click)="adicionarPagamento()">
+          <div class="opcao-icone opcao-icone--add">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <span class="btn-adicionar-texto">Adicionar novo método de pagamento</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Observações de entrega -->
+    <section class="secao">
+      <p class="secao-titulo">Observações de entrega (opcional)</p>
+      <textarea
+        class="observacoes-input"
+        placeholder="Ex: portão azul, interfone 101, deixar com porteiro"
+        [(ngModel)]="observacoesEntrega"
+        rows="3"
+      ></textarea>
+    </section>
+
+    <!-- Resumo do pedido -->
+    <div class="resumo-card">
+      <p class="resumo-titulo">Resumo do pedido</p>
+      <div class="resumo-linha">
+        <span>Subtotal</span>
+        <span>{{ formatarPreco(carrinho.subtotal()) }}</span>
+      </div>
+      <div class="resumo-linha">
+        <span>Taxa de entrega</span>
+        <span>{{ formatarPreco(carrinho.taxaEntrega) }}</span>
+      </div>
+      <div class="resumo-divider"></div>
+      <div class="resumo-linha resumo-total">
+        <span>Total</span>
+        <span>{{ formatarPreco(carrinho.total()) }}</span>
+      </div>
+    </div>
+
+    <button class="btn-confirmar" (click)="confirmarPedido()">Confirmar pedido</button>
+
+  </main>
+
+</div>

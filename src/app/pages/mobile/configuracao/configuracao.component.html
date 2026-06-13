@@ -1,0 +1,475 @@
+<div class="config-page">
+
+  <!-- ══════════════ MENU PRINCIPAL ══════════════ -->
+  <ng-container *ngIf="tela() === 'menu'">
+    <header class="config-header">
+      <button class="btn-voltar" routerLink="/mobile/perfil">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Configurações</h1>
+    </header>
+    <main class="config-content">
+      <p class="secao-label">CONTA</p>
+      <div class="secao-card">
+        <a class="config-item" (click)="tela.set('editar-perfil')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <span class="item-label">Editar perfil</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="item-divider"></div>
+        <a class="config-item" (click)="tela.set('alterar-senha')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <span class="item-label">Alterar senha</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <p class="secao-label">PAGAMENTOS</p>
+      <div class="secao-card">
+        <a class="config-item" (click)="tela.set('pagamentos')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </div>
+          <span class="item-label">Formas de pagamento</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <p class="secao-label">SUPORTE</p>
+      <div class="secao-card">
+        <a class="config-item" (click)="tela.set('ajuda')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <span class="item-label">Ajuda</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+
+      <p class="secao-label">SOBRE</p>
+      <div class="secao-card">
+        <a class="config-item" (click)="tela.set('termos')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <span class="item-label">Termos de uso</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div class="item-divider"></div>
+        <a class="config-item" (click)="tela.set('privacidade')">
+          <div class="item-icone">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <span class="item-label">Política de privacidade</span>
+          <svg class="item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <p class="versao">BAIANAR v1.0.0</p>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ FORMAS DE PAGAMENTO ══════════════ -->
+  <ng-container *ngIf="tela() === 'pagamentos'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Pagamentos</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+
+      <div class="metodos-lista">
+        <div
+          class="metodo-card"
+          *ngFor="let metodo of metodosPagamento()"
+          [class.selecionado]="metodo.selecionado"
+          (click)="selecionarMetodo(metodo.id)"
+        >
+          <div class="metodo-icone" [class]="metodo.tipo">
+            <svg *ngIf="metodo.tipo === 'credito' || metodo.tipo === 'debito'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+            <svg *ngIf="metodo.tipo === 'pix'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <svg *ngIf="metodo.tipo === 'dinheiro'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+            </svg>
+          </div>
+
+          <div class="metodo-info">
+            <p class="metodo-nome">{{ metodo.nome }}</p>
+            <p class="metodo-detalhe">{{ metodo.detalhe }}</p>
+          </div>
+
+          <div class="metodo-radio" [class.ativo]="metodo.selecionado">
+            <svg *ngIf="metodo.selecionado" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Adicionar novo método -->
+        <div class="metodo-card adicionar" (click)="tela.set('adicionar-cartao')">
+          <div class="metodo-icone adicionar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <div class="metodo-info">
+            <p class="metodo-nome adicionar">Adicionar novo método</p>
+            <p class="metodo-detalhe">Cadastre um novo cartão ou método</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="aviso-card seguranca">
+        <p>Seus dados de pagamento estão seguros e protegidos</p>
+      </div>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ EDITAR PERFIL ══════════════ -->
+  <ng-container *ngIf="tela() === 'editar-perfil'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Editar Perfil</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+
+      <!-- Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-circle">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <div class="avatar-camera">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos -->
+      <div class="form-campo">
+        <label>Nome completo</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input type="text" [(ngModel)]="editNome" placeholder="Seu nome completo"/>
+        </div>
+      </div>
+
+      <div class="form-campo">
+        <label>E-mail</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <input type="email" [(ngModel)]="editEmail" placeholder="seu@email.com"/>
+        </div>
+      </div>
+
+      <div class="form-campo">
+        <label>Telefone</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/>
+          </svg>
+          <input type="tel" [(ngModel)]="editTelefone" placeholder="(00) 00000-0000"/>
+        </div>
+      </div>
+
+      <p class="form-erro" *ngIf="editErro">{{ editErro }}</p>
+      <p class="form-sucesso" *ngIf="editSucesso">✓ Alterações salvas com sucesso!</p>
+
+      <button class="btn-salvar" (click)="salvarPerfil()">Salvar alterações</button>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ ALTERAR SENHA ══════════════ -->
+  <ng-container *ngIf="tela() === 'alterar-senha'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Alterar Senha</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+
+      <div class="aviso-card">
+        <p>Para sua segurança, use uma senha forte com pelo menos 6 caracteres.</p>
+      </div>
+
+      <div class="form-campo">
+        <label>Senha atual</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input [type]="senhaAtualVisivel() ? 'text' : 'password'" [(ngModel)]="senhaAtual" placeholder=""/>
+          <button class="toggle-senha" (click)="senhaAtualVisivel.set(!senhaAtualVisivel())">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path *ngIf="!senhaAtualVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!senhaAtualVisivel()" cx="12" cy="12" r="3"/>
+              <path *ngIf="senhaAtualVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="senhaAtualVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-campo">
+        <label>Nova senha</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input [type]="novaSenhaVisivel() ? 'text' : 'password'" [(ngModel)]="novaSenha" placeholder=""/>
+          <button class="toggle-senha" (click)="novaSenhaVisivel.set(!novaSenhaVisivel())">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path *ngIf="!novaSenhaVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!novaSenhaVisivel()" cx="12" cy="12" r="3"/>
+              <path *ngIf="novaSenhaVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="novaSenhaVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-campo">
+        <label>Confirmar nova senha</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input [type]="confirmarSenhaVisivel() ? 'text' : 'password'" [(ngModel)]="confirmarSenha" placeholder=""/>
+          <button class="toggle-senha" (click)="confirmarSenhaVisivel.set(!confirmarSenhaVisivel())">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path *ngIf="!confirmarSenhaVisivel()" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="!confirmarSenhaVisivel()" cx="12" cy="12" r="3"/>
+              <path *ngIf="confirmarSenhaVisivel()" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line *ngIf="confirmarSenhaVisivel()" x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="form-erro" *ngIf="senhaErro">{{ senhaErro }}</p>
+      <p class="form-sucesso" *ngIf="senhaSucesso">✓ Senha atualizada com sucesso!</p>
+
+      <button class="btn-salvar" (click)="atualizarSenha()">Atualizar senha</button>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ AJUDA ══════════════ -->
+  <ng-container *ngIf="tela() === 'ajuda'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Perguntas Frequentes</h1>
+    </header>
+    <main class="config-content">
+      <p class="texto-intro">Encontre respostas rápidas para as dúvidas mais comuns sobre o nosso aplicativo.</p>
+      <div class="faq-lista">
+        <div class="faq-item" *ngFor="let faq of faqs; let i = index">
+          <button class="faq-pergunta" (click)="toggleFaq(i)" [class.aberto]="faqAberto() === i">
+            <span>{{ faq.pergunta }}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              [style.transform]="faqAberto() === i ? 'rotate(180deg)' : 'rotate(0deg)'"
+              style="transition: transform 0.2s; flex-shrink: 0;">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="faq-resposta" *ngIf="faqAberto() === i">
+            <p>{{ faq.resposta }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="ajuda-card">
+        <p class="ajuda-card-titulo">Ainda tem dúvidas?</p>
+        <p class="ajuda-card-texto">Entre em contato com nosso suporte através da opção "Fale conosco" nas configurações.</p>
+      </div>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ TERMOS DE USO ══════════════ -->
+  <ng-container *ngIf="tela() === 'termos'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Termos de Uso</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+      <p class="doc-data">Última atualização: 20 de março de 2026</p>
+      <p class="doc-intro">Bem-vindo ao nosso aplicativo de restaurante. Ao acessar ou utilizar nossos serviços, você concorda com os presentes Termos de Uso.</p>
+      <div class="doc-secao"><p class="doc-secao-titulo">1. Aceitação dos Termos</p><p class="doc-texto">Ao utilizar o aplicativo, o usuário declara estar de acordo com estes termos.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">2. Cadastro</p><p class="doc-texto">O usuário deve fornecer informações verdadeiras e atualizadas ao se cadastrar.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">3. Uso do Aplicativo</p><p class="doc-texto">O uso deve ser feito de forma responsável e de acordo com a legislação vigente.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">4. Pedidos e Pagamentos</p><p class="doc-texto">Os pedidos estão sujeitos à disponibilidade dos restaurantes e devem ser pagos conforme as opções disponíveis.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">5. Cancelamentos</p><p class="doc-texto">Pedidos podem ter regras específicas de cancelamento dependendo do restaurante.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">6. Responsabilidades</p><p class="doc-texto">O aplicativo não se responsabiliza por falhas externas ou informações incorretas fornecidas pelo usuário.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">7. Propriedade Intelectual</p><p class="doc-texto">Todo o conteúdo do aplicativo é protegido por direitos autorais.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">8. Alterações</p><p class="doc-texto">Os termos podem ser atualizados a qualquer momento.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">9. Contato</p><p class="doc-texto">Em caso de dúvidas, utilize o suporte do aplicativo.</p></div>
+      <p class="doc-rodape">BAIANAR - Restaurante de Culinária Baiana</p>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ POLÍTICA DE PRIVACIDADE ══════════════ -->
+  <ng-container *ngIf="tela() === 'privacidade'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="voltar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Política de Privacidade</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+      <p class="doc-data">Última atualização: 20 de março de 2026</p>
+      <p class="doc-intro">Nós valorizamos a sua privacidade. Esta Política de Privacidade descreve como coletamos, usamos e protegemos suas informações ao utilizar nosso aplicativo de restaurante.</p>
+      <div class="doc-secao"><p class="doc-secao-titulo">1. Informações coletadas</p><p class="doc-texto">Coletamos informações como nome, telefone, endereço de entrega e preferências de pedidos para melhorar sua experiência.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">2. Uso das informações</p><p class="doc-texto">As informações são utilizadas para processar pedidos, personalizar recomendações e melhorar nossos serviços.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">3. Compartilhamento de dados</p><p class="doc-texto">Não vendemos suas informações pessoais. Podemos compartilhar dados apenas com parceiros essenciais para a entrega dos pedidos.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">4. Segurança</p><p class="doc-texto">Adotamos medidas de segurança para proteger seus dados contra acesso não autorizado.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">5. Seus direitos</p><p class="doc-texto">Você pode acessar, corrigir ou excluir seus dados a qualquer momento através do aplicativo.</p></div>
+      <div class="doc-secao"><p class="doc-secao-titulo">6. Contato</p><p class="doc-texto">Em caso de dúvidas, entre em contato pelo suporte do aplicativo.</p></div>
+      <p class="doc-rodape">BAIANAR - Restaurante de Culinária Baiana</p>
+    </main>
+  </ng-container>
+
+  <!-- ══════════════ ADICIONAR CARTÃO ══════════════ -->
+  <ng-container *ngIf="tela() === 'adicionar-cartao'">
+    <header class="config-header">
+      <button class="btn-voltar" (click)="tela.set('pagamentos')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <h1 class="config-titulo">Adicionar cartão</h1>
+    </header>
+    <main class="config-content">
+      <div class="doc-divider"></div>
+
+      <!-- Cartão visual -->
+      <div class="cartao-visual" [class.debito]="cartaoTipo() === 'debito'">
+        <div class="cartao-topo">
+          <svg width="34" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+          <span class="cartao-tipo-label">{{ cartaoTipo() === 'credito' ? 'CRÉDITO' : 'DÉBITO' }}</span>
+        </div>
+
+        <p class="cartao-numero">{{ cartaoNumeroFormatado() }}</p>
+
+        <div class="cartao-rodape">
+          <div>
+            <span class="cartao-label">NOME NO CARTÃO</span>
+            <p class="cartao-valor">{{ cartaoNome ? cartaoNome.toUpperCase() : 'SEU NOME' }}</p>
+          </div>
+          <div>
+            <span class="cartao-label">VALIDADE</span>
+            <p class="cartao-valor">{{ cartaoValidade || 'MM/AA' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tipo de cartão -->
+      <div class="form-campo">
+        <label>Tipo de cartão</label>
+        <div class="tipo-cartao-toggle">
+          <button
+            class="tipo-btn"
+            [class.ativo]="cartaoTipo() === 'credito'"
+            (click)="selecionarTipoCartao('credito')"
+          >Crédito</button>
+          <button
+            class="tipo-btn"
+            [class.ativo]="cartaoTipo() === 'debito'"
+            (click)="selecionarTipoCartao('debito')"
+          >Débito</button>
+        </div>
+      </div>
+
+      <!-- Número do cartão -->
+      <div class="form-campo">
+        <label>Número do cartão</label>
+        <div class="campo-input">
+          <input type="text" inputmode="numeric" placeholder="0000 0000 0000 0000" maxlength="19" (input)="onCartaoNumeroInput($event)"/>
+        </div>
+      </div>
+
+      <!-- Nome no cartão -->
+      <div class="form-campo">
+        <label>Nome no cartão</label>
+        <div class="campo-input">
+          <input type="text" placeholder="Como está escrito no cartão" [(ngModel)]="cartaoNome"/>
+        </div>
+      </div>
+
+      <!-- Validade e CVV -->
+      <div class="form-row">
+        <div class="form-campo">
+          <label>Validade</label>
+          <div class="campo-input">
+            <input type="text" inputmode="numeric" placeholder="MM/AA" maxlength="5" (input)="onCartaoValidadeInput($event)"/>
+          </div>
+        </div>
+        <div class="form-campo">
+          <label>CVV</label>
+          <div class="campo-input">
+            <input type="text" inputmode="numeric" placeholder="123" maxlength="4" [(ngModel)]="cartaoCvv"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- CPF -->
+      <div class="form-campo">
+        <label>CPF (opcional)</label>
+        <div class="campo-input">
+          <input type="text" inputmode="numeric" placeholder="000.000.000-00" [(ngModel)]="cartaoCpf"/>
+        </div>
+      </div>
+
+      <p class="form-erro" *ngIf="cartaoErro">{{ cartaoErro }}</p>
+
+      <button class="btn-salvar" (click)="salvarCartao()">Salvar cartão</button>
+    </main>
+  </ng-container>
+
+</div>

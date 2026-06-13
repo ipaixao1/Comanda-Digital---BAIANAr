@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&family=Poppins:wght@300;400;600;700&display=swap');
+
+:host {
+  --bg:            #2d2b3d;
+  --surface:       #383650;
+  --gold:          #F29F05;
+  --gold-2:        #F28705;
+  --text-white:    #ffffff;
+  --text-muted:    #9b93b0;
+  --font-title:    'Cormorant Garamond', Georgia, serif;
+  --font-body:     'Poppins', sans-serif;
+  --radius-card:   14px;
+  --radius-btn:    50px;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.checkout-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text-white);
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+// ── Header ──
+.checkout-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px 12px;
+}
+
+.btn-voltar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(242, 135, 5, 0.15);
+  color: var(--gold-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s;
+  &:hover { filter: brightness(1.2); }
+}
+
+.checkout-titulo {
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 300;
+  font-style: normal;
+  color: var(--gold);
+  margin: 0;
+}
+
+// ── Content ──
+.checkout-content {
+  flex: 1;
+  padding: 0 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ── Seções ──
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.secao-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+}
+
+// ── Lista de opções (endereço / pagamento) ──
+.lista-opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opcao-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+
+  &.selecionado {
+    border-color: var(--gold);
+    background: #4a3526;
+  }
+}
+
+.opcao-icone {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4a3526;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--gold);
+
+  &--pix {
+    background: #1d4d3a;
+    color: #5cb88a;
+  }
+
+  &--add {
+    background: rgba(242, 135, 5, 0.15);
+    color: var(--gold-2);
+  }
+}
+
+.opcao-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.opcao-nome {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-white);
+  margin: 0 0 4px;
+}
+
+.opcao-detalhe {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.opcao-radio {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  &.ativo {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: #fff;
+  }
+}
+
+// ── Botão adicionar ──
+.btn-adicionar {
+  background: transparent;
+  border: 1.5px dashed var(--gold-2);
+  border-radius: var(--radius-card);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: rgba(242,135,5,0.06); }
+}
+
+.btn-adicionar-texto {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-2);
+  text-align: left;
+}
+
+// ── Observações ──
+.observacoes-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-card);
+  color: var(--text-white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 14px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  &:focus { border-color: var(--gold); }
+  &::placeholder { color: var(--text-muted); }
+}
+
+// ── Resumo ──
+.resumo-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.resumo-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0 0 12px;
+}
+
+.resumo-linha {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 400;
+  color: #D9A05B;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.resumo-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 10px 0;
+}
+
+.resumo-total {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 1;
+  margin-bottom: 0;
+  span:last-child { color: var(--gold); }
+}
+
+// ── Confirmar ──
+.btn-confirmar {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-btn);
+  border: none;
+  background: var(--gold-2);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(242,135,5,0.4);
+  transition: filter 0.15s;
+  &:hover { filter: brightness(1.1); }
+}
