@@ -1,0 +1,187 @@
+<div class="estoque-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Estoque</h1>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Produto
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-card--normal">
+      <div class="kpi-top">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <span class="kpi-label">Total de Itens</span>
+      </div>
+      <p class="kpi-value">{{ totalItens() }}</p>
+    </div>
+    <div class="kpi-card kpi-card--baixo">
+      <div class="kpi-top">
+        <div class="kpi-icon kpi-icon--warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <span class="kpi-label">Estoque Baixo</span>
+      </div>
+      <p class="kpi-value kpi-value--warn">{{ estoqueBaixo() }}</p>
+    </div>
+    <div class="kpi-card kpi-card--critico">
+      <div class="kpi-top">
+        <div class="kpi-icon kpi-icon--danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <span class="kpi-label">Estoque Crítico</span>
+      </div>
+      <p class="kpi-value kpi-value--danger">{{ estoqueCritico() }}</p>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-card">
+    <div class="table-head">
+      <span>Imagem</span><span>Nome do Produto</span><span>Categoria</span>
+      <span>Fornecedor</span><span>Qtd. Atual</span><span>Unidade</span>
+      <span>Nível Mínimo</span><span>Status</span><span>Última Atualização</span><span>Ações</span>
+    </div>
+
+    <div *ngFor="let p of produtos()" class="produto-row">
+      <div class="cell-img">
+        <div class="produto-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        </div>
+      </div>
+      <span class="cell cell--nome">{{ p.nome }}</span>
+      <span class="cell cell--cat">{{ p.categoria }}</span>
+      <span class="cell cell--forn">{{ p.fornecedor }}</span>
+      <span class="cell cell--center">{{ p.qtdAtual }}</span>
+      <span class="cell cell--center">{{ p.unidade }}</span>
+      <span class="cell cell--center">{{ p.nivelMinimo }}</span>
+      <span class="cell">
+        <span class="status-badge" [ngClass]="getStatusClass(p.status)">
+          <svg *ngIf="p.status==='Crítico'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="badge-icon"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {{ p.status }}
+        </span>
+      </span>
+      <span class="cell cell--data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="cal-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        {{ p.ultimaAtualizacao }}
+      </span>
+      <span class="cell cell--acoes">
+        <button class="btn-acao btn-editar" (click)="abrirModalEditar(p, $event)" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-acao btn-excluir" (click)="confirmarExclusao(p, $event)" title="Excluir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal Adicionar / Editar ─────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-scroll">
+
+      <h2 class="modal-title">{{ editando() ? 'Editar Produto' : 'Adicionar Produto' }}</h2>
+
+      <!-- Imagem (emoji) -->
+      <div class="field-group">
+        <label class="field-label">Imagem (emoji)</label>
+        <input type="text" class="field-input" [value]="mEmoji()"
+          (input)="onInput('emoji',$event)" />
+      </div>
+
+      <!-- Nome do Produto -->
+      <div class="field-group">
+        <label class="field-label">Nome do Produto</label>
+        <input type="text" class="field-input" [value]="mNome()"
+          (input)="onInput('nome',$event)" placeholder="Digite o nome do produto" />
+      </div>
+
+      <!-- Categoria -->
+      <div class="field-group">
+        <label class="field-label">Categoria</label>
+        <input type="text" class="field-input" [value]="mCategoria()"
+          (input)="onInput('categoria',$event)" placeholder="Ex: Frutos do Mar" />
+      </div>
+
+      <!-- Fornecedor -->
+      <div class="field-group">
+        <label class="field-label">Fornecedor</label>
+        <input type="text" class="field-input" [value]="mFornecedor()"
+          (input)="onInput('fornecedor',$event)" placeholder="Digite o nome do fornecedor" />
+      </div>
+
+      <!-- Quantidade + Unidade -->
+      <div class="modal-row">
+        <div class="field-group">
+          <label class="field-label">Quantidade Atual</label>
+          <input type="number" class="field-input" [value]="mQtd()"
+            (input)="onInput('qtd',$event)" min="0" step="0.5" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Unidade de Medida</label>
+          <select class="field-input field-select" (change)="onSelectUnidade($event)">
+            <option *ngFor="let u of unidades" [value]="u" [selected]="mUnidade()===u">{{ u }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Nível Mínimo + Preço -->
+      <div class="modal-row">
+        <div class="field-group">
+          <label class="field-label">Nível Mínimo de Estoque</label>
+          <input type="number" class="field-input" [value]="mMinimo()"
+            (input)="onInput('minimo',$event)" min="0" step="0.5" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Preço de Compra (R$)</label>
+          <input type="number" class="field-input" [value]="mPreco()"
+            (input)="onInput('preco',$event)" min="0" step="0.01" />
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div class="field-group">
+        <label class="field-label">Descrição (Opcional)</label>
+        <textarea class="field-input field-textarea" [value]="mDescricao()"
+          (input)="onInput('descricao',$event)" rows="4"
+          placeholder="Informações adicionais sobre o produto"></textarea>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-cancelar-lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn-salvar-lg"   (click)="salvar()"      [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">Salvar Produto</span>
+          <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Excluir ────────────────────────────────────────── -->
+<div class="exclusao-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
+  <div class="exclusao-card" (click)="$event.stopPropagation()">
+    <h2 class="exclusao-titulo">Excluir Produto</h2>
+    <p class="exclusao-texto">Tem certeza que deseja excluir este produto do estoque?</p>
+    <p class="exclusao-aviso">Essa ação removerá permanentemente o item do sistema.</p>
+    <div class="exclusao-btns">
+      <button class="exclusao-btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
+      <button class="exclusao-btn-excluir"  (click)="confirmarExclusaoFinal()">Excluir Produto</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,157 @@
+<div class="detalhe-page" *ngIf="entrega">
+
+  <header class="detalhe-header">
+    <button class="btn-voltar" (click)="voltar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <div class="header-center">
+      <h1 class="detalhe-titulo">{{ entrega.numeroPedido }}</h1>
+      <span class="detalhe-status" [class]="entrega.status">
+        {{ entrega.status === 'pendente' ? 'Pendente' : entrega.status === 'a_caminho' ? 'A caminho' : 'Entregue' }}
+      </span>
+    </div>
+    <span class="detalhe-horario">{{ entrega.horario }}</span>
+  </header>
+
+  <main class="detalhe-content">
+
+    <!-- Cliente -->
+    <div class="info-card">
+      <p class="card-titulo">Cliente</p>
+      <div class="info-linha">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>{{ entrega.cliente }}</span>
+      </div>
+      <a class="info-linha link" [href]="'tel:' + entrega.telefone">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/>
+        </svg>
+        <span>{{ entrega.telefone }}</span>
+      </a>
+    </div>
+
+    <!-- Endereço -->
+    <div class="info-card">
+      <p class="card-titulo">Endereço de entrega</p>
+      <div class="info-linha">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <div class="endereco-bloco">
+          <span>{{ entrega.endereco }}</span>
+          <span class="complemento" *ngIf="entrega.complemento">{{ entrega.complemento }}</span>
+          <span class="bairro">{{ entrega.bairro }} — {{ entrega.cidade }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa ilustrativo -->
+    <div class="mapa-card">
+      <div class="mapa-titulo-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>Rota de entrega</span>
+      </div>
+
+      <div class="mapa-ilustrativo">
+        <svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" class="mapa-svg">
+          <rect width="360" height="180" fill="#22202f"/>
+          <path d="M0 40 H360" stroke="#3a3850" stroke-width="6"/>
+          <path d="M0 110 H360" stroke="#3a3850" stroke-width="6"/>
+          <path d="M60 0 V180" stroke="#3a3850" stroke-width="6"/>
+          <path d="M210 0 V180" stroke="#3a3850" stroke-width="6"/>
+          <path d="M300 0 V180" stroke="#3a3850" stroke-width="6"/>
+          <path d="M60 40 C 100 40, 120 110, 180 110 S 260 80, 300 95"
+                fill="none" stroke="#F28705" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/>
+          <g transform="translate(60,40)">
+            <circle r="14" fill="#383650" stroke="#F28705" stroke-width="1.5"/>
+            <text x="0" y="5" font-size="14" text-anchor="middle">🍽️</text>
+          </g>
+          <g transform="translate(160,110)">
+            <circle r="16" fill="#F28705" opacity="0.18">
+              <animate attributeName="r" values="14;20;14" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.25;0.05;0.25" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="14" fill="#F28705" stroke="#fff" stroke-width="1.5"/>
+            <text x="0" y="5" font-size="14" text-anchor="middle">🛵</text>
+          </g>
+          <g transform="translate(300,95)">
+            <circle r="14" fill="#383650" stroke="#4ade80" stroke-width="1.5"/>
+            <text x="0" y="5" font-size="14" text-anchor="middle">📍</text>
+          </g>
+        </svg>
+
+        <div class="mapa-legenda">
+          <span class="legenda-item"><span class="legenda-dot restaurante"></span>Restaurante</span>
+          <span class="legenda-item"><span class="legenda-dot motoboy"></span>Você</span>
+          <span class="legenda-item"><span class="legenda-dot destino"></span>Destino</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itens -->
+    <div class="info-card">
+      <p class="card-titulo">Itens do pedido</p>
+      <div class="item-linha" *ngFor="let item of entrega.itens">
+        <span class="item-qtd">{{ item.quantidade }}x</span>
+        <span class="item-nome">{{ item.nome }}</span>
+      </div>
+      <div class="divider"></div>
+      <div class="total-linha">
+        <span>Total</span>
+        <span class="total-valor">{{ formatarPreco(entrega.total) }}</span>
+      </div>
+      <div class="pagamento-linha">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        <span>{{ entrega.pagamento }}</span>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="acoes" *ngIf="entrega.status !== 'entregue'">
+      <button
+        class="btn-acao secundario"
+        *ngIf="entrega.status === 'pendente'"
+        (click)="iniciarEntrega()"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="5.5" cy="17.5" r="3.5"/>
+          <circle cx="18.5" cy="17.5" r="3.5"/>
+          <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>
+        </svg>
+        Saí para entrega
+      </button>
+
+      <button class="btn-acao principal" (click)="confirmarEntrega()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Confirmar entrega
+      </button>
+    </div>
+
+    <!-- Entregue -->
+    <div class="entregue-card" *ngIf="entrega.status === 'entregue'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <p>Entrega confirmada!</p>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Entrega não encontrada -->
+<div class="nao-encontrado" *ngIf="!entrega">
+  <p>Entrega não encontrada.</p>
+  <button (click)="voltar()">Voltar</button>
+</div>

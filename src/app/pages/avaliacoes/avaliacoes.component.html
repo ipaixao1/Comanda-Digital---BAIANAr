@@ -1,0 +1,95 @@
+<div class="avaliacoes-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+    <h1 class="page-title">Avaliações</h1>
+    <p class="page-subtitle">Feedback dos clientes sobre nossos pratos</p>
+  </div>
+
+  <!-- Resumo -->
+  <div class="resumo-card">
+    <div class="resumo-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <div>
+        <p class="resumo-valor">{{ totalAvaliacoes() }}</p>
+        <p class="resumo-label">Total de avaliações</p>
+      </div>
+    </div>
+    <div class="resumo-divider"></div>
+    <div class="resumo-item">
+      <svg viewBox="0 0 24 24" fill="#F29F05" stroke="#F29F05" stroke-width="1">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+      <div>
+        <p class="resumo-valor">{{ mediaGeral() }}</p>
+        <p class="resumo-label">Média geral</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de avaliações -->
+  <div class="avaliacoes-lista">
+    <div *ngFor="let av of avaliacoes()" class="av-card">
+
+      <!-- Cabeçalho da avaliação -->
+      <div class="av-header">
+        <span class="av-cliente">{{ av.cliente }}</span>
+        <div class="av-estrelas">
+          <svg *ngFor="let s of getStars(av.nota); let i = index"
+            viewBox="0 0 24 24"
+            [attr.fill]="s ? '#F29F05' : 'none'"
+            [attr.stroke]="s ? '#F29F05' : 'rgba(255,255,255,0.25)'"
+            stroke-width="1.5">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Prato e data -->
+      <p class="av-prato">{{ av.prato }}</p>
+      <p class="av-data">{{ av.data }}</p>
+
+      <!-- Comentário -->
+      <p class="av-comentario">{{ av.comentario }}</p>
+
+      <!-- Resposta existente -->
+      <div class="av-resposta" *ngIf="av.resposta && !av.respondendoAgora">
+        <p class="resposta-label">Resposta do BAIANAr:</p>
+        <p class="resposta-texto">{{ av.resposta }}</p>
+      </div>
+
+      <!-- Formulário de resposta -->
+      <div class="av-form-resposta" *ngIf="av.respondendoAgora">
+        <button class="btn-cancelar" (click)="cancelarResposta(av.id)">Cancelar</button>
+        <textarea
+          class="resposta-input"
+          [value]="av.textoResposta || ''"
+          (input)="onTextoResposta(av.id, $event)"
+          placeholder="Digite sua resposta ao cliente..."
+          rows="4"
+        ></textarea>
+        <button class="btn-enviar" (click)="enviarResposta(av.id)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Enviar resposta
+        </button>
+      </div>
+
+      <!-- Botão responder (só se não tem resposta e não está respondendo) -->
+      <button
+        class="btn-responder"
+        *ngIf="!av.resposta && !av.respondendoAgora"
+        (click)="abrirResposta(av.id)"
+      >
+        Responder avaliação
+      </button>
+
+    </div>
+  </div>
+
+</div>

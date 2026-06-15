@@ -1,0 +1,90 @@
+<div class="carrinho-page">
+
+  <header class="carrinho-header">
+    <button class="btn-voltar" (click)="voltar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="carrinho-titulo">Carrinho</h1>
+  </header>
+
+  <main class="carrinho-content">
+
+    <!-- Vazio -->
+    <div class="estado-vazio" *ngIf="carrinho.itens().length === 0">
+      <svg class="vazio-icon" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <p class="vazio-texto">Seu carrinho está vazio</p>
+      <button class="btn-explorar" routerLink="/mobile/cardapio">Ver Cardápio</button>
+    </div>
+
+    <!-- Itens -->
+    <div class="lista-itens" *ngIf="carrinho.itens().length > 0">
+      <div class="item-card" *ngFor="let item of carrinho.itens()">
+        <div class="item-thumb" *ngIf="item.imagem">
+          <img [src]="item.imagem" [alt]="item.nome"/>
+        </div>
+        <div class="item-thumb sem-img" *ngIf="!item.imagem">🍽️</div>
+
+        <div class="item-info">
+          <p class="item-nome">{{ item.nome }}</p>
+          <p class="item-preco-unit">{{ formatarPreco(item.preco) }}</p>
+
+          <div class="item-rodape">
+            <div class="quantidade-control">
+              <button class="qty-btn" (click)="carrinho.remover(item.id)">−</button>
+              <span class="qty-valor">{{ item.quantidade }}</span>
+              <button class="qty-btn" (click)="carrinho.adicionar(item)">+</button>
+            </div>
+            <span class="item-preco-total">{{ formatarPreco(item.preco * item.quantidade) }}</span>
+            <button class="btn-remover" (click)="carrinho.removerTudo(item.id)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div class="observacoes-card">
+        <p class="observacoes-titulo">Observações do pedido</p>
+        <textarea
+          class="observacoes-input"
+          placeholder="Ex: sem cebola, ponto da carne, etc."
+          [(ngModel)]="carrinho.observacoes"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Resumo -->
+      <div class="resumo-card">
+        <p class="resumo-titulo">Resumo do pedido</p>
+        <div class="resumo-linha">
+          <span>Subtotal</span>
+          <span>{{ formatarPreco(carrinho.subtotal()) }}</span>
+        </div>
+        <div class="resumo-linha">
+          <span>Taxa de entrega</span>
+          <span>{{ formatarPreco(carrinho.taxaEntrega) }}</span>
+        </div>
+        <div class="resumo-divider"></div>
+        <div class="resumo-linha resumo-total">
+          <span>Total</span>
+          <span>{{ formatarPreco(carrinho.total()) }}</span>
+        </div>
+      </div>
+
+      <button class="btn-finalizar" (click)="finalizarPedido()">Continuar para pagamento</button>
+    </div>
+
+  </main>
+
+</div>

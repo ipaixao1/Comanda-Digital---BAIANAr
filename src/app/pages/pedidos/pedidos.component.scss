@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:      #302C40;
+$color-card:    #3A3550;
+$color-accent:  #F29F05;
+$color-accent2: #F28705;
+$color-brown:   #734002;
+$color-white:   #FFFFFF;
+$font-title:    'Cormorant Garamond', serif;
+$font-body:     'Poppins', sans-serif;
+
+@mixin gold-border($o: 0.3) { border: 1.5px solid rgba($color-accent, $o); }
+@mixin gold-hover {
+  border-color: $color-accent;
+  box-shadow: 0 0 0 1px rgba($color-accent, 0.18), 0 8px 32px rgba($color-accent, 0.12);
+}
+@mixin poppins($size: 13px) {
+  font-family: $font-body; font-style: italic; font-weight: 200; font-size: $size;
+}
+
+// ── Página ────────────────────────────────────────────────────
+.pedidos-page {
+  display: flex; flex-direction: column; gap: 28px; font-family: $font-body;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.page-header { margin-bottom: 4px; }
+
+.greeting   { @include poppins(18px); color: $color-accent; margin-bottom: 4px; }
+.page-title {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 46px; color: $color-white; line-height: 1.1; margin-bottom: 6px;
+}
+.page-subtitle { @include poppins(13px); color: rgba($color-white, 0.5); }
+
+// ── KPI Grid ──────────────────────────────────────────────────
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+  @media (max-width: 1000px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: $color-card; border-radius: 14px; padding: 24px 22px 20px;
+  display: flex; flex-direction: column; gap: 6px;
+  @include gold-border(0.3);
+  transition: border-color .22s, box-shadow .22s, transform .18s;
+
+  &:hover { @include gold-hover; transform: translateY(-3px); }
+}
+
+.kpi-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+  svg { width: 22px; height: 22px; }
+
+  &--yellow { background: rgba($color-brown, 0.6); svg { stroke: $color-accent; } }
+  &--orange { background: rgba(#F28705, 0.15);     svg { stroke: #F28705; } }
+  &--green  { background: rgba(#2ECC71, 0.15);     svg { stroke: #2ECC71; } }
+  &--red    { background: rgba(#E74C3C, 0.15);     svg { stroke: #E74C3C; } }
+}
+
+.kpi-value {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 42px; color: $color-white; line-height: 1.1;
+  transition: color .22s;
+  .kpi-card:hover & { color: $color-accent; }
+}
+.kpi-label { @include poppins(12.5px); color: rgba($color-white, 0.55); }
+
+// ── Chart card ────────────────────────────────────────────────
+.chart-card {
+  background: $color-card; border-radius: 14px; padding: 24px 22px 18px;
+  @include gold-border(0.3); transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.chart-title {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 22px; color: $color-white; margin-bottom: 20px;
+}
+
+.chart-wrapper { height: 260px; position: relative; canvas { width: 100% !important; height: 100% !important; } }
+
+// ── Table card ────────────────────────────────────────────────
+.table-card {
+  background: $color-card; border-radius: 14px; padding: 24px 22px;
+  @include gold-border(0.3); transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+// Cabeçalho da tabela
+.table-head {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px 1fr 1fr 60px;
+  gap: 8px;
+  padding: 0 16px 14px;
+  border-bottom: 1px solid rgba($color-accent, 0.15);
+  margin-bottom: 4px;
+
+  span {
+    font-family: $font-title; font-style: italic; font-weight: 300;
+    font-size: 16px; color: $color-accent; white-space: nowrap;
+  }
+}
+
+// Grupo pedido (linha + detalhe)
+.pedido-group { border-bottom: 1px solid rgba($color-accent, 0.07); }
+.pedido-group:last-child { border-bottom: none; }
+
+// Linha resumo
+.pedido-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px 1fr 1fr 60px;
+  gap: 8px;
+  padding: 16px;
+  align-items: center;
+  cursor: pointer;
+  transition: background .18s;
+  border-radius: 8px;
+
+  &:hover { background: rgba($color-accent, 0.04); }
+  &--open { background: rgba($color-brown, 0.2); }
+}
+
+.cell {
+  @include poppins(13.5px); color: $color-white;
+
+  &--numero { color: rgba($color-white, 0.9); }
+  &--data   { color: rgba($color-white, 0.75); }
+  &--qtd    { color: rgba($color-white, 0.85); }
+  &--acoes  { display: flex; justify-content: center; }
+}
+
+// ── Status badges ─────────────────────────────────────────────
+.status-badge {
+  display: inline-block; padding: 5px 14px; border-radius: 20px;
+  @include poppins(12px); white-space: nowrap;
+  border: 1.5px solid transparent;
+
+  &.badge--aguardando { color: #F28705; border-color: #F28705; background: rgba(#F28705, 0.1); }
+  &.badge--preparo    { color: $color-accent; border-color: $color-accent; background: rgba($color-accent, 0.1); }
+  &.badge--pronto     { color: #2ECC71; border-color: #2ECC71; background: rgba(#2ECC71, 0.1); }
+  &.badge--finalizado { color: #3AB4D0; border-color: #3AB4D0; background: rgba(#3AB4D0, 0.1); }
+  &.badge--cancelado  { color: #E74C3C; border-color: #E74C3C; background: rgba(#E74C3C, 0.1); }
+  &.badge--aberta     { color: #2ECC71; border-color: #2ECC71; background: rgba(#2ECC71, 0.1); }
+  &.badge--fechada    { color: rgba($color-white, 0.4); border-color: rgba($color-white, 0.25); background: transparent; }
+}
+
+// ── Chevron ───────────────────────────────────────────────────
+.chevron {
+  width: 20px; height: 20px; stroke: rgba($color-white, 0.5);
+  transition: transform .25s cubic-bezier(.4,0,.2,1), stroke .2s;
+  &--up { transform: rotate(180deg); stroke: $color-accent; }
+}
+
+// ── Detalhe expandido ─────────────────────────────────────────
+.detalhe-wrap {
+  padding: 0 16px 20px;
+  animation: slide-down .22s ease;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.detalhe-card {
+  background: rgba($color-bg, 0.55);
+  border-radius: 10px;
+  padding: 22px 24px;
+  @include gold-border(0.2);
+}
+
+.detalhe-titulo {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 20px; color: $color-accent; margin-bottom: 6px;
+}
+
+.detalhe-subtitulo { @include poppins(13px); color: rgba($color-white, 0.55); margin-bottom: 16px; }
+
+// Lista de itens
+.itens-lista { display: flex; flex-direction: column; gap: 10px; }
+
+.item-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba($color-card, 0.6); border-radius: 8px; padding: 12px 16px;
+  @include gold-border(0.12);
+}
+
+.item-left { display: flex; align-items: flex-start; gap: 12px; }
+
+.item-qtd {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 18px; color: $color-accent; flex-shrink: 0; padding-top: 1px;
+}
+
+.item-info { display: flex; flex-direction: column; gap: 2px; }
+
+.item-nome { @include poppins(14px); color: $color-white; }
+.item-obs  { @include poppins(11.5px); color: rgba($color-white, 0.45); }
+
+// Item badges
+.item-badge {
+  @include poppins(12px); padding: 5px 14px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0; border: 1.5px solid transparent;
+
+  &.item-badge--aguardando { color: #F28705;       border-color: #F28705;       background: rgba(#F28705, 0.1); }
+  &.item-badge--preparo    { color: $color-accent; border-color: $color-accent; background: rgba($color-accent, 0.1); }
+  &.item-badge--pronto     { color: #2ECC71;       border-color: #2ECC71;       background: rgba(#2ECC71, 0.1); }
+  &.item-badge--entregue   { color: #3AB4D0;       border-color: #3AB4D0;       background: rgba(#3AB4D0, 0.1); }
+}
+
+// Footer do detalhe
+.detalhe-footer {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 20px;
+}
+
+.valor-label { @include poppins(12px); color: rgba($color-white, 0.45); }
+.valor-total {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 28px; color: $color-accent;
+}

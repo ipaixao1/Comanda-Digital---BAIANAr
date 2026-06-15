@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:      #302C40;
+$color-card:    #3A3550;
+$color-accent:  #F29F05;
+$color-accent2: #F28705;
+$color-brown:   #734002;
+$color-white:   #FFFFFF;
+$font-title:    'Cormorant Garamond', serif;
+$font-body:     'Poppins', sans-serif;
+
+@mixin gold-border($o: 0.3) { border: 1.5px solid rgba($color-accent, $o); }
+@mixin gold-hover { border-color: $color-accent; box-shadow: 0 0 0 1px rgba($color-accent,.15), 0 8px 32px rgba($color-accent,.1); }
+@mixin poppins($s: 13px) { font-family: $font-body; font-style: italic; font-weight: 200; font-size: $s; }
+
+// ── Página ────────────────────────────────────────────────────
+.avaliacoes-page { display: flex; flex-direction: column; gap: 24px; width: 100%; }
+
+// ── Header ────────────────────────────────────────────────────
+.page-header  { margin-bottom: 4px; }
+.greeting     { @include poppins(18px); color: $color-accent; margin-bottom: 4px; }
+.page-title   { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 48px; color: $color-white; line-height: 1.1; margin-bottom: 6px; }
+.page-subtitle{ @include poppins(14px); color: rgba($color-white,.5); }
+
+// ── Resumo ────────────────────────────────────────────────────
+.resumo-card {
+  background: $color-card; border-radius: 14px;
+  padding: 20px 32px; display: flex; align-items: center; gap: 40px;
+  @include gold-border(.25);
+  transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.resumo-item {
+  display: flex; align-items: center; gap: 14px;
+  svg { width: 32px; height: 32px; flex-shrink: 0; }
+}
+
+.resumo-valor {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 36px; color: $color-white; line-height: 1;
+}
+.resumo-label { @include poppins(13px); color: rgba($color-white,.55); margin-top: 2px; }
+
+.resumo-divider {
+  width: 1px; height: 48px; background: rgba($color-accent,.2); flex-shrink: 0;
+}
+
+// ── Lista ─────────────────────────────────────────────────────
+.avaliacoes-lista { display: flex; flex-direction: column; gap: 16px; }
+
+// ── Card de avaliação ─────────────────────────────────────────
+.av-card {
+  background: $color-card; border-radius: 14px;
+  padding: 24px 28px;
+  @include gold-border(.2);
+  transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.av-header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 6px;
+}
+
+.av-cliente {
+  font-family: $font-title; font-style: italic; font-weight: 300;
+  font-size: 22px; color: $color-white;
+}
+
+.av-estrelas {
+  display: flex; gap: 3px;
+  svg { width: 18px; height: 18px; }
+}
+
+.av-prato {
+  @include poppins(13.5px); color: $color-accent;
+  margin-bottom: 2px;
+}
+
+.av-data {
+  @include poppins(12px); color: rgba($color-white,.4);
+  margin-bottom: 14px;
+}
+
+.av-comentario {
+  @include poppins(14px); color: rgba($color-white,.8);
+  line-height: 1.6; margin-bottom: 16px;
+}
+
+// ── Resposta existente ────────────────────────────────────────
+.av-resposta {
+  background: rgba($color-brown,.45);
+  border: 1.5px solid rgba($color-accent, .25);
+  border-left: 3px solid $color-accent;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 4px;
+  animation: slide-in .2s ease;
+}
+
+@keyframes slide-in { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+
+.resposta-label {
+  @include poppins(12px); color: $color-accent; margin-bottom: 6px;
+}
+
+.resposta-texto {
+  @include poppins(13.5px); color: rgba($color-white,.75);
+  line-height: 1.6; font-style: italic;
+}
+
+// ── Botão Responder ───────────────────────────────────────────
+.btn-responder {
+  background: none;
+  border: 1.5px solid rgba($color-accent,.5);
+  border-radius: 8px;
+  padding: 9px 20px;
+  @include poppins(13px); color: $color-accent;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  &:hover { background: rgba($color-accent,.1); border-color: $color-accent; }
+}
+
+// ── Formulário de resposta ────────────────────────────────────
+.av-form-resposta {
+  display: flex; flex-direction: column; gap: 12px;
+  animation: slide-in .2s ease;
+}
+
+.btn-cancelar {
+  align-self: flex-start;
+  background: none; border: 1.5px solid rgba($color-accent,.45);
+  border-radius: 8px; padding: 8px 18px;
+  @include poppins(13px); color: $color-accent; cursor: pointer;
+  transition: background .2s;
+  &:hover { background: rgba($color-accent,.1); }
+}
+
+.resposta-input {
+  width: 100%; background: rgba($color-bg,.7);
+  border: 1.5px solid rgba($color-accent,.3); border-radius: 8px;
+  padding: 14px 16px; @include poppins(13.5px); color: $color-white;
+  outline: none; resize: vertical; min-height: 100px; line-height: 1.6;
+  transition: border-color .2s;
+  &::placeholder { color: rgba($color-white,.25); }
+  &:focus { border-color: $color-accent; }
+}
+
+.btn-enviar {
+  align-self: flex-start;
+  display: flex; align-items: center; gap: 8px;
+  background: $color-accent; border: none; border-radius: 8px;
+  padding: 10px 22px; @include poppins(13.5px); color: $color-white;
+  cursor: pointer; transition: background .2s, transform .15s;
+  svg { width: 15px; height: 15px; }
+  &:hover { background: $color-accent2; transform: translateY(-1px); }
+}

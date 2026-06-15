@@ -1,0 +1,78 @@
+<div class="status-page">
+
+  <header class="status-header">
+    <button class="btn-voltar" (click)="voltar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </button>
+    <h1 class="status-titulo">Status do Pedido</h1>
+  </header>
+
+  <main class="status-content">
+
+    <!-- Número do pedido -->
+    <div class="numero-card">
+      <p class="numero-label">Número do Pedido</p>
+      <p class="numero-valor">#{{ numeroPedido }}</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-card">
+      <div class="timeline-item" *ngFor="let etapa of etapas; let i = index" [class.ultima]="i === etapas.length - 1">
+
+        <div class="timeline-marcador">
+          <div class="timeline-icone" [class.concluido]="etapa.status === 'concluido'" [class.atual]="etapa.status === 'atual'">
+            <svg *ngIf="etapa.icone === 'check'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <svg *ngIf="etapa.icone === 'chef'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/>
+              <line x1="6" y1="17" x2="18" y2="17"/>
+            </svg>
+            <svg *ngIf="etapa.icone === 'box'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <svg *ngIf="etapa.icone === 'bike'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="5.5" cy="17.5" r="3.5"/>
+              <circle cx="18.5" cy="17.5" r="3.5"/>
+              <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>
+            </svg>
+          </div>
+          <div class="timeline-linha" [class.concluida]="etapa.status === 'concluido'" *ngIf="i !== etapas.length - 1"></div>
+        </div>
+
+        <div class="timeline-info">
+          <p class="timeline-titulo" [class.atual]="etapa.status === 'atual'">{{ etapa.titulo }}</p>
+          <p class="timeline-subtitulo" *ngIf="etapa.status === 'atual'">Em andamento...</p>
+        </div>
+
+        <div class="timeline-check" *ngIf="etapa.status === 'concluido'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tempo estimado -->
+    <div class="tempo-card">
+      <div class="tempo-icone">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="tempo-info">
+        <p class="tempo-label">Tempo estimado</p>
+        <p class="tempo-valor">{{ tempoEstimado }}</p>
+      </div>
+    </div>
+
+    <p class="aviso-texto">Você será notificado quando o pedido estiver pronto.</p>
+
+  </main>
+
+</div>

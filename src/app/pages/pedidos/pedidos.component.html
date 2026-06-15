@@ -1,0 +1,144 @@
+<div class="pedidos-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+    <h1 class="page-title">Gerenciamento de Pedidos</h1>
+    <p class="page-subtitle">Acompanhe e gerencie os pedidos do restaurante em tempo real</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--yellow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.96-1.62L23 6H6"/>
+        </svg>
+      </div>
+      <p class="kpi-value">{{ totalSemana() }}</p>
+      <p class="kpi-label">Total de pedidos da semana</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <p class="kpi-value">{{ emPreparo() }}</p>
+      <p class="kpi-label">Pedidos em preparo</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <p class="kpi-value">{{ finalizados() }}</p>
+      <p class="kpi-label">Pedidos finalizados</p>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <p class="kpi-value">{{ cancelados() }}</p>
+      <p class="kpi-label">Pedidos cancelados</p>
+    </div>
+
+  </div>
+
+  <!-- Gráfico -->
+  <div class="chart-card">
+    <h2 class="chart-title">Quantidade de Pedidos por Dia da Semana</h2>
+    <div class="chart-wrapper">
+      <canvas #chartDia></canvas>
+    </div>
+  </div>
+
+  <!-- Tabela de pedidos -->
+  <div class="table-card">
+    <h2 class="chart-title">Pedidos Realizados</h2>
+
+    <!-- Cabeçalho -->
+    <div class="table-head">
+      <span>Nº Pedido</span>
+      <span>Data e Hora</span>
+      <span>Qtd. Itens</span>
+      <span>Status Preparo</span>
+      <span>Status Comanda</span>
+      <span>Ações</span>
+    </div>
+
+    <!-- Linhas -->
+    <div *ngFor="let p of pedidos()" class="pedido-group">
+
+      <!-- Linha resumo -->
+      <div
+        class="pedido-row"
+        [class.pedido-row--open]="pedidoAberto() === p.numero"
+        (click)="togglePedido(p.numero)"
+      >
+        <span class="cell cell--numero">#{{ p.numero }}</span>
+        <span class="cell cell--data">{{ formatDataHora(p.dataHora) }}</span>
+        <span class="cell cell--qtd">{{ p.qtdItens }}</span>
+        <span class="cell cell--status">
+          <span class="status-badge" [ngClass]="getPreparoClass(p.statusPreparo)">
+            {{ p.statusPreparo }}
+          </span>
+        </span>
+        <span class="cell cell--comanda">
+          <span class="status-badge" [ngClass]="getComandaClass(p.statusComanda)">
+            {{ p.statusComanda }}
+          </span>
+        </span>
+        <span class="cell cell--acoes">
+          <svg class="chevron" [class.chevron--up]="pedidoAberto() === p.numero"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+      </div>
+
+      <!-- Detalhe expandido -->
+      <div class="detalhe-wrap" *ngIf="pedidoAberto() === p.numero">
+        <div class="detalhe-card">
+
+          <p class="detalhe-titulo">Detalhes do Pedido #{{ p.numero }}</p>
+          <p class="detalhe-subtitulo">Itens do Pedido:</p>
+
+          <div class="itens-lista">
+            <div *ngFor="let item of p.itens" class="item-row">
+              <div class="item-left">
+                <span class="item-qtd">{{ item.quantidade }}x</span>
+                <div class="item-info">
+                  <span class="item-nome">{{ item.nome }}</span>
+                  <span *ngIf="item.obs" class="item-obs">Obs: {{ item.obs }}</span>
+                </div>
+              </div>
+              <span class="item-badge" [ngClass]="getItemClass(item.status)">
+                {{ item.status }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detalhe-footer">
+            <span class="valor-label">Valor Total</span>
+            <span class="valor-total">R$ {{ formatValor(p.valorTotal) }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=Poppins:wght@300;400;600;700&display=swap');
+
+:host {
+  --bg:         #2d2b3d;
+  --surface:    #383650;
+  --gold:       #F29F05;
+  --gold-2:     #F28705;
+  --text-white: #ffffff;
+  --text-muted: #9b93b0;
+  --green:      #4ade80;
+  --font-title: 'Cormorant Garamond', Georgia, serif;
+  --font-body:  'Poppins', sans-serif;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-body);
+}
+
+.entregas-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text-white);
+}
+
+// ── Header ──
+.entregas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 16px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.header-info {}
+
+.header-titulo {
+  font-family: var(--font-title);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0 0 4px;
+}
+
+.header-subtitulo {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.btn-sair {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,80,80,0.12);
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: rgba(255,80,80,0.22); }
+}
+
+// ── Content ──
+.entregas-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Resumo ──
+.resumo-row {
+  display: flex;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+
+.resumo-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 8px;
+  gap: 4px;
+}
+
+.resumo-valor {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 0;
+
+  &.entregues { color: var(--green); }
+}
+
+.resumo-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.resumo-divider {
+  width: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 10px 0;
+}
+
+// ── Lista ──
+.lista-entregas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entrega-card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 14px;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover { border-color: rgba(242,135,5,0.4); }
+
+  &.a-caminho { border-color: rgba(242,135,5,0.4); }
+  &.entregue  { border-color: rgba(74,222,128,0.3); opacity: 0.7; }
+}
+
+.entrega-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.entrega-numero-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entrega-numero {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-white);
+}
+
+.entrega-horario {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+}
+
+.entrega-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 50px;
+
+  &.pendente {
+    background: rgba(242,135,5,0.15);
+    color: var(--gold-2);
+  }
+  &.a_caminho {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+  }
+  &.entregue {
+    background: rgba(74,222,128,0.15);
+    color: var(--green);
+  }
+}
+
+.entrega-cliente, .entrega-endereco {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+
+  svg { stroke: var(--text-muted); flex-shrink: 0; }
+}
+
+.entrega-rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.entrega-itens {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+}
+
+.entrega-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold-2);
+}
+
+.chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  stroke: var(--text-muted);
+}
+
+// ── Vazio ──
+.estado-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+
+  svg { opacity: 0.3; stroke: var(--text-muted); }
+
+  p {
+    font-size: 14px;
+    font-weight: 300;
+    margin: 0;
+  }
+}

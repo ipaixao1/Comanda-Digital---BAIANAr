@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=Poppins:wght@300;400;600;700&display=swap');
+
+:host {
+  --bg:            #2d2b3d;
+  --surface:       #383650;
+  --gold:          #F29F05;
+  --gold-2:        #F28705;
+  --text-white:    #ffffff;
+  --text-muted:    #9b93b0;
+  --border:        rgba(255,255,255,0.08);
+  --font-title:    'Cormorant Garamond', Georgia, serif;
+  --font-body:     'Poppins', sans-serif;
+  --radius-card:   16px;
+  --footer-h:      140px;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+.detalhe-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text-white);
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+// ── Imagem ──
+.imagem-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  flex-shrink: 0;
+  padding: 16px 16px 0;
+}
+
+.produto-imagem {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 16px;
+}
+
+.sem-imagem {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #4a3820, #383650);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  border-radius: 16px;
+}
+
+.btn-voltar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gold-2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter 0.15s;
+
+  &:hover { filter: brightness(1.1); }
+}
+
+.btn-favorito {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(30,28,48,0.65);
+  color: rgba(255,255,255,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &.ativo {
+    background: var(--gold);
+    color: #fff;
+  }
+}
+
+// ── Conteúdo ──
+.conteudo {
+  flex: 1;
+  padding: 16px 16px calc(var(--footer-h) + 16px);
+}
+
+.info-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px 18px;
+}
+
+// ── Nome ──
+.produto-nome {
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 300;
+  font-style: normal;
+  color: var(--gold);
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+
+// ── Avaliação ──
+.avaliacao-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.estrelas {
+  display: flex;
+  gap: 2px;
+}
+
+.estrela {
+  font-size: 16px;
+  color: var(--gold);
+
+  &.vazia { opacity: 0.3; }
+}
+
+.avaliacao-num {
+  font-size: 14px;
+  font-weight: 600;
+  color: (#D9A05B);
+}
+
+// ── Divisor ──
+.divisor {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+// ── Preço ──
+.preco-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preco-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: (#D9A05B);
+}
+
+.preco-valor {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: (#F28705);
+}
+
+// ── Seções ──
+.secao { margin-bottom: 16px; }
+
+.secao-titulo {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-white);
+  margin: 0 0 8px;
+}
+
+.secao-texto {
+  font-size: 13px;
+  font-weight: 400;
+  font-style: normal;
+  color: (#D9A05B);
+  opacity: 0.75;
+  line-height: 1.6;
+  margin: 0;
+}
+
+// ── Ingredientes ──
+.ingredientes-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ingrediente-tag {
+  font-size: 12px;
+  font-weight: 400;
+  font-style: normal;
+  color: (#D9A05B);
+  opacity: 0.75;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.05);
+}
+
+// ── Footer ──
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--bg);
+  padding: 16px 16px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.quantidade-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.quantidade-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-white);
+}
+
+.quantidade-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  overflow: hidden;
+  padding: 0 4px;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:active { background: rgba(255,255,255,0.08); }
+}
+
+.qty-valor {
+  min-width: 28px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-white);
+}
+
+.adicionar-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 50px;
+  border: none;
+  background: var(--gold-2);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(242,135,5,0.4);
+  transition: filter 0.15s, transform 0.15s;
+
+  &:hover  { filter: brightness(1.1); }
+  &:active { transform: scale(0.98); }
+}
+
+// ── Não encontrado ──
+.nao-encontrado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  gap: 16px;
+  color: var(--text-muted);
+
+  button {
+    padding: 10px 24px;
+    border-radius: 50px;
+    border: none;
+    background: var(--gold-2);
+    color: #fff;
+    cursor: pointer;
+  }
+}

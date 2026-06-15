@@ -1,0 +1,168 @@
+<div class="enderecos-page">
+
+  <header class="enderecos-header">
+    <button class="btn-voltar" routerLink="/mobile/perfil">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <h1 class="enderecos-titulo">Meus Endereços</h1>
+  </header>
+
+  <main class="enderecos-content">
+
+    <button class="btn-adicionar" (click)="abrirModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar novo endereço
+    </button>
+
+    <div class="lista" *ngIf="enderecos().length > 0">
+      <div class="endereco-card" *ngFor="let endereco of enderecos()">
+        <div class="card-topo">
+          <div class="card-esquerda">
+            <div class="endereco-icone">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
+            <div>
+              <p class="endereco-nome">{{ endereco.nome }}</p>
+              <p class="endereco-padrao" *ngIf="endereco.padrao">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Endereço padrão
+              </p>
+            </div>
+          </div>
+          <div class="card-acoes">
+            <button class="btn-editar" (click)="editarEndereco(endereco)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn-deletar" (click)="deletarEndereco(endereco.id)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="endereco-info">
+          <p>{{ endereco.rua }}, {{ endereco.numero }}<span *ngIf="endereco.complemento"> - {{ endereco.complemento }}</span></p>
+          <p>{{ endereco.bairro }} - {{ endereco.cidade }}/{{ endereco.estado }}</p>
+          <p>CEP: {{ endereco.cep }}</p>
+        </div>
+
+        <button class="btn-definir-padrao" *ngIf="!endereco.padrao" (click)="definirPadrao(endereco.id)">
+          Definir como padrão
+        </button>
+      </div>
+    </div>
+
+    <div class="estado-vazio" *ngIf="enderecos().length === 0">
+      <svg class="vazio-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      <p class="vazio-texto">Nenhum endereço cadastrado</p>
+    </div>
+
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="modalAberto()" (click)="fecharModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <h2 class="modal-titulo">{{ enderecoEditando ? 'Editar endereço' : 'Novo endereço' }}</h2>
+        <button class="modal-fechar" (click)="fecharModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-campo">
+        <label>Nome do endereço</label>
+        <div class="campo-input">
+          <input type="text" placeholder="Ex: Casa, Trabalho, etc." [(ngModel)]="form.nome"/>
+        </div>
+      </div>
+
+      <div class="modal-campo">
+        <label>CEP</label>
+        <div class="campo-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input type="text" placeholder="00000-000" [(ngModel)]="form.cep"/>
+        </div>
+      </div>
+
+      <div class="modal-campo">
+        <label>Rua</label>
+        <div class="campo-input">
+          <input type="text" placeholder="Nome da rua" [(ngModel)]="form.rua"/>
+        </div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-campo flex-1">
+          <label>Número</label>
+          <div class="campo-input">
+            <input type="text" placeholder="123" [(ngModel)]="form.numero"/>
+          </div>
+        </div>
+        <div class="modal-campo flex-2">
+          <label>Complemento</label>
+          <div class="campo-input">
+            <input type="text" placeholder="Opcional" [(ngModel)]="form.complemento"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-campo">
+        <label>Bairro</label>
+        <div class="campo-input">
+          <input type="text" placeholder="Nome do bairro" [(ngModel)]="form.bairro"/>
+        </div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-campo flex-2">
+          <label>Cidade</label>
+          <div class="campo-input">
+            <input type="text" placeholder="Cidade" [(ngModel)]="form.cidade"/>
+          </div>
+        </div>
+        <div class="modal-campo flex-1">
+          <label>UF</label>
+          <div class="campo-input">
+            <input type="text" placeholder="BA" [(ngModel)]="form.estado" maxlength="2"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-checkbox">
+        <input type="checkbox" id="padrao" [(ngModel)]="formPadrao"/>
+        <label for="padrao">Definir como endereço padrão</label>
+      </div>
+
+      <p class="modal-erro" *ngIf="erro">{{ erro }}</p>
+
+      <button class="modal-btn-salvar" (click)="salvarEndereco()">
+        {{ enderecoEditando ? 'Salvar endereço' : 'Salvar endereço' }}
+      </button>
+
+    </div>
+  </div>
+
+</div>

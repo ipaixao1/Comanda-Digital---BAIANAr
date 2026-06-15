@@ -1,0 +1,181 @@
+<div class="admins-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Administradores</h1>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Administrador
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-card">
+    <div class="table-head">
+      <span>Foto</span><span>Nome</span><span>Matrícula</span><span>Senha</span>
+      <span>Cargo</span><span>Telefone</span><span>Email</span><span>Status</span><span>Ações</span>
+    </div>
+
+    <div *ngFor="let a of admins()" class="admin-row">
+
+      <div class="cell-foto">
+        <div class="avatar">{{ getInitials(a.nome) }}</div>
+      </div>
+
+      <span class="cell cell--nome">{{ a.nome }}</span>
+      <span class="cell cell--matricula">{{ a.matricula }}</span>
+
+      <span class="cell cell--senha">
+        <span class="senha-dots">{{ a.senhaVisivel ? a.senha : '••••••' }}</span>
+        <button class="btn-olho" (click)="toggleSenha(a.id, $event)" [title]="a.senhaVisivel ? 'Ocultar' : 'Mostrar'">
+          <svg *ngIf="!a.senhaVisivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg *ngIf="a.senhaVisivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </span>
+
+      <span class="cell">
+        <span class="cargo-badge" [ngClass]="getCargoClass(a.cargo)">{{ a.cargo }}</span>
+      </span>
+      <span class="cell">{{ a.telefone }}</span>
+      <span class="cell cell--email">{{ a.email }}</span>
+      <span class="cell">
+        <span class="status-badge" [class.badge--ativo]="a.status==='Ativo'" [class.badge--inativo]="a.status==='Inativo'">
+          {{ a.status }}
+        </span>
+      </span>
+      <span class="cell cell--acoes">
+        <button class="btn-acao btn-editar" (click)="abrirModalEditar(a, $event)" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn-acao btn-excluir" (click)="confirmarExclusao(a, $event)" title="Excluir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+        </button>
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal Adicionar / Editar ─────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Barra de rolagem visível, sem cabeçalho fixo -->
+    <div class="modal-scroll">
+
+      <h2 class="modal-title">
+        {{ editando() ? 'Editar Administrador' : 'Adicionar Administrador' }}
+      </h2>
+
+      <!-- Grid 2 colunas -->
+      <div class="modal-grid">
+
+        <!-- Nome Completo -->
+        <div class="field-group">
+          <label class="field-label">Nome Completo</label>
+          <input type="text" class="field-input" [value]="mNome()"
+            (input)="onInput('nome',$event)" placeholder="" />
+        </div>
+
+        <!-- Matrícula -->
+        <div class="field-group">
+          <label class="field-label">Matrícula</label>
+          <input type="text" class="field-input" [value]="mMatricula()"
+            (input)="onInput('matricula',$event)" placeholder="" />
+        </div>
+
+        <!-- Senha -->
+        <div class="field-group">
+          <label class="field-label">Senha</label>
+          <input type="text" class="field-input" [value]="mSenha()"
+            (input)="onInput('senha',$event)" placeholder="" />
+        </div>
+
+        <!-- Cargo -->
+        <div class="field-group">
+          <label class="field-label">Cargo</label>
+          <select class="field-input field-select" (change)="onSelectCargo($event)">
+            <option *ngFor="let c of cargos" [value]="c" [selected]="mCargo() === c">{{ c }}</option>
+          </select>
+        </div>
+
+        <!-- Telefone -->
+        <div class="field-group">
+          <label class="field-label">Telefone</label>
+          <input type="text" class="field-input" [value]="mTelefone()"
+            (input)="onInput('telefone',$event)" placeholder="" />
+        </div>
+
+        <!-- Email -->
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input type="text" class="field-input" [value]="mEmail()"
+            (input)="onInput('email',$event)" placeholder="" />
+        </div>
+
+        <!-- URL da Foto - full width -->
+        <div class="field-group field-group--full">
+          <label class="field-label">URL da Foto</label>
+          <input type="text" class="field-input" [value]="mFoto()"
+            (input)="onInput('foto',$event)" placeholder="https://.." />
+        </div>
+
+        <!-- Status - full width -->
+        <div class="field-group field-group--full">
+          <label class="field-label">Status</label>
+          <select class="field-input field-select" (change)="onSelectStatus($event)">
+            <option *ngFor="let s of statusOpcoes" [value]="s" [selected]="mStatus() === s">{{ s }}</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Footer dentro do scroll -->
+      <div class="modal-footer">
+        <button class="btn-cancelar-lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn-salvar-lg"   (click)="salvar()"      [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">{{ editando() ? 'Salvar' : 'Salvar' }}</span>
+          <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Exclusão -->
+<div class="exclusao-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
+  <div class="exclusao-card" (click)="$event.stopPropagation()">
+
+    <h2 class="exclusao-titulo">Excluir Administrador</h2>
+    <p class="exclusao-texto">
+      Tem certeza que deseja excluir este administrador? Esta ação não pode ser desfeita.
+    </p>
+
+    <div class="exclusao-btns">
+      <button class="exclusao-btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
+      <button class="exclusao-btn-excluir"  (click)="confirmarExclusaoFinal()">Excluir</button>
+    </div>
+
+  </div>
+</div>
