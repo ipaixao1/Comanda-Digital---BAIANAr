@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=Poppins:wght@300;400;600;700&display=swap');
+
+:host {
+  --bg:         #2d2b3d;
+  --surface:    #383650;
+  --gold:       #F29F05;
+  --gold-2:     #F28705;
+  --text-white: #ffffff;
+  --text-muted: #9b93b0;
+  --font-title: 'Cormorant Garamond', Georgia, serif;
+  --font-body:  'Poppins', sans-serif;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-body);
+}
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 32px 24px;
+  background: var(--bg);
+  gap: 32px;
+}
+
+// ── Topo ──
+.login-topo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.logo-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--gold-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(242,135,5,0.4);
+
+  svg { stroke: #fff; }
+}
+
+.login-titulo {
+  font-family: var(--font-title);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0;
+}
+
+.login-subtitulo {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+// ── Card ──
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 28px 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+// ── Campos ──
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 13px;
+    font-weight: 400;
+    color: #D9A05B;
+  }
+}
+
+.campo-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50px;
+  padding: 0 16px;
+  transition: border-color 0.2s;
+
+  &:focus-within { border-color: var(--gold); }
+
+  svg { stroke: #D9A05B; flex-shrink: 0; }
+
+  input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-white);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 14px 0;
+
+    &::placeholder { color: var(--text-muted); }
+  }
+}
+
+.toggle-senha {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color 0.15s;
+  &:hover { color: var(--gold); }
+  svg { stroke: currentColor; }
+}
+
+// ── Erro ──
+.erro {
+  font-size: 13px;
+  color: #ff6b6b;
+  margin: -6px 0 0;
+  padding-left: 4px;
+}
+
+// ── Botão ──
+.btn-entrar {
+  width: 100%;
+  padding: 15px;
+  border-radius: 50px;
+  border: none;
+  background: var(--gold-2);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(242,135,5,0.4);
+  transition: filter 0.15s;
+  margin-top: 4px;
+
+  &:hover:not(:disabled) { filter: brightness(1.1); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}

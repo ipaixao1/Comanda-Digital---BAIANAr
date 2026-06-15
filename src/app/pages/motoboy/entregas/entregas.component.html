@@ -1,0 +1,93 @@
+<div class="entregas-page">
+
+  <header class="entregas-header">
+    <div class="header-info">
+      <h1 class="header-titulo">Olá, {{ primeiroNome() }}!</h1>
+      <p class="header-subtitulo">{{ entregasPendentes() }} entrega{{ entregasPendentes() !== 1 ? 's' : '' }} pendente{{ entregasPendentes() !== 1 ? 's' : '' }}</p>
+    </div>
+    <button class="btn-sair" (click)="sair()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="entregas-content">
+
+    <!-- Resumo -->
+    <div class="resumo-row">
+      <div class="resumo-item">
+        <p class="resumo-valor">{{ entregasPendentes() }}</p>
+        <p class="resumo-label">Pendentes</p>
+      </div>
+      <div class="resumo-divider"></div>
+      <div class="resumo-item">
+        <p class="resumo-valor">{{ entregasACaminho() }}</p>
+        <p class="resumo-label">A caminho</p>
+      </div>
+      <div class="resumo-divider"></div>
+      <div class="resumo-item">
+        <p class="resumo-valor entregues">{{ entregasEntregues() }}</p>
+        <p class="resumo-label">Entregues</p>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="lista-entregas">
+      <div
+        class="entrega-card"
+        *ngFor="let entrega of entregas()"
+        (click)="abrirDetalhe(entrega.id)"
+        [class.a-caminho]="entrega.status === 'a_caminho'"
+        [class.entregue]="entrega.status === 'entregue'"
+      >
+        <div class="entrega-topo">
+          <div class="entrega-numero-wrap">
+            <span class="entrega-numero">{{ entrega.numeroPedido }}</span>
+            <span class="entrega-horario">{{ entrega.horario }}</span>
+          </div>
+          <span class="entrega-status" [class]="entrega.status">
+            {{ entrega.status === 'pendente' ? 'Pendente' : entrega.status === 'a_caminho' ? 'A caminho' : 'Entregue' }}
+          </span>
+        </div>
+
+        <div class="entrega-cliente">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>{{ entrega.cliente }}</span>
+        </div>
+
+        <div class="entrega-endereco">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>{{ entrega.endereco }}, {{ entrega.bairro }}</span>
+        </div>
+
+        <div class="entrega-rodape">
+          <span class="entrega-itens">{{ entrega.itens.length }} {{ entrega.itens.length === 1 ? 'item' : 'itens' }}</span>
+          <span class="entrega-total">{{ formatarPreco(entrega.total) }}</span>
+        </div>
+
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Vazio -->
+    <div class="estado-vazio" *ngIf="entregas().length === 0">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="5.5" cy="17.5" r="3.5"/>
+        <circle cx="18.5" cy="17.5" r="3.5"/>
+        <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>
+      </svg>
+      <p>Nenhuma entrega por hoje!</p>
+    </div>
+
+  </main>
+
+</div>

@@ -1,0 +1,336 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=Poppins:wght@300;400;600;700&display=swap');
+
+:host {
+  --bg:         #2d2b3d;
+  --surface:    #383650;
+  --gold:       #F29F05;
+  --gold-2:     #F28705;
+  --text-white: #ffffff;
+  --text-muted: #9b93b0;
+  --green:      #4ade80;
+  --font-title: 'Cormorant Garamond', Georgia, serif;
+  --font-body:  'Poppins', sans-serif;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100dvh;
+  font-family: var(--font-body);
+}
+
+.detalhe-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text-white);
+}
+
+// ── Header ──
+.detalhe-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.btn-voltar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(242,135,5,0.15);
+  color: var(--gold-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s;
+  &:hover { filter: brightness(1.2); }
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detalhe-titulo {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gold);
+  margin: 0;
+}
+
+.detalhe-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 50px;
+  align-self: flex-start;
+
+  &.pendente  { background: rgba(242,135,5,0.15); color: var(--gold-2); }
+  &.a_caminho { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  &.entregue  { background: rgba(74,222,128,0.15); color: var(--green); }
+}
+
+.detalhe-horario {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+// ── Content ──
+.detalhe-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ── Info cards ──
+.info-card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.card-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+}
+
+.info-linha {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-white);
+  margin-bottom: 8px;
+
+  &:last-child { margin-bottom: 0; }
+
+  svg { stroke: var(--gold-2); flex-shrink: 0; margin-top: 1px; }
+
+  &.link {
+    text-decoration: none;
+    color: #60a5fa;
+    cursor: pointer;
+    svg { stroke: #60a5fa; }
+  }
+}
+
+.endereco-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.complemento {
+  font-size: 13px;
+  color: var(--gold-2);
+  opacity: 0.85;
+}
+
+.bairro {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// ── Itens ──
+.item-linha {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-white);
+  margin-bottom: 8px;
+}
+
+.item-qtd {
+  font-weight: 700;
+  color: var(--gold-2);
+  min-width: 24px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 10px 0;
+}
+
+.total-linha {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-white);
+  margin-bottom: 8px;
+}
+
+.total-valor { color: var(--gold-2); }
+
+.pagamento-linha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+
+  svg { stroke: var(--text-muted); }
+}
+
+// ── Mapa ──
+.mapa-card {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.mapa-titulo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-2);
+  margin-bottom: 10px;
+
+  svg { stroke: var(--gold-2); }
+}
+
+.mapa-ilustrativo {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #22202f;
+}
+
+.mapa-svg {
+  width: 100%;
+  height: 150px;
+  display: block;
+}
+
+.mapa-legenda {
+  display: flex;
+  gap: 14px;
+  padding: 10px 4px 4px;
+}
+
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.legenda-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+
+  &.restaurante { background: var(--surface); border: 1.5px solid var(--gold-2); }
+  &.motoboy     { background: var(--gold-2); }
+  &.destino     { background: var(--surface); border: 1.5px solid #4ade80; }
+}
+
+// ── Ações ──
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-acao {
+  width: 100%;
+  padding: 15px;
+  border-radius: 50px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 0.15s;
+
+  &.principal {
+    background: var(--green);
+    color: #1a1a2e;
+    box-shadow: 0 4px 16px rgba(74,222,128,0.3);
+    svg { stroke: #1a1a2e; }
+    &:hover { filter: brightness(1.1); }
+  }
+
+  &.secundario {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+    border: 1.5px solid rgba(96,165,250,0.3);
+    svg { stroke: #60a5fa; }
+    &:hover { background: rgba(96,165,250,0.22); }
+  }
+}
+
+// ── Entregue ──
+.entregue-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.3);
+  border-radius: 14px;
+  padding: 16px;
+  color: var(--green);
+
+  svg { stroke: var(--green); }
+
+  p {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+// ── Não encontrado ──
+.nao-encontrado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+
+  button {
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-family: var(--font-body);
+    cursor: pointer;
+  }
+}

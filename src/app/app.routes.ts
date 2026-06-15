@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, kdsGuard } from './guards/auth.guard';
+import { motoboyGuard } from './guards/motoboy.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -22,7 +23,19 @@ export const routes: Routes = [
       { path: 'carrinho', loadComponent: () => import('./pages/mobile/carrinho/carrinho.component').then(m => m.CarrinhoComponent) },
       { path: 'finalizar-pedido', loadComponent: () => import('./pages/mobile/finalizar-pedido/finalizar-pedido.component').then(m => m.FinalizarPedidoComponent) },
       { path: 'status-pedido', loadComponent: () => import('./pages/mobile/status-pedido/status-pedido.component').then(m => m.StatusPedidoComponent) },
-      { path: 'avaliacao', loadComponent: () => import('./pages/mobile/avaliacao/avaliacao.component').then(m => m.AvaliacaoComponent) }
+      { path: 'avaliacao', loadComponent: () => import('./pages/mobile/avaliacao/avaliacao.component').then(m => m.AvaliacaoComponent) },
+    ]
+  },
+
+  // ── Rotas motoboy ──
+  {
+    path: 'motoboy',
+    loadComponent: () => import('./pages/motoboy/motoboy.component').then(m => m.MotoboyComponent),
+    children: [
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      { path: 'login', loadComponent: () => import('./pages/motoboy/login/login.component').then(m => m.MotoboyLoginComponent) },
+      { path: 'entregas', canActivate: [motoboyGuard], loadComponent: () => import('./pages/motoboy/entregas/entregas.component').then(m => m.EntregasComponent) },
+      { path: 'entrega/:id', canActivate: [motoboyGuard], loadComponent: () => import('./pages/motoboy/entrega-detalhe/entrega-detalhe.component').then(m => m.EntregaDetalheComponent) },
     ]
   },
 
