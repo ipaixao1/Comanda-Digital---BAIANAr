@@ -1,25 +1,10 @@
-import { Component, computed, signal } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
-import { FormsModule } from "@angular/forms";
-import { ClienteAuthService } from "../../../services/cliente-auth.service";
-import { CarrinhoService } from "../../../services/carrinho.service";
-
-export interface ItemHistorico {
-  nome: string;
-  quantidade: number;
-  preco: number;
-}
-
-export interface PedidoHistorico {
-  id: string;
-  numero: string;
-  data: string;
-  hora: string;
-  status: string;
-  itens: ItemHistorico[];
-  total: number;
-}
+import { Component, computed, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ClienteAuthService } from '../../../services/cliente-auth.service';
+import { CarrinhoService } from '../../../services/carrinho.service';
+import { PedidoService, PedidoShared, StatusPedido } from '../../../services/pedido.service';
 
 export interface EtapaStatus {
   label: string;
@@ -27,122 +12,132 @@ export interface EtapaStatus {
 }
 
 @Component({
-  selector: "app-pedidos-mobile",
+  selector: 'app-pedidos-mobile',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: "./pedidos.component.html",
-  styleUrls: ["./pedidos.component.scss"],
+  templateUrl: './pedidos.component.html',
+  styleUrls: ['./pedidos.component.scss'],
 })
 export class PedidosMobileComponent {
+
+  private clienteAuth   = inject(ClienteAuthService);
+  public  carrinho      = inject(CarrinhoService);
+  private pedidoService = inject(PedidoService);
+  private router        = inject(Router);
 
   isLogado = computed(() => this.clienteAuth.isAuthenticated());
   cliente  = computed(() => this.clienteAuth.getCurrentCliente());
 
-  modalLoginAberto = signal<boolean>(false);
-  senhaVisivel     = signal<boolean>(false);
-  senhaConfVisivel = signal<boolean>(false);
-  modalAba: "login" | "cadastro" = "login";
-  loginEmail       = "";
-  loginSenha       = "";
-  cadastroNome     = "";
-  cadastroTelefone = "";
-  cadastroSenhaConf = "";
-  loginErro        = "";
+  // ── Pedidos do cliente — reativos ao signal do serviço ────────
+  private pedidosDoCliente = computed(() => {
+    const cId = this.cliente()?.id;
+    if (!cId) return [];
+    return this.pedidoService.getPedidosCliente(cId);
+  });
 
-  // Navegação interna
+  pedidoAtivo = computed<PedidoShared | null>(() =>
+    this.pedidosDoCliente().find(
+      p => !['entregue', 'cancelado'].includes(p.status)
+    ) ?? null
+  );
+
+  historico = computed<PedidoShared[]>(() =>
+    this.pedidosDoCliente().filter(p =>
+      ['entregue', 'cancelado'].includes(p.status)
+    )
+  );
+
+  temPedidoAtual = computed(() => this.pedidoAtivo() !== null);
+
+  // ── Modal + navegação ─────────────────────────────────────────
+  modalLoginAberto  = signal(false);
+  senhaVisivel      = signal(false);
+  senhaConfVisivel  = signal(false);
+  modalAba: 'login' | 'cadastro' = 'login';
+  loginEmail        = '';
+  loginSenha        = '';
+  cadastroNome      = '';
+  cadastroTelefone  = '';
+  cadastroSenhaConf = '';
+  loginErro         = '';
+
   tela = signal<'lista' | 'status' | 'historico'>('lista');
+  pedidoVisualizado = signal<PedidoShared | null>(null);
 
-  // Pedido atual (mockado fixo)
-  numeroPedidoAtual = '#8742';
+  // ── Pedido visualizado na tela de status ─────────────────────
+  // Se pedidoVisualizado === null → mostra o pedidoAtivo
+  private pedidoParaExibir = computed<PedidoShared | null>(() => {
+    const vis = this.pedidoVisualizado();
+    if (vis) {
+      // Re-busca no signal para receber atualizações em tempo real
+      return this.pedidoService.getPedido(vis.id) ?? vis;
+    }
+    return this.pedidoAtivo();
+  });
 
-  itensPedidoAtual = signal<ItemHistorico[]>([
-    { nome: 'Mini Acarajés', quantidade: 2, preco: 24.90 },
-    { nome: 'Caldo de Sururu', quantidade: 1, preco: 28.90 },
-  ]);
-
-  totalPedidoAtual = computed(() =>
-    this.itensPedidoAtual().reduce((soma, item) => soma + item.preco * item.quantidade, 0)
-  );
-
-  totalItensPedidoAtual = computed(() =>
-    this.itensPedidoAtual().reduce((soma, item) => soma + item.quantidade, 0)
-  );
-
-  temPedidoAtual = signal<boolean>(true);
-
-  // Pedido sendo visualizado na tela de status (null = pedido atual)
-  pedidoVisualizado = signal<PedidoHistorico | null>(null);
-
-  // Etapas da timeline (dependem do pedido visualizado)
-  // Etapas da timeline (apenas para o pedido atual)
-  etapasStatus = computed<EtapaStatus[]>(() => [
-    { label: 'Pedido recebido',     estado: 'concluido' },
-    { label: 'Em preparo',          estado: 'atual' },
-    { label: 'Pronto',              estado: 'pendente' },
-    { label: 'Saiu para entrega',   estado: 'pendente' },
-  ]);
-
-  // Itens e número exibidos na tela de status
-  numeroPedidoExibido = computed(() =>
-    this.pedidoVisualizado()?.numero ?? this.numeroPedidoAtual
-  );
-
-  itensPedidoExibido = computed<ItemHistorico[]>(() =>
-    this.pedidoVisualizado()?.itens ?? this.itensPedidoAtual()
-  );
-
-  totalPedidoExibido = computed(() =>
-    this.pedidoVisualizado()?.total ?? this.totalPedidoAtual()
-  );
-
-  // true quando estamos vendo o pedido atual (em andamento)
   ehPedidoAtual = computed(() => this.pedidoVisualizado() === null);
 
-  // Histórico de pedidos (mockado)
-  historico: PedidoHistorico[] = [
-    {
-      id: 'h1', numero: '#8701', data: '08 Jun 2026', hora: '19:15', status: 'Entregue',
-      itens: [
-        { nome: 'Moqueca de Peixe', quantidade: 1, preco: 75.90 },
-        { nome: 'Pudim de Tapioca', quantidade: 2, preco: 16.90 },
-      ],
-      total: 109.70,
-    },
-    {
-      id: 'h2', numero: '#8654', data: '02 Jun 2026', hora: '20:40', status: 'Entregue',
-      itens: [
-        { nome: 'Bobó de Camarão', quantidade: 1, preco: 82.90 },
-        { nome: 'Refrigerante', quantidade: 2, preco: 6.00 },
-      ],
-      total: 94.90,
-    },
-    {
-      id: 'h3', numero: '#8590', data: '25 Mai 2026', hora: '18:05', status: 'Cancelado',
-      itens: [
-        { nome: 'Casquinhas de Siri', quantidade: 2, preco: 32.90 },
-      ],
-      total: 65.80,
-    },
-  ];
+  numeroPedidoExibido = computed(() => this.pedidoParaExibir()?.numero ?? '');
+  itensPedidoExibido  = computed(() => this.pedidoParaExibir()?.itens ?? []);
+  totalPedidoExibido  = computed(() => this.pedidoParaExibir()?.total ?? 0);
 
-  constructor(
-    private clienteAuth: ClienteAuthService,
-    public carrinho: CarrinhoService
-  ) {}
+  totalItensPedidoAtual = computed(() =>
+    (this.pedidoAtivo()?.itens ?? []).reduce((s, i) => s + i.quantidade, 0)
+  );
+  totalValorPedidoAtual = computed(() => this.pedidoAtivo()?.total ?? 0);
 
+  labelStatusAtual = computed(() => {
+    const s = this.pedidoAtivo()?.status;
+    return s ? this.pedidoService.labelStatus(s) : '';
+  });
+
+  // ── Timeline ──────────────────────────────────────────────────
+  etapasStatus = computed<EtapaStatus[]>(() => {
+    const p = this.pedidoParaExibir();
+    if (!p) return [];
+    return this.calcularEtapas(p.status);
+  });
+
+  private calcularEtapas(status: StatusPedido): EtapaStatus[] {
+    const ordem: StatusPedido[] = ['recebido', 'em_preparo', 'pronto', 'a_caminho', 'entregue'];
+
+    const defs = [
+      { label: 'Pedido recebido',   ref: 'recebido'   },
+      { label: 'Em preparo',        ref: 'em_preparo' },
+      { label: 'Pronto',            ref: 'pronto'     },
+      { label: 'Saiu para entrega', ref: 'a_caminho'  },
+      { label: 'Entregue',          ref: 'entregue'   },
+    ];
+
+    return defs.map((d, i) => {
+      let estado: EtapaStatus['estado'];
+      if (status === 'enviado') {
+        if (i < 3) estado = 'concluido';
+        else if (i === 3) estado = 'atual';
+        else estado = 'pendente';
+      } else {
+        const idx = ordem.indexOf(d.ref as StatusPedido);
+        const idxAtual = ordem.indexOf(status);
+        if (idx < idxAtual)       estado = 'concluido';
+        else if (idx === idxAtual) estado = 'atual';
+        else                       estado = 'pendente';
+      }
+      return { label: d.label, estado };
+    });
+  }
+
+  // ── Navegação ─────────────────────────────────────────────────
   abrirStatus(): void {
     this.pedidoVisualizado.set(null);
     this.tela.set('status');
   }
 
-  abrirStatusHistorico(pedido: PedidoHistorico): void {
+  abrirStatusHistorico(pedido: PedidoShared): void {
     this.pedidoVisualizado.set(pedido);
     this.tela.set('status');
   }
 
-  abrirHistorico(): void {
-    this.tela.set('historico');
-  }
+  abrirHistorico(): void { this.tela.set('historico'); }
 
   voltarLista(): void {
     this.tela.set('lista');
@@ -154,53 +149,51 @@ export class PedidosMobileComponent {
     this.pedidoVisualizado.set(null);
   }
 
-  avaliarPedido(): void {
-    alert('Em breve você poderá avaliar este pedido!');
+  avaliarPedido(pedidoId: string): void {
+    this.router.navigate(['/mobile/avaliacao'], { queryParams: { pedidoId } });
   }
 
   formatarPreco(preco: number): string {
     return preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  abrirModal(): void {
-    this.modalLoginAberto.set(true);
+  formatarData(iso: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' ' +
+           d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
+
+  // ── Modal login ───────────────────────────────────────────────
+  abrirModal(): void { this.modalLoginAberto.set(true); }
 
   fecharModal(): void {
     this.modalLoginAberto.set(false);
-    this.loginEmail = "";
-    this.loginSenha = "";
-    this.loginErro  = "";
-    this.cadastroNome = "";
-    this.cadastroTelefone = "";
-    this.cadastroSenhaConf = "";
-    this.modalAba = "login";
+    this.loginEmail = ''; this.loginSenha = ''; this.loginErro = '';
+    this.cadastroNome = ''; this.cadastroTelefone = ''; this.cadastroSenhaConf = '';
+    this.modalAba = 'login';
   }
 
-  toggleSenhaVisivel(): void { this.senhaVisivel.update(v => !v); }
+  toggleSenhaVisivel():     void { this.senhaVisivel.update(v => !v); }
   toggleSenhaConfVisivel(): void { this.senhaConfVisivel.update(v => !v); }
 
   async fazerLogin(): Promise<void> {
-    this.loginErro = "";
-    const result = await this.clienteAuth.login(this.loginEmail, this.loginSenha);
-    if (result.success) {
-      this.fecharModal();
-    } else {
-      this.loginErro = result.error ?? "Erro ao fazer login.";
-    }
+    this.loginErro = '';
+    const r = await this.clienteAuth.login(this.loginEmail, this.loginSenha);
+    if (r.success) this.fecharModal();
+    else this.loginErro = r.error ?? 'Erro ao fazer login.';
   }
 
   async fazerCadastro(): Promise<void> {
-    this.loginErro = "";
-    if (!this.cadastroNome.trim())                 { this.loginErro = "Informe seu nome."; return; }
-    if (!this.loginEmail.trim())                   { this.loginErro = "Informe seu email."; return; }
-    if (this.loginSenha.length < 6)                { this.loginErro = "Senha deve ter mínimo 6 caracteres."; return; }
-    if (this.loginSenha !== this.cadastroSenhaConf){ this.loginErro = "As senhas não coincidem."; return; }
-    const result = await this.clienteAuth.cadastrar(this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone);
-    if (result.success) {
-      this.fecharModal();
-    } else {
-      this.loginErro = result.error ?? "Erro ao cadastrar.";
-    }
+    this.loginErro = '';
+    if (!this.cadastroNome.trim())                  { this.loginErro = 'Informe seu nome.'; return; }
+    if (!this.loginEmail.trim())                    { this.loginErro = 'Informe seu email.'; return; }
+    if (this.loginSenha.length < 6)                 { this.loginErro = 'Senha deve ter mínimo 6 caracteres.'; return; }
+    if (this.loginSenha !== this.cadastroSenhaConf) { this.loginErro = 'As senhas não coincidem.'; return; }
+    const r = await this.clienteAuth.cadastrar(
+      this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone
+    );
+    if (r.success) this.fecharModal();
+    else this.loginErro = r.error ?? 'Erro ao cadastrar.';
   }
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EntregasService, Entrega } from '../../../services/entregas.service';
+import { PedidoService, PedidoShared } from '../../../services/pedido.service';
+import { MotoboyAuthService } from '../../../services/motoboy-auth.service';
 
 @Component({
   selector: 'app-entrega-detalhe',
@@ -12,36 +13,68 @@ import { EntregasService, Entrega } from '../../../services/entregas.service';
 })
 export class EntregaDetalheComponent implements OnInit {
 
-  entrega: Entrega | undefined;
+  private route         = inject(ActivatedRoute);
+  private router        = inject(Router);
+  private pedidoService = inject(PedidoService);
+  private auth          = inject(MotoboyAuthService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private entregasService: EntregasService,
-  ) {}
+  private pedidoId = signal('');
+
+  // Reativo — atualiza automaticamente com o onSnapshot
+  pedido = computed<PedidoShared | undefined>(() =>
+    this.pedidoService.getPedido(this.pedidoId())
+  );
+
+  salvando = signal(false);
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id') ?? '';
-    this.entrega = this.entregasService.getEntrega(id);
+    this.pedidoId.set(this.route.snapshot.paramMap.get('id') ?? '');
   }
 
-  voltar(): void {
-    this.router.navigate(['/motoboy/entregas']);
+  voltar(): void { this.router.navigate(['/motoboy/entregas']); }
+
+  async aceitarEntrega(): Promise<void> {
+    if (this.salvando()) return;
+    this.salvando.set(true);
+    try {
+      const motoboy = this.auth.motoboy();
+      await this.pedidoService.atualizarStatus(this.pedidoId(), 'a_caminho', {
+        motoboyNome:    motoboy?.nome,
+        motoboyVeiculo: motoboy?.veiculo,
+      });
+    } catch (err) {
+      console.error('[EntregaDetalhe] erro ao aceitar:', err);
+    } finally {
+      this.salvando.set(false);
+    }
   }
 
-  iniciarEntrega(): void {
-    if (!this.entrega) return;
-    this.entregasService.atualizarStatus(this.entrega.id, 'a_caminho');
-    this.entrega = this.entregasService.getEntrega(this.entrega.id);
-  }
-
-  confirmarEntrega(): void {
-    if (!this.entrega) return;
-    this.entregasService.atualizarStatus(this.entrega.id, 'entregue');
-    this.entrega = this.entregasService.getEntrega(this.entrega.id);
+  async confirmarEntrega(): Promise<void> {
+    if (this.salvando()) return;
+    this.salvando.set(true);
+    try {
+      await this.pedidoService.atualizarStatus(this.pedidoId(), 'entregue');
+    } catch (err) {
+      console.error('[EntregaDetalhe] erro ao confirmar:', err);
+    } finally {
+      this.salvando.set(false);
+    }
   }
 
   formatarPreco(preco: number): string {
     return preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  formatarHora(iso: string): string {
+    return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  statusLabel(status: string): string {
+    const map: Record<string, string> = {
+      enviado:   'Novo pedido',
+      a_caminho: 'A caminho',
+      entregue:  'Entregue',
+    };
+    return map[status] ?? status;
   }
 }

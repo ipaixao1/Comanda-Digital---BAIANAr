@@ -44,17 +44,26 @@
             <div class="items-list" [class.items-expanded]="expandedStockCategories.has(cat.id)">
               <div *ngFor="let item of cat.items"
                 class="stock-item-row"
-                [class.item-unavailable]="item.status === 'em_falta'">
+                [class.item-unavailable]="getKdsStockStatus(item.id) === 'em_falta'">
 
-                <span class="item-name"
-                  [class.name-unavailable]="item.status === 'em_falta'">
-                  {{ item.name }}
-                </span>
+                <div class="item-name-wrap">
+                  <span class="item-name"
+                    [class.name-unavailable]="getKdsStockStatus(item.id) === 'em_falta'">
+                    {{ item.name }}
+                  </span>
+                  <!-- Badge do status admin (Baixo/Crítico) vindo da página de estoque -->
+                  <span class="admin-status-badge"
+                    *ngIf="getAdminStockStatus(item.id) !== 'Normal'"
+                    [class.baixo]="getAdminStockStatus(item.id) === 'Baixo'"
+                    [class.critico]="getAdminStockStatus(item.id) === 'Crítico'">
+                    {{ getAdminStockStatus(item.id) }}
+                  </span>
+                </div>
 
                 <!-- Toggle switch — verde quando disponível, cinza quando em falta -->
                 <label class="toggle-switch" (click)="$event.stopPropagation()">
                   <input type="checkbox"
-                    [checked]="item.status !== 'em_falta'"
+                    [checked]="getKdsStockStatus(item.id) !== 'em_falta'"
                     (change)="toggleStockItem(cat.id, item.id)" />
                   <span class="toggle-slider"></span>
                 </label>
@@ -120,7 +129,7 @@
                 <!-- Toggle switch — verde quando disponível -->
                 <label class="toggle-switch" (click)="$event.stopPropagation()">
                   <input type="checkbox"
-                    [checked]="!dish.manuallyUnavailable"
+                    [checked]="!isDishUnavailable(dish.id)"
                     (change)="toggleDish(cat.id, dish.id)" />
                   <span class="toggle-slider"></span>
                 </label>
@@ -174,7 +183,7 @@
         <div *ngFor="let order of getOrdersByStatus(col.status)" class="order-card">
 
           <div class="card-header" [style.borderBottomColor]="getStatusColor(order.status)">
-            <div class="order-number">#{{ order.id }}</div>
+            <div class="order-number">{{ order.numeroPedido ?? '#' + order.id }}</div>
             <div class="card-meta">
               <span class="order-time">{{ order.time }}</span>
               <span class="meta-dot" [style.backgroundColor]="getStatusColor(order.status)"></span>

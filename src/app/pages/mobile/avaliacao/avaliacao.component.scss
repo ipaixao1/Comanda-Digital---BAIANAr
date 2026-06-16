@@ -169,3 +169,193 @@
   line-height: 1.5;
   margin: 0;
 }
+// ── Novos elementos integrados ──────────────────────────────────
+
+.pedido-info-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  border: 1px solid rgba(242,159,5,0.2);
+  margin-bottom: 4px;
+
+  .pedido-numero { font-weight: 600; color: var(--gold); font-size: 0.95rem; margin-bottom: 4px; }
+  .pedido-itens  { color: rgba(255,255,255,0.6); font-size: 0.82rem; line-height: 1.4; }
+}
+
+.estrelas-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  text-align: center;
+
+  .estrelas-label { color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 14px; }
+
+  .estrelas-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .estrela-btn {
+    background: none;
+    border: none;
+    font-size: 2.4rem;
+    color: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: color 0.15s, transform 0.1s;
+    line-height: 1;
+    padding: 0;
+
+    &.ativa { color: var(--gold); }
+    &:hover { transform: scale(1.15); }
+  }
+
+  .nota-label {
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+}
+
+.comentario-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 20px;
+
+  .comentario-label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  .comentario-input {
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    line-height: 1.5;
+
+    &:focus { border-color: rgba(242,159,5,0.5); }
+    &::placeholder { color: rgba(255,255,255,0.3); }
+  }
+}
+
+.btn-enviar {
+  width: 100%;
+  background: var(--gold);
+  color: #1a1825;
+  border: none;
+  border-radius: var(--radius-card);
+  padding: 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:not(:disabled):hover { opacity: 0.9; }
+}
+
+.sucesso-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid rgba(74,222,128,0.3);
+
+  svg { color: #4ade80; margin-bottom: 16px; }
+  .sucesso-titulo { font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 8px; }
+  .sucesso-texto  { color: rgba(255,255,255,0.6); font-size: 0.875rem; line-height: 1.5; margin-bottom: 20px; }
+}
+
+.btn-voltar-pedidos {
+  background: var(--gold);
+  color: #1a1825;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  &:hover { opacity: 0.9; }
+}
+
+// ── Histórico de avaliações ──────────────────────────────────────
+.historico-avaliacoes {
+  margin-top: 8px;
+
+  .historico-titulo {
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+}
+
+.avaliacao-card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+
+  .av-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .av-numero    { font-weight: 600; color: var(--gold); font-size: 0.9rem; }
+  .av-estrelas  { display: flex; gap: 2px; }
+  .estrela-mini { font-size: 1rem; color: rgba(255,255,255,0.2); &.ativa { color: var(--gold); } }
+  .av-data      { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-bottom: 8px; }
+  .av-comentario{ color: rgba(255,255,255,0.8); font-size: 0.86rem; line-height: 1.5; }
+}
+
+.av-resposta {
+  background: rgba(242,159,5,0.08);
+  border: 1px solid rgba(242,159,5,0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+
+  .resposta-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    color: var(--gold);
+    font-size: 0.78rem;
+    font-weight: 600;
+    svg { flex-shrink: 0; }
+  }
+
+  .resposta-texto { color: rgba(255,255,255,0.85); font-size: 0.85rem; line-height: 1.5; }
+  .resposta-data  { color: rgba(255,255,255,0.35); font-size: 0.72rem; margin-top: 6px; }
+}
+
+.aguardando-resposta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.78rem;
+
+  svg { flex-shrink: 0; }
+}

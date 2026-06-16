@@ -1,6 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { PedidoService, PedidoShared, StatusPedido } from '../../services/pedido.service';
+import { EstoqueService } from '../../services/estoque.service';
+import { CardapioStatusService } from '../../services/cardapio-status.service';
 
 export type OrderStatus = 'received' | 'preparing' | 'ready' | 'out_for_delivery';
 
@@ -13,11 +16,14 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number;
+  id: number | string;
   status: OrderStatus;
   time: string;
   createdAt: Date;
   items: OrderItem[];
+  numeroPedido?: string;  // ex: "#8750" — só nos pedidos reais
+  isReal?: boolean;       // true = veio do PedidoService
+  pedidoId?: string;      // id do PedidoShared (para atualizar status)
 }
 
 export interface StockItem {
@@ -323,17 +329,77 @@ export class KdsComponent implements OnInit, OnDestroy {
     }
   ];
 
+  // ─── PedidoService (injetado via inject()) ───────────────────
+  private pedidoService      = inject(PedidoService);
+  private estoqueService     = inject(EstoqueService);
+  private cardapioStatusSvc  = inject(CardapioStatusService);
+
+  // Pedidos reais do Firestore convertidos para Order (computed puro)
+  ordersReais = computed<Order[]>(() =>
+    this.pedidoService.pedidosParaKds().map(p => ({
+      id:           `real_${p.id}` as any,
+      status:       this.toOrderStatus(p.status) ?? 'received',
+      time:         new Date(p.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      createdAt:    new Date(p.dataHora),
+      numeroPedido: p.numero,
+      isReal:       true,
+      pedidoId:     p.id,
+      items:        p.itens.map((item, idx) => ({
+        id:          idx + 1,
+        name:        item.nome,
+        quantity:    item.quantidade,
+        observation: item.obs,
+      })),
+    }))
+  );
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     this.updateClock();
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
-    this.timerInterval = setInterval(() => {}, 30000);
   }
 
   ngOnDestroy(): void {
     if (this.clockInterval) clearInterval(this.clockInterval);
     if (this.timerInterval) clearInterval(this.timerInterval);
+  }
+
+  // Converte StatusPedido → OrderStatus
+  private toOrderStatus(s: StatusPedido): OrderStatus | null {
+    const map: Partial<Record<StatusPedido, OrderStatus>> = {
+      recebido:   'received',
+      em_preparo: 'preparing',
+      pronto:     'ready',
+      enviado:    'out_for_delivery',
+    };
+    return map[s] ?? null;
+  }
+
+  // Avança pedido mock (local) ou real (Firestore)
+  advanceOrder(order: Order): void {
+    const map: Partial<Record<OrderStatus, OrderStatus>> = {
+      received:  'preparing',
+      preparing: 'ready',
+      ready:     'out_for_delivery',
+    };
+    const next = map[order.status];
+    if (!next) return;
+
+    if ((order as any).isReal && (order as any).pedidoId) {
+      // Pedido real → persiste no Firestore (onSnapshot atualiza a UI)
+      const statusMap: Record<OrderStatus, StatusPedido> = {
+        received:         'recebido',
+        preparing:        'em_preparo',
+        ready:            'pronto',
+        out_for_delivery: 'enviado',
+      };
+      this.pedidoService.atualizarStatus((order as any).pedidoId, statusMap[next])
+        .catch(err => console.error('[KDS] erro ao avançar pedido:', err));
+    } else {
+      // Pedido mock → muta localmente
+      order.status = next;
+    }
   }
 
   // ─── Relógio ────────────────────────────────────────────────
@@ -370,19 +436,39 @@ export class KdsComponent implements OnInit, OnDestroy {
   toggleStockItem(categoryId: string, itemId: string): void {
     const cat  = this.stockCategories.find(c => c.id === categoryId);
     const item = cat?.items.find(i => i.id === itemId);
-    if (item) item.status = item.status === 'available' ? 'em_falta' : 'available';
+    if (!item) return;
+    const novoStatus = this.getKdsStockStatus(itemId) === 'available' ? 'em_falta' : 'available';
+    this.estoqueService.toggleStatusKds(itemId, item.name, novoStatus)
+      .catch(err => console.error('[KDS] toggleStockItem erro:', err));
   }
 
   // ─── Toggle manual do prato ──────────────────────────────────
   toggleDish(categoryId: string, dishId: string): void {
     const cat  = this.dishCategories.find(c => c.id === categoryId);
     const dish = cat?.dishes.find(d => d.id === dishId);
-    if (dish) dish.manuallyUnavailable = !dish.manuallyUnavailable;
+    if (!dish) return;
+    const atual = this.cardapioStatusSvc.isIndisponivel(dishId);
+    this.cardapioStatusSvc.setDisponibilidadeKds(dishId, dish.name, !atual)
+      .catch(err => console.error('[KDS] toggleDish erro:', err));
+  }
+
+  // ─── Getters reativos para estoque e cardápio ────────────────
+  getKdsStockStatus(itemId: string): 'available' | 'em_falta' {
+    return this.estoqueService.getStatusKds(itemId);
+  }
+
+  getAdminStockStatus(itemId: string): 'Normal' | 'Baixo' | 'Crítico' {
+    return this.estoqueService.getStatusAdmin(itemId);
+  }
+
+  isDishUnavailable(dishId: string): boolean {
+    return this.cardapioStatusSvc.isIndisponivel(dishId);
   }
 
   // ─── Helpers estoque ─────────────────────────────────────────
   get unavailableCount(): number {
-    return this.stockCategories.flatMap(c => c.items).filter(i => i.status === 'em_falta').length;
+    return this.stockCategories.flatMap(c => c.items)
+      .filter(i => this.getKdsStockStatus(i.id) === 'em_falta').length;
   }
 
   getStockItemById(id: string): StockItem | undefined {
@@ -390,11 +476,10 @@ export class KdsComponent implements OnInit, OnDestroy {
   }
 
   getDishStatus(dish: Dish): 'available' | 'warning' | 'unavailable' {
-    if (dish.manuallyUnavailable) return 'unavailable';
-    const hasWarning = dish.requiredStock.some(sid => {
-      const item = this.getStockItemById(sid);
-      return item && item.status === 'em_falta';
-    });
+    if (this.isDishUnavailable(dish.id)) return 'unavailable';
+    const hasWarning = dish.requiredStock.some(sid =>
+      this.getKdsStockStatus(sid) === 'em_falta'
+    );
     return hasWarning ? 'warning' : 'available';
   }
 
@@ -403,7 +488,7 @@ export class KdsComponent implements OnInit, OnDestroy {
   }
 
   stockCategoryUnavailableCount(cat: StockCategory): number {
-    return cat.items.filter(i => i.status === 'em_falta').length;
+    return cat.items.filter(i => this.getKdsStockStatus(i.id) === 'em_falta').length;
   }
 
   dishCategoryUnavailableCount(cat: DishCategory): number {
@@ -412,7 +497,12 @@ export class KdsComponent implements OnInit, OnDestroy {
 
   // ─── Helpers pedidos ─────────────────────────────────────────
   getOrdersByStatus(status: OrderStatus): Order[] {
-    return this.orders.filter(o => o.status === status);
+    // Reais vindos do Firestore (computed reativo)
+    const reais  = this.ordersReais().filter(o => o.status === status);
+    // Mockados locais
+    const mocks  = this.orders.filter(o => o.status === status);
+    // Reais primeiro
+    return [...reais, ...mocks];
   }
 
   getStatusColor(status: OrderStatus): string {
@@ -440,16 +530,6 @@ export class KdsComponent implements OnInit, OnDestroy {
       out_for_delivery: ''
     };
     return map[status];
-  }
-
-  advanceOrder(order: Order): void {
-    const map: Partial<Record<OrderStatus, OrderStatus>> = {
-      received:  'preparing',
-      preparing: 'ready',
-      ready:     'out_for_delivery'
-    };
-    const next = map[order.status];
-    if (next) order.status = next;
   }
 
   columns: { status: OrderStatus; label: string }[] = [

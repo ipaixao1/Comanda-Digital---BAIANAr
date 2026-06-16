@@ -6,37 +6,119 @@
         <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
       </svg>
     </button>
-    <h1 class="avaliacoes-titulo">Avaliações</h1>
+    <h1 class="avaliacoes-titulo">Avaliar Pedido</h1>
   </header>
 
   <main class="avaliacoes-content">
 
-    <!-- Resumo -->
-    <div class="resumo-card">
-      <div class="resumo-topo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="star-icone">
+    <!-- ══ JÁ AVALIADO ══ -->
+    <ng-container *ngIf="jaAvaliado()">
+      <div class="sucesso-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <p class="sucesso-titulo">Pedido já avaliado!</p>
+        <p class="sucesso-texto">Você já enviou uma avaliação para este pedido.</p>
+      </div>
+    </ng-container>
+
+    <!-- ══ FORMULÁRIO ══ -->
+    <ng-container *ngIf="!jaAvaliado() && !enviado()">
+
+      <!-- Info do pedido -->
+      <div class="pedido-info-card" *ngIf="pedido()">
+        <p class="pedido-numero">Pedido {{ pedido()!.numero }}</p>
+        <p class="pedido-itens">{{ pedidoItensResumo }}</p>
+      </div>
+
+      <!-- Estrelas -->
+      <div class="estrelas-card">
+        <p class="estrelas-label">Qual sua nota?</p>
+        <div class="estrelas-row">
+          <button
+            *ngFor="let n of estrelas"
+            class="estrela-btn"
+            [class.ativa]="estrelaNota(n)"
+            (mouseenter)="setHover(n)"
+            (mouseleave)="clearHover()"
+            (click)="setNota(n)"
+          >★</button>
+        </div>
+        <p class="nota-label" *ngIf="notaSelecionada() > 0">
+          {{ ['', 'Péssimo', 'Ruim', 'Regular', 'Bom', 'Excelente'][notaSelecionada()] }}
+        </p>
+      </div>
+
+      <!-- Comentário -->
+      <div class="comentario-card">
+        <p class="comentario-label">Conte-nos mais</p>
+        <textarea
+          class="comentario-input"
+          [(ngModel)]="comentario"
+          placeholder="Como foi sua experiência? O que você achou do prato, da entrega..."
+          rows="5"
+        ></textarea>
+      </div>
+
+      <!-- Enviar -->
+      <button
+        class="btn-enviar"
+        (click)="enviarAvaliacao()"
+        [disabled]="enviando()"
+      >
+        <svg *ngIf="!enviando()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
         </svg>
-        <span class="resumo-nota">{{ mediaAvaliacoes }}</span>
-      </div>
-      <p class="resumo-total">{{ avaliacoes.length }} avaliações</p>
-    </div>
+        {{ enviando() ? 'Enviando...' : 'Enviar avaliação' }}
+      </button>
 
-    <!-- Lista -->
-    <div class="avaliacoes-lista">
-      <div class="avaliacao-card" *ngFor="let av of avaliacoes">
-        <div class="avaliacao-topo">
-          <span class="avaliacao-nome">{{ av.nome }}</span>
-          <div class="estrelas">
-            <span
-              *ngFor="let s of [1,2,3,4,5]; let i = index"
-              class="estrela"
-              [class.vazia]="i + 1 > av.nota"
-            >★</span>
+    </ng-container>
+
+    <!-- ══ SUCESSO ══ -->
+    <ng-container *ngIf="enviado()">
+      <div class="sucesso-card">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <p class="sucesso-titulo">Avaliação enviada!</p>
+        <p class="sucesso-texto">Obrigado pelo seu feedback. Isso nos ajuda a melhorar cada vez mais!</p>
+        <button class="btn-voltar-pedidos" (click)="voltar()">Voltar para pedidos</button>
+      </div>
+    </ng-container>
+
+    <!-- ══ HISTÓRICO DE AVALIAÇÕES DO CLIENTE (com respostas) ══ -->
+    <div class="historico-avaliacoes" *ngIf="avaliacoesDoCliente().length > 0 && !enviado()">
+      <p class="historico-titulo">Suas avaliações anteriores</p>
+
+      <div class="avaliacao-card" *ngFor="let av of avaliacoesDoCliente()">
+        <div class="av-topo">
+          <span class="av-numero">{{ av.numeroPedido }}</span>
+          <div class="av-estrelas">
+            <span *ngFor="let n of estrelas" class="estrela-mini" [class.ativa]="n <= av.nota">★</span>
           </div>
         </div>
-        <p class="avaliacao-data">{{ av.data }}</p>
-        <p class="avaliacao-texto">{{ av.texto }}</p>
+        <p class="av-data">{{ formatarData(av.dataHora) }}</p>
+        <p class="av-comentario">{{ av.comentario }}</p>
+
+        <!-- Resposta do restaurante -->
+        <div class="av-resposta" *ngIf="av.resposta">
+          <div class="resposta-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>Resposta do BAIANAr</span>
+          </div>
+          <p class="resposta-texto">{{ av.resposta }}</p>
+          <p class="resposta-data" *ngIf="av.dataResposta">{{ formatarData(av.dataResposta) }}</p>
+        </div>
+
+        <!-- Aguardando resposta -->
+        <div class="aguardando-resposta" *ngIf="!av.resposta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Aguardando resposta do restaurante</span>
+        </div>
       </div>
     </div>
 

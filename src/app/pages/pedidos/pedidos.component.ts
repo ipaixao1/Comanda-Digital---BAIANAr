@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { PedidoService, PedidoShared, StatusPedido as StatusPedidoShared } from '../../services/pedido.service';
 import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -20,13 +21,15 @@ export interface ItemPedido {
 }
 
 export interface Pedido {
-  numero: number;
+  numero: number | string;
   dataHora: Date;
   qtdItens: number;
   itens: ItemPedido[];
   statusPreparo: StatusPreparo;
   statusComanda: StatusComanda;
   valorTotal: number;
+  isReal?: boolean;
+  pedidoId?: string;
 }
 
 @Component({
@@ -39,14 +42,54 @@ export interface Pedido {
 export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('chartDia') chartDiaRef!: ElementRef<HTMLCanvasElement>;
 
-  private authService = inject(AuthService);
-  private destroyRef  = inject(DestroyRef);
+  private authService  = inject(AuthService);
+  private pedidoSvc    = inject(PedidoService);
+  private destroyRef   = inject(DestroyRef);
   private chart: any;
 
-  pedidoAberto = signal<number | null>(null);
+  pedidoAberto = signal<number | string | null>(null);
   private _extra = signal(0);
 
-  pedidos = signal<Pedido[]>([
+  // ── Mapa: StatusPedidoShared → StatusPreparo (admin) ────────
+  private toStatusPreparo(s: StatusPedidoShared): StatusPreparo {
+    const map: Record<StatusPedidoShared, StatusPreparo> = {
+      recebido:   'Aguardando preparo',
+      em_preparo: 'Em preparo',
+      pronto:     'Pronto',
+      enviado:    'Pronto',
+      a_caminho:  'Finalizado',
+      entregue:   'Finalizado',
+      cancelado:  'Cancelado',
+    };
+    return map[s];
+  }
+
+  private toStatusComanda(s: StatusPedidoShared): StatusComanda {
+    return ['entregue', 'cancelado', 'a_caminho'].includes(s) ? 'Fechada' : 'Aberta';
+  }
+
+  // Converte PedidoShared → Pedido (admin)
+  private converterPedido(p: PedidoShared): Pedido {
+    return {
+      numero: p.numero as any,   // string "#8750"
+      dataHora: new Date(p.dataHora),
+      qtdItens: p.itens.reduce((s, i) => s + i.quantidade, 0),
+      statusPreparo: this.toStatusPreparo(p.status),
+      statusComanda: this.toStatusComanda(p.status),
+      valorTotal: p.total,
+      isReal: true,
+      pedidoId: p.id,
+      itens: p.itens.map(i => ({
+        nome: i.nome,
+        quantidade: i.quantidade,
+        obs: i.obs,
+        status: 'Aguardando' as const,
+      })),
+    };
+  }
+
+  // Pedidos mockados (demo) — mantidos exatamente como estavam
+  private pedidosMock: Pedido[] = [
     {
       numero: 2045, dataHora: new Date('2026-03-05T19:45'), qtdItens: 4,
       statusPreparo: 'Em preparo', statusComanda: 'Aberta', valorTotal: 128.50,
@@ -117,10 +160,19 @@ export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
         { nome: 'Água com Gás',    quantidade: 2, status: 'Entregue' },
       ]
     },
-  ]);
+  ];
+
+  // Signal de pedidos (reais do Firestore + mockados)
+  pedidos = computed<Pedido[]>(() => {
+    const reais = this.pedidoSvc.pedidos().map(p => this.converterPedido(p));
+    return [...reais, ...this.pedidosMock];
+  });
+
+  // Sincroniza pedidos reais do PedidoService — mantido por compatibilidade mas não faz nada agora
+  private sincronizarPedidos(): void {}
 
   // KPIs
-  totalSemana = computed(() => 446 + this._extra());
+  totalSemana = computed(() => 446 + this._extra() + this.pedidoSvc.pedidos().length);
   emPreparo   = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Em preparo').length);
   finalizados = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Finalizado').length);
   cancelados  = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Cancelado').length);
@@ -129,6 +181,7 @@ export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
   pedidosPorDia = [45, 37, 52, 63, 74, 95, 80];
 
   ngOnInit(): void {
+    // Pequena oscilação aleatória no KPI para simular movimento (apenas visual)
     interval(8000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this._extra.update(v => v + Math.floor(Math.random() * 2));
     });
@@ -210,7 +263,7 @@ export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   }
 
-  togglePedido(num: number): void {
+  togglePedido(num: number | string): void {
     this.pedidoAberto.set(this.pedidoAberto() === num ? null : num);
   }
 

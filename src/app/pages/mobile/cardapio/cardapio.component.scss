@@ -831,3 +831,40 @@
   padding: 0 4px;
   border: 2px solid var(--bg);
 }
+// ── Produto indisponível ────────────────────────────────────────
+.produto-card {
+  position: relative;
+  overflow: hidden;
+
+  &.produto-indisponivel {
+    opacity: 0.6;
+    cursor: default !important;
+  }
+}
+
+.indisp-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.indisp-label {
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+
+.adicionar-btn.indisp-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  cursor: not-allowed !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

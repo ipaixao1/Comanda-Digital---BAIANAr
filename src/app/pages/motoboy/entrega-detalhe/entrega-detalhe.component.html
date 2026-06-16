@@ -1,4 +1,4 @@
-<div class="detalhe-page" *ngIf="entrega">
+<div class="detalhe-page" *ngIf="pedido()">
 
   <header class="detalhe-header">
     <button class="btn-voltar" (click)="voltar()">
@@ -7,12 +7,12 @@
       </svg>
     </button>
     <div class="header-center">
-      <h1 class="detalhe-titulo">{{ entrega.numeroPedido }}</h1>
-      <span class="detalhe-status" [class]="entrega.status">
-        {{ entrega.status === 'pendente' ? 'Pendente' : entrega.status === 'a_caminho' ? 'A caminho' : 'Entregue' }}
+      <h1 class="detalhe-titulo">{{ pedido()!.numero }}</h1>
+      <span class="detalhe-status" [class]="pedido()!.status">
+        {{ statusLabel(pedido()!.status) }}
       </span>
     </div>
-    <span class="detalhe-horario">{{ entrega.horario }}</span>
+    <span class="detalhe-horario">{{ formatarHora(pedido()!.dataHora) }}</span>
   </header>
 
   <main class="detalhe-content">
@@ -24,27 +24,26 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
-        <span>{{ entrega.cliente }}</span>
+        <span>{{ pedido()!.clienteNome ?? 'Cliente' }}</span>
       </div>
-      <a class="info-linha link" [href]="'tel:' + entrega.telefone">
+      <div class="info-linha" *ngIf="pedido()!.clienteTelefone">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/>
         </svg>
-        <span>{{ entrega.telefone }}</span>
-      </a>
+        <span>{{ pedido()!.clienteTelefone }}</span>
+      </div>
     </div>
 
     <!-- Endereço -->
-    <div class="info-card">
+    <div class="info-card" *ngIf="pedido()!.endereco">
       <p class="card-titulo">Endereço de entrega</p>
       <div class="info-linha">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
         </svg>
         <div class="endereco-bloco">
-          <span>{{ entrega.endereco }}</span>
-          <span class="complemento" *ngIf="entrega.complemento">{{ entrega.complemento }}</span>
-          <span class="bairro">{{ entrega.bairro }} — {{ entrega.cidade }}</span>
+          <span>{{ pedido()!.endereco!.rua }}</span>
+          <span class="bairro">{{ pedido()!.endereco!.cidade }}</span>
         </div>
       </div>
     </div>
@@ -97,48 +96,56 @@
     <!-- Itens -->
     <div class="info-card">
       <p class="card-titulo">Itens do pedido</p>
-      <div class="item-linha" *ngFor="let item of entrega.itens">
+      <div class="item-linha" *ngFor="let item of pedido()!.itens">
         <span class="item-qtd">{{ item.quantidade }}x</span>
         <span class="item-nome">{{ item.nome }}</span>
       </div>
       <div class="divider"></div>
       <div class="total-linha">
         <span>Total</span>
-        <span class="total-valor">{{ formatarPreco(entrega.total) }}</span>
+        <span class="total-valor">{{ formatarPreco(pedido()!.total) }}</span>
       </div>
-      <div class="pagamento-linha">
+      <div class="pagamento-linha" *ngIf="pedido()!.pagamento">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
         </svg>
-        <span>{{ entrega.pagamento }}</span>
+        <span>{{ pedido()!.pagamento!.nome }}</span>
       </div>
     </div>
 
-    <!-- Ações -->
-    <div class="acoes" *ngIf="entrega.status !== 'entregue'">
-      <button
-        class="btn-acao secundario"
-        *ngIf="entrega.status === 'pendente'"
-        (click)="iniciarEntrega()"
-      >
+    <!-- Ações: novo pedido (enviado) → aceitar/recusar -->
+    <div class="acoes" *ngIf="pedido()!.status === 'enviado'">
+      <p style="text-align:center;color:rgba(255,255,255,0.7);margin-bottom:1rem;font-size:0.9rem;">
+        Novo pedido aguardando aceitação
+      </p>
+      <button class="btn-acao principal" (click)="aceitarEntrega()" [disabled]="salvando()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        {{ salvando() ? 'Aguarde...' : 'Aceitar entrega' }}
+      </button>
+    </div>
+
+    <!-- Ações: a caminho → confirmar entrega -->
+    <div class="acoes" *ngIf="pedido()!.status === 'a_caminho'">
+      <button class="btn-acao secundario" style="cursor:default;opacity:0.7">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="5.5" cy="17.5" r="3.5"/>
           <circle cx="18.5" cy="17.5" r="3.5"/>
           <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>
         </svg>
-        Saí para entrega
+        Em rota de entrega
       </button>
-
-      <button class="btn-acao principal" (click)="confirmarEntrega()">
+      <button class="btn-acao principal" (click)="confirmarEntrega()" [disabled]="salvando()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-        Confirmar entrega
+        {{ salvando() ? 'Aguarde...' : 'Confirmar entrega' }}
       </button>
     </div>
 
     <!-- Entregue -->
-    <div class="entregue-card" *ngIf="entrega.status === 'entregue'">
+    <div class="entregue-card" *ngIf="pedido()!.status === 'entregue'">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
         <polyline points="22 4 12 14.01 9 11.01"/>
@@ -150,8 +157,8 @@
 
 </div>
 
-<!-- Entrega não encontrada -->
-<div class="nao-encontrado" *ngIf="!entrega">
-  <p>Entrega não encontrada.</p>
+<!-- Pedido não encontrado -->
+<div class="nao-encontrado" *ngIf="!pedido()">
+  <p>Pedido não encontrado.</p>
   <button (click)="voltar()">Voltar</button>
 </div>

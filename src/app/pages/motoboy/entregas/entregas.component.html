@@ -3,7 +3,7 @@
   <header class="entregas-header">
     <div class="header-info">
       <h1 class="header-titulo">Olá, {{ primeiroNome() }}!</h1>
-      <p class="header-subtitulo">{{ entregasPendentes() }} entrega{{ entregasPendentes() !== 1 ? 's' : '' }} pendente{{ entregasPendentes() !== 1 ? 's' : '' }}</p>
+      <p class="header-subtitulo">{{ entregasPendentes() }} entrega{{ entregasPendentes() !== 1 ? 's' : '' }} nova{{ entregasPendentes() !== 1 ? 's' : '' }}</p>
     </div>
     <button class="btn-sair" (click)="sair()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -20,7 +20,7 @@
     <div class="resumo-row">
       <div class="resumo-item">
         <p class="resumo-valor">{{ entregasPendentes() }}</p>
-        <p class="resumo-label">Pendentes</p>
+        <p class="resumo-label">Novos</p>
       </div>
       <div class="resumo-divider"></div>
       <div class="resumo-item">
@@ -45,11 +45,11 @@
       >
         <div class="entrega-topo">
           <div class="entrega-numero-wrap">
-            <span class="entrega-numero">{{ entrega.numeroPedido }}</span>
-            <span class="entrega-horario">{{ entrega.horario }}</span>
+            <span class="entrega-numero">{{ entrega.numero }}</span>
+            <span class="entrega-horario">{{ formatarHora(entrega.dataHora) }}</span>
           </div>
           <span class="entrega-status" [class]="entrega.status">
-            {{ entrega.status === 'pendente' ? 'Pendente' : entrega.status === 'a_caminho' ? 'A caminho' : 'Entregue' }}
+            {{ statusLabel(entrega) }}
           </span>
         </div>
 
@@ -57,14 +57,14 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
           </svg>
-          <span>{{ entrega.cliente }}</span>
+          <span>{{ entrega.clienteNome ?? 'Cliente' }}</span>
         </div>
 
-        <div class="entrega-endereco">
+        <div class="entrega-endereco" *ngIf="entrega.endereco">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
-          <span>{{ entrega.endereco }}, {{ entrega.bairro }}</span>
+          <span>{{ entrega.endereco.rua }}</span>
         </div>
 
         <div class="entrega-rodape">

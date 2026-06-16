@@ -1,9 +1,10 @@
-import { Component, signal, computed, HostListener } from '@angular/core';
+import { Component, signal, computed, HostListener, inject } from '@angular/core';
 import { ClienteAuthService } from '../../../services/cliente-auth.service';
 import { CarrinhoService } from '../../../services/carrinho.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { CardapioStatusService } from '../../../services/cardapio-status.service';
 
 export interface Produto {
   id: number;
@@ -66,35 +67,35 @@ export class CardapioComponent {
   ];
 
   produtos: Produto[] = [
-    { id: 1,  nome: 'Casquinhas de Siri',      descricao: 'Casquinhas de siri gratinadas',                         preco: 32.90, imagem: 'https://images.unsplash.com/photo-1565680018093-ebb6b9ab5460?w=600&q=80', categoria: 'entradas',   favorito: false },
-    { id: 2,  nome: 'Caldo de Sururu',          descricao: 'Caldo quente de sururu com temperos',                   preco: 28.90, imagem: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80', categoria: 'entradas',   favorito: false },
-    { id: 3,  nome: 'Mini Acarajés',            descricao: 'Bolinho de feijão-fradinho frito no azeite de dendê',   preco: 24.90, imagem: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&q=80', categoria: 'entradas',   favorito: true  },
-    { id: 4,  nome: 'Mini Abarás',              descricao: 'Abarás cozidos no vapor com vatapá',                    preco: 26.90, imagem: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80', categoria: 'entradas',   favorito: false },
-    { id: 5,  nome: 'Mini Pastel de Camarão',   descricao: 'Pastéis crocantes recheados com camarão temperado',     preco: 22.90, imagem: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?w=600&q=80', categoria: 'entradas',   favorito: false },
-    { id: 6,  nome: 'Porção de Pitinga',        descricao: 'Manjubinha frita, crocante e temperada',                preco: 28.90, imagem: 'https://images.unsplash.com/photo-1519984388953-d2406bc725e1?w=600&q=80', categoria: 'entradas',   favorito: false },
-    { id: 7,  nome: 'Moqueca de Peixe',         descricao: 'Peixe fresco ao molho de dendê e leite de coco',       preco: 75.90, imagem: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=600&q=80', categoria: 'principais', favorito: true  },
-    { id: 8,  nome: 'Bobó de Camarão',          descricao: 'Camarões frescos em creme cremoso de mandioca',         preco: 82.90, imagem: 'https://images.unsplash.com/photo-1599084993891-1b4e9dd5a70a?w=600&q=80', categoria: 'principais', favorito: true  },
-    { id: 9,  nome: 'Carne do Sol com Purê',    descricao: 'Carne do sol grelhada com purê rústico de macaxeira',   preco: 68.90, imagem: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80', categoria: 'principais', favorito: false },
-    { id: 10, nome: 'Baião de Dois',            descricao: 'Arroz com feijão de corda, queijo coalho e carne seca', preco: 58.90, imagem: 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=600&q=80', categoria: 'principais', favorito: false },
-    { id: 11, nome: 'Arroz de Polvo',           descricao: 'Polvo ao molho com arroz negro e azeite de ervas',      preco: 89.90, imagem: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=80', categoria: 'principais', favorito: false },
-    { id: 12, nome: 'Camarão à Baiana',         descricao: 'Camarão salteado com molho de dendê e pimenta',         preco: 78.90, imagem: 'https://images.unsplash.com/photo-1617622141573-cba8e887e3c3?w=600&q=80', categoria: 'principais', favorito: false },
-    { id: 13, nome: 'Torta de Cocada',                      descricao: 'Torta cremosa de coco com base crocante',              preco: 18.90, imagem: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 14, nome: 'Pudim de Tapioca',                     descricao: 'Pudim nordestino de tapioca com calda de caramelo',     preco: 16.90, imagem: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 15, nome: 'Bolinho de Estudante',                 descricao: 'Bolinho frito de tapioca com coco ralado',              preco: 14.90, imagem: 'https://images.unsplash.com/photo-1528975604071-b4dc52a2d18c?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 16, nome: 'Bala Baiana na Travessa',              descricao: 'Doce tradicional baiano servido na travessa',           preco: 22.90, imagem: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 17, nome: 'Queijadinha',                          descricao: 'Docinho de coco e queijo coalho assado',                preco: 12.90, imagem: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 18, nome: 'Doce de Leite Talhado',               descricao: 'Doce de leite artesanal no ponto rústico',              preco: 15.90, imagem: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 19, nome: 'Pudim de Tapioca com Leite Condensado', descricao: 'Versão especial do pudim com leite condensado',        preco: 17.90, imagem: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80', categoria: 'sobremesas', favorito: false },
-    { id: 20, nome: 'Água',           descricao: 'Água mineral gelada (500ml)',                   preco: 4.00,  imagem: null, categoria: 'bebidas', favorito: false },
-    { id: 21, nome: 'Água com Gás',   descricao: 'Água mineral com gás gelada (500ml)',            preco: 5.00,  imagem: null, categoria: 'bebidas', favorito: false },
-    { id: 22, nome: 'Refrigerante',   descricao: 'Lata 350ml · consulte os sabores disponíveis',  preco: 6.00,  imagem: null, categoria: 'bebidas', favorito: false },
-    { id: 23, nome: 'Sucos Naturais', descricao: 'Frutas da estação batidas na hora',              preco: 12.00, imagem: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=600&q=80', categoria: 'bebidas', favorito: false },
-    { id: 24, nome: 'Cerveja 600ml',  descricao: 'Long neck ou garrafa, consulte as marcas',       preco: 15.00, imagem: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&q=80', categoria: 'bebidas', favorito: false },
-    { id: 25, nome: 'Caipirinhas e Caipiroskas', descricao: 'Cachaça ou vodka com frutas frescas da estação', preco: 22.00, imagem: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=600&q=80', categoria: 'drinks', favorito: false },
-    { id: 26, nome: 'Cravinho',                  descricao: 'Licor artesanal de cravo com cachaça envelhecida', preco: 24.00, imagem: 'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=80', categoria: 'drinks', favorito: false },
-    { id: 27, nome: 'Coice de Mula',             descricao: 'Moscow Mule tropical com gengibre e limão',       preco: 26.00, imagem: 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=600&q=80', categoria: 'drinks', favorito: false },
-    { id: 28, nome: 'Drinks Tropicais',          descricao: 'Combinações exclusivas com frutas nordestinas',   preco: 28.00, imagem: 'https://images.unsplash.com/photo-1587223962930-cb7f31384c19?w=600&q=80', categoria: 'drinks', favorito: false },
-    { id: 29, nome: 'Gin Tônica',                descricao: 'Gin premium com água tônica e botânicos da casa', preco: 30.00, imagem: 'https://images.unsplash.com/photo-1534353341530-41ae8b93dc16?w=600&q=80', categoria: 'drinks', favorito: false },
+    { id: 1,  nome: 'Casquinhas de Siri',      descricao: 'Casquinhas de siri gratinadas',                         preco: 32.90, imagem: 'assets/images/Casquinhas de Siri.jpg', categoria: 'entradas',   favorito: false },
+    { id: 2,  nome: 'Caldo de Sururu',          descricao: 'Caldo quente de sururu com temperos',                   preco: 28.90, imagem: 'assets/images/Caldo de Sururu.jpg', categoria: 'entradas',   favorito: false },
+    { id: 3,  nome: 'Mini Acarajés',            descricao: 'Bolinho de feijão-fradinho frito no azeite de dendê',   preco: 24.90, imagem: 'assets/images/Mini acarajé.jpg', categoria: 'entradas',   favorito: true  },
+    { id: 4,  nome: 'Mini Abarás',              descricao: 'Abarás cozidos no vapor com vatapá',                    preco: 26.90, imagem: 'assets/images/Mini Abara.jpg', categoria: 'entradas',   favorito: false },
+    { id: 5,  nome: 'Mini Pastel de Camarão',   descricao: 'Pastéis crocantes recheados com camarão temperado',     preco: 22.90, imagem: 'assets/images/Pastel de camarao.jpg', categoria: 'entradas',   favorito: false },
+    { id: 6,  nome: 'Porção de Pitinga',        descricao: 'Manjubinha frita, crocante e temperada',                preco: 28.90, imagem: 'assets/images/Porcao de Pititinga.jpg', categoria: 'entradas',   favorito: false },
+    { id: 7,  nome: 'Moqueca de Peixe',         descricao: 'Peixe fresco ao molho de dendê e leite de coco',       preco: 75.90, imagem: 'assets/images/Moqueca de Peixe.jpg', categoria: 'principais', favorito: true  },
+    { id: 8,  nome: 'Bobó de Camarão',          descricao: 'Camarões frescos em creme cremoso de mandioca',         preco: 82.90, imagem: 'assets/images/Bobo de Camarao.jpg', categoria: 'principais', favorito: true  },
+    { id: 9,  nome: 'Carne do Sol com Purê',    descricao: 'Carne do sol grelhada com purê rústico de macaxeira',   preco: 68.90, imagem: 'assets/images/Carne do Sol.jpg', categoria: 'principais', favorito: false },
+    { id: 10, nome: 'Baião de Dois',            descricao: 'Arroz com feijão de corda, queijo coalho e carne seca', preco: 58.90, imagem: 'assets/images/Baiao de Dois.jpg', categoria: 'principais', favorito: false },
+    { id: 11, nome: 'Arroz de Polvo',           descricao: 'Polvo ao molho com arroz negro e azeite de ervas',      preco: 89.90, imagem: 'assets/images/Arroz de Polvo.jpg', categoria: 'principais', favorito: false },
+    { id: 12, nome: 'Camarão à Baiana',         descricao: 'Camarão salteado com molho de dendê e pimenta',         preco: 78.90, imagem: 'assets/images/Camarao a Baiana.jpg', categoria: 'principais', favorito: false },
+    { id: 13, nome: 'Torta de Cocada',                      descricao: 'Torta cremosa de coco com base crocante',              preco: 18.90, imagem: 'assets/images/Torta de Cocada.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 14, nome: 'Pudim de Tapioca',                     descricao: 'Pudim nordestino de tapioca com calda de caramelo',     preco: 16.90, imagem: 'assets/images/Pudim de Tapioca.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 15, nome: 'Bolinho de Estudante',                 descricao: 'Bolinho frito de tapioca com coco ralado',              preco: 14.90, imagem: 'assets/images/Bolinho de Estudante.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 16, nome: 'Bala Baiana na Travessa',              descricao: 'Doce tradicional baiano servido na travessa',           preco: 22.90, imagem: 'assets/images/Bala baiana.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 17, nome: 'Queijadinha',                          descricao: 'Docinho de coco e queijo coalho assado',                preco: 12.90, imagem: 'assets/images/Queijadinha.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 18, nome: 'Doce de Leite Talhado',               descricao: 'Doce de leite artesanal no ponto rústico',              preco: 15.90, imagem: 'assets/images/Doce de Leite.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 19, nome: 'Pudim de Tapioca com Leite Condensado', descricao: 'Versão especial do pudim com leite condensado',        preco: 17.90, imagem: 'assets/images/Pudim.jpg', categoria: 'sobremesas', favorito: false },
+    { id: 20, nome: 'Água',           descricao: 'Água mineral gelada (500ml)',                   preco: 4.00,  imagem: 'assets/images/Agua.jpg', categoria: 'bebidas', favorito: false },
+    { id: 21, nome: 'Água com Gás',   descricao: 'Água mineral com gás gelada (500ml)',            preco: 5.00,  imagem: 'assets/images/Agua com gas.jpg', categoria: 'bebidas', favorito: false },
+    { id: 22, nome: 'Refrigerante',   descricao: 'Lata 350ml · consulte os sabores disponíveis',  preco: 6.00,  imagem: 'assets/images/refrigerante.jpg', categoria: 'bebidas', favorito: false },
+    { id: 23, nome: 'Sucos Naturais', descricao: 'Frutas da estação batidas na hora',              preco: 12.00, imagem: 'assets/images/Sucos.jpg', categoria: 'bebidas', favorito: false },
+    { id: 24, nome: 'Cerveja 600ml',  descricao: 'Long neck ou garrafa, consulte as marcas',       preco: 15.00, imagem: 'assets/images/Cerveja.jpg', categoria: 'bebidas', favorito: false },
+    { id: 25, nome: 'Caipirinhas e Caipiroskas', descricao: 'Cachaça ou vodka com frutas frescas da estação', preco: 22.00, imagem: 'assets/images/Caipirnha e Caipiroska.jpg', categoria: 'drinks', favorito: false },
+    { id: 26, nome: 'Cravinho',                  descricao: 'Licor artesanal de cravo com cachaça envelhecida', preco: 24.00, imagem: 'assets/images/Cravinho.jpg', categoria: 'drinks', favorito: false },
+    { id: 27, nome: 'Coice de Mula',             descricao: 'Moscow Mule tropical com gengibre e limão',       preco: 26.00, imagem: 'assets/images/Moscow Mule.jpg', categoria: 'drinks', favorito: false },
+    { id: 28, nome: 'Drinks Tropicais',          descricao: 'Combinações exclusivas com frutas nordestinas',   preco: 28.00, imagem: 'assets/images/Drinks tropicais.jpg', categoria: 'drinks', favorito: false },
+    { id: 29, nome: 'Gin Tônica',                descricao: 'Gin premium com água tônica e botânicos da casa', preco: 30.00, imagem: 'assets/images/Gin tonica.jpg', categoria: 'drinks', favorito: false },
   ];
 
   avaliacoes: Avaliacao[] = [
@@ -130,10 +131,17 @@ export class CardapioComponent {
   toastVisivel = signal<boolean>(false);
   private toastTimeout: any;
 
+  private cardapioStatusSvc = inject(CardapioStatusService);
+
   constructor(
     private authService: ClienteAuthService,
     public carrinho: CarrinhoService
   ) {}
+
+  // Verifica se prato está indisponível (KDS ou admin)
+  isProdutoIndisponivel(nome: string): boolean {
+    return this.cardapioStatusSvc.isIndisPorNome(nome);
+  }
 
   categoriaSelecionada = signal<string>('todos');
   dropdownAberto = signal<boolean>(false);

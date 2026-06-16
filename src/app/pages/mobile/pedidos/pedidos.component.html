@@ -39,16 +39,16 @@
             </div>
             <div class="pedido-info">
               <div class="pedido-topo">
-                <p class="pedido-numero">Pedido {{ numeroPedidoAtual }}</p>
+                <p class="pedido-numero">Pedido {{ pedidoAtivo()?.numero }}</p>
                 <svg class="pedido-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
               <p class="pedido-status">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Em preparo
+                {{ labelStatusAtual() }}
               </p>
               <div class="pedido-rodape">
                 <span class="pedido-itens">{{ totalItensPedidoAtual() }} {{ totalItensPedidoAtual() === 1 ? 'item' : 'itens' }}</span>
-                <span class="pedido-total">{{ formatarPreco(totalPedidoAtual()) }}</span>
+                <span class="pedido-total">{{ formatarPreco(totalValorPedidoAtual()) }}</span>
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@
           <svg class="pedido-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
 
-        <!-- Sem pedidos -->
+        <!-- Sem pedidos ativos -->
         <div class="estado-vazio" *ngIf="!temPedidoAtual()">
           <div class="icone-wrapper">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -214,21 +214,19 @@
 
       <main class="pedidos-content">
 
-        <!-- Card de status (entregue/cancelado) -->
-        <div class="status-final-card" [class.cancelado]="pedidoVisualizado()?.status === 'Cancelado'">
+        <!-- Card de status -->
+        <div class="status-final-card" [class.cancelado]="pedidoVisualizado()?.status === 'cancelado'">
           <div class="status-final-icone">
-            <svg *ngIf="pedidoVisualizado()?.status !== 'Cancelado'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg *ngIf="pedidoVisualizado()?.status !== 'cancelado'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            <svg *ngIf="pedidoVisualizado()?.status === 'Cancelado'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg *ngIf="pedidoVisualizado()?.status === 'cancelado'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </div>
           <div>
-            <p class="status-final-titulo">{{ pedidoVisualizado()?.status === 'Cancelado' ? 'Pedido cancelado' : 'Pedido finalizado' }}</p>
-            <p class="status-final-data">
-              {{ pedidoVisualizado()?.status === 'Cancelado' ? 'Cancelado em' : 'Entregue em' }} {{ pedidoVisualizado()?.data }}, {{ pedidoVisualizado()?.hora }}
-            </p>
+            <p class="status-final-titulo">{{ pedidoVisualizado()?.status === 'cancelado' ? 'Pedido cancelado' : 'Pedido finalizado' }}</p>
+            <p class="status-final-data">{{ formatarData(pedidoVisualizado()?.dataHora ?? '') }}</p>
           </div>
         </div>
 
@@ -253,7 +251,7 @@
         </div>
 
         <!-- Avaliar pedido (apenas Entregue) -->
-        <button class="btn-avaliar" *ngIf="pedidoVisualizado()?.status !== 'Cancelado'" (click)="avaliarPedido()">
+        <button class="btn-avaliar" *ngIf="pedidoVisualizado()?.status === 'entregue'" (click)="avaliarPedido(pedidoVisualizado()!.id)">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
@@ -278,23 +276,38 @@
 
     <main class="pedidos-content">
       <div class="historico-lista">
-        <div class="historico-card" *ngFor="let pedido of historico" (click)="abrirStatusHistorico(pedido)">
-          <div class="historico-topo">
-            <p class="historico-numero">Pedido {{ pedido.numero }}</p>
-            <span class="historico-status" [class.cancelado]="pedido.status === 'Cancelado'">{{ pedido.status }}</span>
-          </div>
-          <p class="historico-data">{{ pedido.data }}</p>
+        <ng-container *ngIf="historico().length > 0; else semHistorico">
+          <div class="historico-card" *ngFor="let p of historico()" (click)="abrirStatusHistorico(p)">
+            <div class="historico-topo">
+              <p class="historico-numero">Pedido {{ p.numero }}</p>
+              <span class="historico-status" [class.cancelado]="p.status === 'cancelado'">
+                {{ p.status === 'entregue' ? 'Entregue' : 'Cancelado' }}
+              </span>
+            </div>
+            <p class="historico-data">{{ formatarData(p.dataHora) }}</p>
 
-          <div class="historico-itens">
-            <p class="historico-item" *ngFor="let item of pedido.itens">{{ item.quantidade }}x {{ item.nome }}</p>
-          </div>
+            <div class="historico-itens">
+              <p class="historico-item" *ngFor="let item of p.itens">{{ item.quantidade }}x {{ item.nome }}</p>
+            </div>
 
-          <div class="historico-divider"></div>
-          <div class="historico-rodape">
-            <span>Total</span>
-            <span class="historico-total">{{ formatarPreco(pedido.total) }}</span>
+            <div class="historico-divider"></div>
+            <div class="historico-rodape">
+              <span>Total</span>
+              <span class="historico-total">{{ formatarPreco(p.total) }}</span>
+            </div>
           </div>
-        </div>
+        </ng-container>
+        <ng-template #semHistorico>
+          <div class="estado-vazio">
+            <div class="icone-wrapper">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h2 class="vazio-titulo">Nenhum pedido anterior</h2>
+            <p class="vazio-texto">Seus pedidos finalizados aparecerão aqui.</p>
+          </div>
+        </ng-template>
       </div>
     </main>
   </ng-container>

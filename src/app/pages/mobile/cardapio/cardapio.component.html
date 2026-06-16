@@ -164,7 +164,15 @@
       <h2 class="categoria-titulo">{{ cat.label }}</h2>
 
       <div class="produtos-lista">
-        <article class="produto-card" *ngFor="let produto of produtosPorCategoria(cat.id)" [routerLink]="['/mobile/produto', produto.id]" style="cursor:pointer">
+        <article class="produto-card" *ngFor="let produto of produtosPorCategoria(cat.id)"
+          [routerLink]="isProdutoIndisponivel(produto.nome) ? null : ['/mobile/produto', produto.id]"
+          [class.produto-indisponivel]="isProdutoIndisponivel(produto.nome)"
+          style="cursor:pointer">
+
+          <!-- Overlay indisponível -->
+          <div class="indisp-overlay" *ngIf="isProdutoIndisponivel(produto.nome)">
+            <span class="indisp-label">Indisponível hoje</span>
+          </div>
 
           <!-- Imagem -->
           <div class="produto-imagem-wrapper" *ngIf="produto.imagem; else semFoto">
@@ -218,14 +226,17 @@
                 Consulte o valor
               </span>
 
-              <div class="quantidade-control" *ngIf="getQuantidade(produto) > 0; else addBtn">
+              <div class="quantidade-control" *ngIf="getQuantidade(produto) > 0 && !isProdutoIndisponivel(produto.nome); else addBtnOrIndisp">
                 <button class="qty-btn" (click)="$event.stopPropagation(); removerProduto(produto)">−</button>
                 <span class="qty-valor">{{ getQuantidade(produto) }}</span>
                 <button class="qty-btn" (click)="$event.stopPropagation(); adicionarProduto(produto)">+</button>
               </div>
 
-              <ng-template #addBtn>
-                <button class="adicionar-btn" (click)="$event.stopPropagation(); adicionarProduto(produto)">
+              <ng-template #addBtnOrIndisp>
+                <button class="adicionar-btn indisp-btn" disabled *ngIf="isProdutoIndisponivel(produto.nome)">
+                  Indisponível
+                </button>
+                <button class="adicionar-btn" *ngIf="!isProdutoIndisponivel(produto.nome)" (click)="$event.stopPropagation(); adicionarProduto(produto)">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2.5" stroke-linecap="round">
                     <line x1="12" y1="5" x2="12" y2="19"/>

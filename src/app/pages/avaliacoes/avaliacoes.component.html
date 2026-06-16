@@ -32,11 +32,14 @@
 
   <!-- Lista de avaliações -->
   <div class="avaliacoes-lista">
-    <div *ngFor="let av of avaliacoes()" class="av-card">
+    <div *ngFor="let av of todasAvaliacoes()" class="av-card">
 
-      <!-- Cabeçalho da avaliação -->
+      <!-- Cabeçalho -->
       <div class="av-header">
-        <span class="av-cliente">{{ av.cliente }}</span>
+        <div class="av-header-left">
+          <span class="av-cliente">{{ av.clienteNome }}</span>
+          <span class="av-numero">{{ av.numeroPedido }}</span>
+        </div>
         <div class="av-estrelas">
           <svg *ngFor="let s of getStars(av.nota); let i = index"
             viewBox="0 0 24 24"
@@ -49,45 +52,62 @@
       </div>
 
       <!-- Prato e data -->
-      <p class="av-prato">{{ av.prato }}</p>
-      <p class="av-data">{{ av.data }}</p>
+      <p class="av-prato">{{ av.pratoResumo }}</p>
+      <p class="av-data">{{ formatarData(av.dataHora) }}</p>
 
       <!-- Comentário -->
       <p class="av-comentario">{{ av.comentario }}</p>
 
       <!-- Resposta existente -->
-      <div class="av-resposta" *ngIf="av.resposta && !av.respondendoAgora">
-        <p class="resposta-label">Resposta do BAIANAr:</p>
+      <div class="av-resposta" *ngIf="av.resposta && !isRespondendo(av.id)">
+        <div class="resposta-label-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="resposta-label">Resposta do BAIANAr:</span>
+        </div>
         <p class="resposta-texto">{{ av.resposta }}</p>
+        <p class="resposta-data" *ngIf="av.dataResposta">{{ formatarData(av.dataResposta) }}</p>
       </div>
 
       <!-- Formulário de resposta -->
-      <div class="av-form-resposta" *ngIf="av.respondendoAgora">
-        <button class="btn-cancelar" (click)="cancelarResposta(av.id)">Cancelar</button>
+      <div class="av-form-resposta" *ngIf="isRespondendo(av.id)">
         <textarea
           class="resposta-input"
-          [value]="av.textoResposta || ''"
-          (input)="onTextoResposta(av.id, $event)"
+          [value]="textoResposta()"
+          (input)="textoResposta.set($any($event.target).value)"
           placeholder="Digite sua resposta ao cliente..."
           rows="4"
         ></textarea>
-        <button class="btn-enviar" (click)="enviarResposta(av.id)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-          Enviar resposta
-        </button>
+        <div class="form-acoes">
+          <button class="btn-cancelar" (click)="cancelarResposta()">Cancelar</button>
+          <button
+            class="btn-enviar"
+            (click)="enviarResposta(av)"
+            [disabled]="isEnviando(av.id)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            {{ isEnviando(av.id) ? 'Enviando...' : 'Enviar resposta' }}
+          </button>
+        </div>
       </div>
 
-      <!-- Botão responder (só se não tem resposta e não está respondendo) -->
+      <!-- Botão responder -->
       <button
         class="btn-responder"
-        *ngIf="!av.resposta && !av.respondendoAgora"
+        *ngIf="!av.resposta && !isRespondendo(av.id)"
         (click)="abrirResposta(av.id)"
       >
         Responder avaliação
       </button>
+
+      <!-- Badge "nova" para avaliações reais sem resposta -->
+      <span class="badge-nova" *ngIf="av.pedidoId && !av.resposta && !isRespondendo(av.id)">
+        Nova
+      </span>
 
     </div>
   </div>
