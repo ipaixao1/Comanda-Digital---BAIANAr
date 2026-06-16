@@ -6,7 +6,7 @@
       <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
       <h1 class="page-title">Gerenciamento de Fornecedores</h1>
     </div>
-    <button class="btn-adicionar" (click)="abrirModalNovo()">
+    <button class="btn-adicionar" (click)="abrirModalNovo()" *ngIf="podeEditar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
@@ -55,7 +55,7 @@
       <span class="cell">
         <span class="status-badge" [class.badge--ativo]="f.status==='Ativo'" [class.badge--inativo]="f.status==='Inativo'">{{ f.status }}</span>
       </span>
-      <span class="cell cell--acoes">
+      <span class="cell cell--acoes" *ngIf="podeEditar">
         <button class="btn-acao btn-editar" (click)="abrirModalEditar(f, $event)" title="Editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>

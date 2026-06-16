@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&family=Poppins:ital,wght@1,200&display=swap');
+
+$color-bg:     #302C40; $color-card: #3A3550; $color-accent: #F29F05;
+$color-accent2:#F28705; $color-brown:#734002; $color-white:  #FFFFFF;
+$font-title:   'Cormorant Garamond', serif; $font-body: 'Poppins', sans-serif;
+
+@mixin gold-border($o: 0.3) { border: 1.5px solid rgba($color-accent, $o); }
+@mixin gold-hover { border-color: $color-accent; box-shadow: 0 0 0 1px rgba($color-accent,.15), 0 8px 32px rgba($color-accent,.1); }
+@mixin poppins($s: 13px) { font-family: $font-body; font-style: italic; font-weight: 200; font-size: $s; }
+
+.motoboys-page { display: flex; flex-direction: column; gap: 28px; }
+
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.greeting    { @include poppins(18px); color: $color-accent; margin-bottom: 4px; }
+.page-title  { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 42px; color: $color-white; line-height: 1.1; }
+
+.btn-adicionar {
+  display: flex; align-items: center; gap: 8px;
+  background: $color-accent; border: none; border-radius: 8px; padding: 13px 22px;
+  @include poppins(15px); color: $color-white; cursor: pointer; white-space: nowrap;
+  transition: background .2s, transform .15s;
+  svg { width: 18px; height: 18px; }
+  &:hover { background: $color-accent2; transform: translateY(-1px); }
+}
+
+// ── KPIs ─────────────────────────────────────────────────────
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.kpi-card {
+  border-radius: 14px; padding: 22px 24px; display: flex; flex-direction: column; gap: 10px;
+  transition: transform .18s;
+  &:hover { transform: translateY(-2px); }
+  &--normal  { background: rgba($color-brown,.5);  border: 1.5px solid rgba($color-accent,.35); }
+  &--rota    { background: rgba(#F28705,.12);       border: 1.5px solid rgba(#F28705,.4); }
+  &--entregas{ background: rgba(#2ECC71,.1);         border: 1.5px solid rgba(#2ECC71,.35); }
+}
+.kpi-top   { display: flex; align-items: center; justify-content: space-between; }
+.kpi-icon  { width: 40px; height: 40px; border-radius: 10px; background: rgba($color-accent,.15); display: flex; align-items: center; justify-content: center; svg { width: 20px; height: 20px; stroke: $color-accent; } &--warn { background: rgba(#F28705,.15); svg { stroke: #F28705; } } &--ok { background: rgba(#2ECC71,.15); svg { stroke: #2ECC71; } } }
+.kpi-label { @include poppins(13px); color: rgba($color-white,.6); }
+.kpi-value { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 48px; color: $color-accent; line-height: 1; &--warn { color: #F28705; } &--ok { color: #2ECC71; } }
+
+// ── Lista de motoboys ──────────────────────────────────────────
+.motoboys-lista { display: flex; flex-direction: column; gap: 14px; }
+
+.motoboy-card {
+  background: $color-card; border-radius: 14px; @include gold-border(.3);
+  overflow: hidden; transition: border-color .22s, box-shadow .22s;
+  &:hover { @include gold-hover; }
+}
+
+.motoboy-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px; cursor: pointer;
+}
+
+.motoboy-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba($color-accent,.15); border: 1.5px solid rgba($color-accent,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-family: $font-title; font-style: italic; font-weight: 600; font-size: 18px;
+  color: $color-accent; flex-shrink: 0;
+}
+
+.motoboy-info { flex: 1; min-width: 0; }
+.motoboy-nome { font-family: $font-title; font-style: italic; font-weight: 400; font-size: 19px; color: $color-white; }
+.motoboy-meta { @include poppins(13px); color: rgba($color-white,.55); margin-top: 2px; }
+
+.motoboy-stats { display: flex; gap: 18px; flex-shrink: 0; }
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-valor { font-family: $font-title; font-style: italic; font-weight: 500; font-size: 22px; color: $color-accent; }
+.stat-label { @include poppins(11px); color: rgba($color-white,.45); text-transform: uppercase; letter-spacing: .04em; }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px;
+  @include poppins(12.5px); border: 1.5px solid transparent; flex-shrink: 0; white-space: nowrap;
+  &.badge--disponivel { color: #2ECC71; border-color: #2ECC71; background: rgba(#2ECC71,.1); }
+  &.badge--entrega    { color: #F28705; border-color: #F28705; background: rgba(#F28705,.1); }
+  &.badge--offline    { color: rgba($color-white,.5); border-color: rgba($color-white,.3); background: rgba($color-white,.05); }
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.motoboy-acoes { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.btn-acao { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; display: flex; transition: transform .15s; svg { width: 17px; height: 17px; } &:hover { transform: scale(1.18); } }
+.btn-editar  svg { stroke: $color-accent; }
+.btn-excluir svg { stroke: #E74C3C; }
+
+.chevron { stroke: rgba($color-white,.4); flex-shrink: 0; transition: transform .2s; &--up { transform: rotate(180deg); } }
+
+// ── Detalhe expandido ────────────────────────────────────────
+.motoboy-detalhe {
+  padding: 4px 20px 20px; border-top: 1px solid rgba($color-accent,.12);
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+.detalhe-secao { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; }
+.detalhe-titulo { font-family: $font-title; font-style: italic; font-weight: 400; font-size: 17px; color: $color-accent; }
+
+.detalhe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.detalhe-item { display: flex; flex-direction: column; gap: 3px; }
+.detalhe-label { @include poppins(11.5px); color: rgba($color-white,.45); text-transform: uppercase; letter-spacing: .03em; }
+.detalhe-valor { @include poppins(14px); color: $color-white; }
+
+.entrega-ativa-card {
+  background: rgba(#F28705,.08); border: 1.5px solid rgba(#F28705,.3); border-radius: 10px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.entrega-ativa-topo { display: flex; align-items: center; justify-content: space-between; }
+.entrega-numero { font-family: $font-title; font-style: italic; font-weight: 500; font-size: 16px; color: $color-accent; }
+.entrega-status-tag { @include poppins(11.5px); color: #F28705; background: rgba(#F28705,.15); padding: 3px 10px; border-radius: 14px; }
+.entrega-ativa-info { display: flex; align-items: center; gap: 8px; @include poppins(13px); color: rgba($color-white,.8); svg { flex-shrink: 0; stroke: rgba($color-white,.5); } }
+
+.historico-entrega-row {
+  display: grid; grid-template-columns: 90px 1fr 100px 90px; gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: 8px; background: rgba($color-bg,.4);
+  @include poppins(13px); color: rgba($color-white,.8);
+  &:not(:last-child) { margin-bottom: 6px; }
+}
+.historico-numero { color: $color-accent; font-weight: 600; }
+.historico-data    { color: rgba($color-white,.55); font-size: 12px; }
+.historico-valor   { color: $color-white; text-align: right; }
+.historico-tag      { color: #2ECC71; background: rgba(#2ECC71,.12); padding: 3px 8px; border-radius: 12px; font-size: 11px; text-align: center; }
+
+.sem-dados { @include poppins(13px); color: rgba($color-white,.4); padding: 8px 0; }
+
+.estado-vazio { text-align: center; padding: 48px 0; @include poppins(15px); color: rgba($color-white,.4); }
+
+// ── Modal Adicionar/Editar ─────────────────────────────────────
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+
+.modal-card {
+  background: $color-card; border-radius: 16px; @include gold-border(.4);
+  width: 100%; max-width: 560px; max-height: 90vh;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  animation: modal-in .22s cubic-bezier(.4,0,.2,1);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+
+@keyframes modal-in { from{opacity:0;transform:translateY(16px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 26px; border-bottom: 1px solid rgba($color-accent,.15);
+  h2 { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 26px; color: $color-accent; }
+}
+.modal-close { background: none; border: none; cursor: pointer; padding: 4px; svg { width: 20px; height: 20px; stroke: rgba($color-white,.6); } &:hover svg { stroke: $color-white; } }
+
+.modal-body { padding: 24px 26px; overflow-y: auto; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { @include poppins(12.5px); color: rgba($color-white,.65); }
+.form-field input, .form-field select {
+  background: rgba($color-bg,.6); border: 1.5px solid rgba($color-accent,.2);
+  border-radius: 8px; padding: 12px 14px;
+  @include poppins(14px); color: $color-white; outline: none; width: 100%;
+  transition: border-color .18s; box-sizing: border-box;
+  &::placeholder { color: rgba($color-white,.2); }
+  &:focus { border-color: $color-accent; }
+}
+.form-field select { cursor: pointer; option { background: $color-card; color: $color-white; } }
+
+.modal-footer {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  padding: 20px 26px; border-top: 1px solid rgba($color-accent,.12);
+}
+
+.btn-cancelar { background: rgba($color-bg,.8); border: 1.5px solid rgba($color-white,.2); border-radius: 8px; padding: 14px; @include poppins(15px); color: rgba($color-white,.75); cursor: pointer; width: 100%; transition: border-color .18s, color .18s; &:hover { border-color: rgba($color-white,.45); color: $color-white; } }
+.btn-salvar   { background: $color-accent; border: none; border-radius: 8px; padding: 14px; @include poppins(15px); color: $color-white; cursor: pointer; width: 100%; transition: background .18s, transform .15s; &:hover { background: $color-accent2; transform: translateY(-1px); } &:disabled { opacity: .7; cursor: not-allowed; } }
+
+// ── Modal exclusão ──────────────────────────────────────────────
+.modal-card--exclusao {
+  max-width: 440px; padding: 32px 28px; border: 2px solid #E74C3C;
+  display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center;
+}
+.exclusao-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(#E74C3C,.12); display: flex; align-items: center; justify-content: center; svg { width: 28px; height: 28px; stroke: #E74C3C; } }
+.exclusao-titulo { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 26px; color: #E74C3C; }
+.exclusao-texto  { @include poppins(14.5px); color: rgba($color-white,.85); line-height: 1.5; strong { color: $color-white; font-weight: 600; } }
+.exclusao-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; width: 100%; }
+.btn-excluir-confirmar { background: #E74C3C; border: none; border-radius: 8px; padding: 14px; @include poppins(15px); color: $color-white; cursor: pointer; transition: filter .18s, transform .15s; &:hover { filter: brightness(1.15); transform: translateY(-1px); } }
+
+@media (max-width: 720px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .motoboy-row { flex-wrap: wrap; }
+  .motoboy-stats { order: 3; width: 100%; justify-content: flex-start; }
+  .detalhe-grid { grid-template-columns: 1fr; }
+  .historico-entrega-row { grid-template-columns: 1fr; gap: 4px; }
+}

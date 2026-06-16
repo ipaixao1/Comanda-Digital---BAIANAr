@@ -2,6 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { AdminDataService, Fornecedor } from '../../services/admin-data.service';
+import { PermissionService } from '../../services/permission.service';
 
 @Component({
   selector: 'app-fornecedores', standalone: true, imports: [CommonModule],
@@ -10,6 +11,10 @@ import { AdminDataService, Fornecedor } from '../../services/admin-data.service'
 export class FornecedoresComponent {
   private authService = inject(AuthService);
   private adminData   = inject(AdminDataService);
+  permission           = inject(PermissionService);
+
+  // Esta página só é editável pelo Dono — Gerente e Supervisor têm acesso somente leitura
+  podeEditar = this.permission.podeEditar('fornecedores');
 
   showModal         = signal(false);
   editando          = signal<Fornecedor | null>(null);
@@ -59,6 +64,7 @@ export class FornecedoresComponent {
   fecharModal(): void { if (!this.isSaving()) this.showModal.set(false); }
 
   async salvar(): Promise<void> {
+    if (!this.podeEditar) return;
     if (!this.mNome().trim()) return;
     this.isSaving.set(true);
     try {
@@ -94,6 +100,7 @@ export class FornecedoresComponent {
   }
 
   async confirmarExclusaoFinal(): Promise<void> {
+    if (!this.podeEditar) return;
     const f = this.fornParaExcluir();
     if (f?.firestoreId) {
       await this.adminData.excluirFornecedor(f.firestoreId).catch(console.error);

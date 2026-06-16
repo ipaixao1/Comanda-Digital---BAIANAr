@@ -11,7 +11,7 @@
     <!-- Navegação -->
     <nav class="sidebar__nav">
       <ul>
-        <li *ngFor="let item of navItems">
+        <li *ngFor="let item of navItems()">
           <a
             [routerLink]="item.route"
             routerLinkActive="nav-item--active"
@@ -26,6 +26,7 @@
               <svg *ngIf="item.icon === 'admins'"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3.5"/><path d="M2 20v-1.5A5.5 5.5 0 0113.5 13"/><circle cx="18" cy="17" r="4"/><path d="M18 15v2l1.5 1.5"/></svg>
               <svg *ngIf="item.icon === 'estoque'"      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
               <svg *ngIf="item.icon === 'fornecedores'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              <svg *ngIf="item.icon === 'motoboys'"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></svg>
               <svg *ngIf="item.icon === 'avaliacoes'"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </span>
             <span class="nav-label">{{ item.label }}</span>

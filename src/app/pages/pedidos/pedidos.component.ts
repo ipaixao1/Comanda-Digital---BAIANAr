@@ -68,6 +68,20 @@ export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
     return ['entregue', 'cancelado', 'a_caminho'].includes(s) ? 'Fechada' : 'Aberta';
   }
 
+  // Mapa: StatusPedidoShared → status do item individual
+  private toItemStatus(s: StatusPedidoShared): ItemPedido['status'] {
+    const map: Record<StatusPedidoShared, ItemPedido['status']> = {
+      recebido:   'Aguardando',
+      em_preparo: 'Em preparo',
+      pronto:     'Pronto',
+      enviado:    'Pronto',
+      a_caminho:  'Entregue',
+      entregue:   'Entregue',
+      cancelado:  'Aguardando',
+    };
+    return map[s];
+  }
+
   // Converte PedidoShared → Pedido (admin)
   private converterPedido(p: PedidoShared): Pedido {
     return {
@@ -83,7 +97,7 @@ export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
         nome: i.nome,
         quantidade: i.quantidade,
         obs: i.obs,
-        status: 'Aguardando' as const,
+        status: this.toItemStatus(p.status),
       })),
     };
   }

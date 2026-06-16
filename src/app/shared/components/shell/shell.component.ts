@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/auth.service';
+import { PermissionService } from '../../../services/permission.service';
 
 @Component({
   selector: 'app-shell',
@@ -14,21 +15,28 @@ import { User } from '../../../services/auth.service';
 export class ShellComponent implements OnInit {
   private authService = inject(AuthService);
   private router      = inject(Router);
+  permission           = inject(PermissionService);
 
   sidebarOpen       = signal(true);
   currentUser       = signal<User | null>(null);
   showLogoutConfirm = signal(false);   // ← novo
 
-  navItems = [
-    { label: 'Início',          icon: 'home',         route: '/dashboard' },
-    { label: 'Cardápio',        icon: 'cardapio',     route: '/cardapio' },
-    { label: 'Pedidos',         icon: 'pedidos',      route: '/pedidos' },
-    { label: 'Funcionários',    icon: 'funcionarios', route: '/funcionarios' },
-    { label: 'Administradores', icon: 'admins',       route: '/administradores' },
-    { label: 'Estoque',         icon: 'estoque',      route: '/estoque' },
-    { label: 'Fornecedores',    icon: 'fornecedores', route: '/fornecedores' },
-    { label: 'Avaliações',      icon: 'avaliacoes',   route: '/avaliacoes' },
+  private todosItens = [
+    { label: 'Início',          icon: 'home',         route: '/dashboard',       pagina: 'dashboard'       },
+    { label: 'Cardápio',        icon: 'cardapio',     route: '/cardapio',        pagina: 'cardapio'        },
+    { label: 'Pedidos',         icon: 'pedidos',      route: '/pedidos',         pagina: 'pedidos'         },
+    { label: 'Funcionários',    icon: 'funcionarios', route: '/funcionarios',    pagina: 'funcionarios'    },
+    { label: 'Administradores', icon: 'admins',       route: '/administradores', pagina: 'administradores' },
+    { label: 'Estoque',         icon: 'estoque',      route: '/estoque',         pagina: 'estoque'         },
+    { label: 'Fornecedores',    icon: 'fornecedores', route: '/fornecedores',    pagina: 'fornecedores'    },
+    { label: 'Motoboys',        icon: 'motoboys',     route: '/motoboys',        pagina: 'motoboys'        },
+    { label: 'Avaliações',      icon: 'avaliacoes',   route: '/avaliacoes',      pagina: 'avaliacoes'      },
   ];
+
+  // Itens visíveis na sidebar, filtrados conforme o cargo do admin logado
+  navItems = computed(() =>
+    this.todosItens.filter(item => this.permission.podeAcessarPagina(item.pagina))
+  );
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user: User | null) => {

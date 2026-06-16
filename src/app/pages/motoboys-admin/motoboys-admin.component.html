@@ -1,0 +1,247 @@
+<div class="motoboys-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Gerenciamento de Motoboys</h1>
+    </div>
+    <button class="btn-adicionar" (click)="abrirModalNovo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Adicionar Motoboy
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-card--normal">
+      <div class="kpi-top">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/>
+          </svg>
+        </div>
+        <span class="kpi-label">Total de Motoboys</span>
+      </div>
+      <p class="kpi-value">{{ totalMotoboys() }}</p>
+    </div>
+    <div class="kpi-card kpi-card--rota">
+      <div class="kpi-top">
+        <div class="kpi-icon kpi-icon--warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <span class="kpi-label">Em Rota Agora</span>
+      </div>
+      <p class="kpi-value kpi-value--warn">{{ motoboysEmRota() }}</p>
+    </div>
+    <div class="kpi-card kpi-card--entregas">
+      <div class="kpi-top">
+        <div class="kpi-icon kpi-icon--ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <span class="kpi-label">Entregas Concluídas</span>
+      </div>
+      <p class="kpi-value kpi-value--ok">{{ totalEntregasGeral() }}</p>
+    </div>
+  </div>
+
+  <!-- Lista de motoboys -->
+  <div class="motoboys-lista">
+    <div class="motoboy-card" *ngFor="let m of motoboys()">
+
+      <!-- Linha principal -->
+      <div class="motoboy-row" (click)="toggleDetalhe(m.id)">
+        <div class="motoboy-avatar">{{ getInitials(m.nome) }}</div>
+
+        <div class="motoboy-info">
+          <p class="motoboy-nome">{{ m.nome }}</p>
+          <p class="motoboy-meta">{{ m.matricula }} • {{ m.veiculo }}</p>
+        </div>
+
+        <div class="motoboy-stats">
+          <div class="stat-item">
+            <span class="stat-valor">{{ totalEntregas(m) }}</span>
+            <span class="stat-label">Entregas</span>
+          </div>
+        </div>
+
+        <span class="status-badge" [ngClass]="getStatusClass(statusAtual(m))">
+          <span class="status-dot"></span>
+          {{ statusAtual(m) }}
+        </span>
+
+        <div class="motoboy-acoes">
+          <button class="btn-acao btn-editar" (click)="abrirModalEditar(m, $event)" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-acao btn-excluir" (click)="confirmarExclusao(m, $event)" title="Excluir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m5 0V4a2 2 0 012-2h0a2 2 0 012 2v2"/>
+            </svg>
+          </button>
+        </div>
+
+        <svg class="chevron" [class.chevron--up]="detalheAberto() === m.id"
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      <!-- Detalhes expandidos -->
+      <div class="motoboy-detalhe" *ngIf="detalheAberto() === m.id">
+
+        <!-- Informações de contato -->
+        <div class="detalhe-secao">
+          <p class="detalhe-titulo">Informações de contato</p>
+          <div class="detalhe-grid">
+            <div class="detalhe-item">
+              <span class="detalhe-label">Telefone</span>
+              <span class="detalhe-valor">{{ m.telefone || 'Não informado' }}</span>
+            </div>
+            <div class="detalhe-item">
+              <span class="detalhe-label">Data de Admissão</span>
+              <span class="detalhe-valor">{{ m.dataAdmissao }}</span>
+            </div>
+            <div class="detalhe-item">
+              <span class="detalhe-label">Veículo</span>
+              <span class="detalhe-valor">{{ m.veiculo }}</span>
+            </div>
+            <div class="detalhe-item">
+              <span class="detalhe-label">Matrícula</span>
+              <span class="detalhe-valor">{{ m.matricula }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Entrega em andamento -->
+        <div class="detalhe-secao" *ngIf="entregaAtual(m)">
+          <p class="detalhe-titulo">Entrega em andamento</p>
+          <div class="entrega-ativa-card">
+            <div class="entrega-ativa-topo">
+              <span class="entrega-numero">{{ entregaAtual(m)!.numero }}</span>
+              <span class="entrega-status-tag">A caminho</span>
+            </div>
+            <div class="entrega-ativa-info" *ngIf="entregaAtual(m)!.endereco">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ entregaAtual(m)!.endereco!.rua }}</span>
+            </div>
+            <div class="entrega-ativa-info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>{{ entregaAtual(m)!.clienteNome ?? 'Cliente' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico de entregas -->
+        <div class="detalhe-secao">
+          <p class="detalhe-titulo">Últimas entregas</p>
+          <ng-container *ngIf="historicoEntregas(m).length > 0; else semEntregas">
+            <div class="historico-entrega-row" *ngFor="let p of historicoEntregas(m)">
+              <span class="historico-numero">{{ p.numero }}</span>
+              <span class="historico-data">{{ formatarData(p.dataHora) }}</span>
+              <span class="historico-valor">{{ formatarPreco(p.total) }}</span>
+              <span class="historico-tag">Entregue</span>
+            </div>
+          </ng-container>
+          <ng-template #semEntregas>
+            <p class="sem-dados">Nenhuma entrega registrada ainda.</p>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="estado-vazio" *ngIf="motoboys().length === 0">
+      <p>Nenhum motoboy cadastrado.</p>
+    </div>
+  </div>
+
+  <!-- ── Modal Adicionar/Editar ──────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editando() ? 'Editar Motoboy' : 'Adicionar Motoboy' }}</h2>
+        <button class="modal-close" (click)="fecharModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Nome completo</label>
+            <input type="text" [value]="mNome()" (input)="onInput('nome', $event)" placeholder="Ex: Carlos Souza"/>
+          </div>
+          <div class="form-field">
+            <label>Matrícula</label>
+            <input type="text" [value]="mMatricula()" (input)="onInput('matricula', $event)" placeholder="Ex: MB001"/>
+          </div>
+          <div class="form-field">
+            <label>Senha de acesso</label>
+            <input type="text" [value]="mSenha()" (input)="onInput('senha', $event)" placeholder="Senha do app motoboy"/>
+          </div>
+          <div class="form-field">
+            <label>Veículo</label>
+            <input type="text" [value]="mVeiculo()" (input)="onInput('veiculo', $event)" placeholder="Ex: Moto Honda CG 160"/>
+          </div>
+          <div class="form-field">
+            <label>Telefone</label>
+            <input type="text" [value]="mTelefone()" (input)="onInput('telefone', $event)" placeholder="(71) 99999-9999"/>
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select [value]="mStatus()" (change)="onSelectStatus($event)">
+              <option *ngFor="let s of statusOpcoes" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancelar" (click)="fecharModal()">Cancelar</button>
+        <button class="btn-salvar" (click)="salvar()" [disabled]="isSaving()">
+          {{ isSaving() ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal Exclusão ──────────────────────────────────────────── -->
+  <div class="modal-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
+    <div class="modal-card modal-card--exclusao" (click)="$event.stopPropagation()">
+      <div class="exclusao-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <p class="exclusao-titulo">Excluir motoboy?</p>
+      <p class="exclusao-texto">
+        Tem certeza que deseja excluir <strong>{{ motoboyParaExcluir()?.nome }}</strong>?
+        Esta ação não pode ser desfeita.
+      </p>
+      <div class="exclusao-acoes">
+        <button class="btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
+        <button class="btn-excluir-confirmar" (click)="confirmarExclusaoFinal()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+</div>

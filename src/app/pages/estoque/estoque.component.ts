@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { EstoqueService, StatusEstoqueAdmin } from '../../services/estoque.service';
 import { AdminDataService, ProdutoEstoque } from '../../services/admin-data.service';
+import { PermissionService } from '../../services/permission.service';
 
 export type StatusEstoque = 'Normal' | 'Baixo' | 'Crítico';
 export type Produto = ProdutoEstoque; // alias para o HTML não precisar mudar
@@ -79,6 +80,10 @@ export class EstoqueComponent {
   private authService = inject(AuthService);
   private estoqueSvc  = inject(EstoqueService);
   private adminData   = inject(AdminDataService);
+  permission           = inject(PermissionService);
+
+  // Esta página só é editável pelo Dono — Gerente e Supervisor têm acesso somente leitura
+  podeEditar = this.permission.podeEditar('estoque');
 
   // Dados vivos do Firestore
   produtos = this.adminData.estoqueItens;
@@ -154,6 +159,7 @@ export class EstoqueComponent {
   fecharModal(): void { if (!this.isSaving()) this.showModal.set(false); }
 
   async salvar(): Promise<void> {
+    if (!this.podeEditar) return;
     if (!this.mNome().trim()) return;
     this.isSaving.set(true);
     try {
@@ -201,6 +207,7 @@ export class EstoqueComponent {
   }
 
   async confirmarExclusaoFinal(): Promise<void> {
+    if (!this.podeEditar) return;
     const p = this.prodParaExcluir();
     if (p?.firestoreId) {
       await this.adminData.excluirProduto(p.firestoreId).catch(console.error);
