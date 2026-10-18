@@ -313,3 +313,18 @@
   transition: filter 0.15s;
   &:hover { filter: brightness(1.1); }
 }
+// ── Observação por item (RF-003) ──
+.item-obs {
+  width: 100%;
+  margin: 6px 0 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+  &::placeholder { color: rgba(255,255,255,0.4); }
+  &:focus { border-color: var(--gold); }
+}

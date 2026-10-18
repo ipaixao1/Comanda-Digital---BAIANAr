@@ -1,16 +1,23 @@
-import { Component, computed, signal, inject } from '@angular/core';
+import { Component, computed, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ClienteAuthService } from '../../../services/cliente-auth.service';
+import { Subscription } from 'rxjs';
+import { Cliente, ClienteAuthService } from '../../../services/cliente-auth.service';
 import { CarrinhoService } from '../../../services/carrinho.service';
-import { PedidoService, PedidoShared, StatusPedido } from '../../../services/pedido.service';
+import { PedidoApiService, PedidoCliente } from '../../../services/api/pedido-api.service';
+import { StatusPedidoApi } from '../../../services/api/api-types';
+import { calcularTimeline, isFinal, labelStatus } from '../../../services/api/pedido-status.util';
 
 export interface EtapaStatus {
   label: string;
   estado: 'concluido' | 'atual' | 'pendente' | 'cancelado';
 }
 
+/**
+ * RF-007 (acompanhar pedido) e RF-008 (meus pedidos):
+ * GET /api/pedidos/meus — atualizado a cada 10 s enquanto a tela está aberta.
+ */
 @Component({
   selector: 'app-pedidos-mobile',
   standalone: true,
@@ -18,34 +25,27 @@ export interface EtapaStatus {
   templateUrl: './pedidos.component.html',
   styleUrls: ['./pedidos.component.scss'],
 })
-export class PedidosMobileComponent {
+export class PedidosMobileComponent implements OnInit, OnDestroy {
 
-  private clienteAuth   = inject(ClienteAuthService);
-  public  carrinho      = inject(CarrinhoService);
-  private pedidoService = inject(PedidoService);
-  private router        = inject(Router);
+  private clienteAuth = inject(ClienteAuthService);
+  public  carrinho    = inject(CarrinhoService);
+  private pedidoApi   = inject(PedidoApiService);
 
-  isLogado = computed(() => this.clienteAuth.isAuthenticated());
-  cliente  = computed(() => this.clienteAuth.getCurrentCliente());
+  private sub: Subscription | null = null;
+  private timer: ReturnType<typeof setInterval> | null = null;
 
-  // ── Pedidos do cliente — reativos ao signal do serviço ────────
-  private pedidosDoCliente = computed(() => {
-    const cId = this.cliente()?.id;
-    if (!cId) return [];
-    return this.pedidoService.getPedidosCliente(cId);
-  });
+  cliente  = signal<Cliente | null>(null);
+  isLogado = computed(() => !!this.cliente());
 
-  pedidoAtivo = computed<PedidoShared | null>(() =>
-    this.pedidosDoCliente().find(
-      p => !['entregue', 'cancelado'].includes(p.status)
-    ) ?? null
+  // ── Pedidos do cliente (mais recente primeiro, como a API devolve) ───────
+  private pedidos = signal<PedidoCliente[]>([]);
+
+  pedidoAtivo = computed<PedidoCliente | null>(() =>
+    this.pedidos().find(p => !isFinal(p.status)) ?? null
   );
 
-  historico = computed<PedidoShared[]>(() =>
-    this.pedidosDoCliente().filter(p =>
-      ['entregue', 'cancelado'].includes(p.status)
-    )
-  );
+  // RF-008: histórico lista TODOS os pedidos do cliente (data, itens, valor e status).
+  historico = computed<PedidoCliente[]>(() => this.pedidos());
 
   temPedidoAtual = computed(() => this.pedidoAtivo() !== null);
 
@@ -58,24 +58,27 @@ export class PedidosMobileComponent {
   loginSenha        = '';
   cadastroNome      = '';
   cadastroTelefone  = '';
+  cadastroEndereco  = '';
   cadastroSenhaConf = '';
   loginErro         = '';
 
   tela = signal<'lista' | 'status' | 'historico'>('lista');
-  pedidoVisualizado = signal<PedidoShared | null>(null);
+  private selecionadoId = signal<string | null>(null);
 
-  // ── Pedido visualizado na tela de status ─────────────────────
-  // Se pedidoVisualizado === null → mostra o pedidoAtivo
-  private pedidoParaExibir = computed<PedidoShared | null>(() => {
-    const vis = this.pedidoVisualizado();
-    if (vis) {
-      // Re-busca no signal para receber atualizações em tempo real
-      return this.pedidoService.getPedido(vis.id) ?? vis;
-    }
-    return this.pedidoAtivo();
+  // Pedido exibido na tela de status: o escolhido; se nenhum, o pedido ativo.
+  private pedidoParaExibir = computed<PedidoCliente | null>(() => {
+    const id = this.selecionadoId();
+    const escolhido = id ? this.pedidos().find(p => p.id === id) : undefined;
+    return escolhido ?? this.pedidoAtivo();
   });
 
-  ehPedidoAtual = computed(() => this.pedidoVisualizado() === null);
+  // Alias usado pelo template do detalhe (pedido finalizado/cancelado).
+  pedidoVisualizado = computed<PedidoCliente | null>(() => this.pedidoParaExibir());
+
+  ehPedidoAtual = computed(() => {
+    const p = this.pedidoParaExibir();
+    return !!p && !isFinal(p.status);
+  });
 
   numeroPedidoExibido = computed(() => this.pedidoParaExibir()?.numero ?? '');
   itensPedidoExibido  = computed(() => this.pedidoParaExibir()?.itens ?? []);
@@ -88,52 +91,65 @@ export class PedidosMobileComponent {
 
   labelStatusAtual = computed(() => {
     const s = this.pedidoAtivo()?.status;
-    return s ? this.pedidoService.labelStatus(s) : '';
+    return s ? labelStatus(s) : '';
   });
 
-  // ── Timeline ──────────────────────────────────────────────────
+  // ── Timeline (SRS RF-007) ─────────────────────────────────────
   etapasStatus = computed<EtapaStatus[]>(() => {
     const p = this.pedidoParaExibir();
     if (!p) return [];
-    return this.calcularEtapas(p.status);
+    return calcularTimeline(p.status).map(e => ({ label: e.titulo, estado: e.estado }));
   });
 
-  private calcularEtapas(status: StatusPedido): EtapaStatus[] {
-    const ordem: StatusPedido[] = ['recebido', 'em_preparo', 'pronto', 'a_caminho', 'entregue'];
+  labelStatus(status: StatusPedidoApi): string { return labelStatus(status); }
 
-    const defs = [
-      { label: 'Pedido recebido',   ref: 'recebido'   },
-      { label: 'Em preparo',        ref: 'em_preparo' },
-      { label: 'Pronto',            ref: 'pronto'     },
-      { label: 'Saiu para entrega', ref: 'a_caminho'  },
-      { label: 'Entregue',          ref: 'entregue'   },
-    ];
-
-    return defs.map((d, i) => {
-      let estado: EtapaStatus['estado'];
-      if (status === 'enviado') {
-        if (i < 3) estado = 'concluido';
-        else if (i === 3) estado = 'atual';
-        else estado = 'pendente';
+  // ── Ciclo de vida: carrega e atualiza os pedidos enquanto logado ─────────
+  ngOnInit(): void {
+    this.sub = this.clienteAuth.currentCliente$.subscribe(c => {
+      this.cliente.set(c);
+      if (c) {
+        this.carregar();
+        this.iniciarPolling();
       } else {
-        const idx = ordem.indexOf(d.ref as StatusPedido);
-        const idxAtual = ordem.indexOf(status);
-        if (idx < idxAtual)       estado = 'concluido';
-        else if (idx === idxAtual) estado = 'atual';
-        else                       estado = 'pendente';
+        this.pedidos.set([]);
+        this.pararPolling();
       }
-      return { label: d.label, estado };
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+    this.pararPolling();
+  }
+
+  private iniciarPolling(): void {
+    this.pararPolling();
+    this.timer = setInterval(() => this.carregar(), 10000);
+  }
+
+  private pararPolling(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  private async carregar(): Promise<void> {
+    try {
+      this.pedidos.set(await this.pedidoApi.meusPedidos());
+    } catch {
+      // mantém a lista anterior se a rede falhar; o próximo ciclo tenta de novo
+    }
   }
 
   // ── Navegação ─────────────────────────────────────────────────
   abrirStatus(): void {
-    this.pedidoVisualizado.set(null);
+    this.selecionadoId.set(this.pedidoAtivo()?.id ?? null);
     this.tela.set('status');
   }
 
-  abrirStatusHistorico(pedido: PedidoShared): void {
-    this.pedidoVisualizado.set(pedido);
+  abrirStatusHistorico(pedido: PedidoCliente): void {
+    this.selecionadoId.set(pedido.id);
     this.tela.set('status');
   }
 
@@ -141,16 +157,12 @@ export class PedidosMobileComponent {
 
   voltarLista(): void {
     this.tela.set('lista');
-    this.pedidoVisualizado.set(null);
+    this.selecionadoId.set(null);
   }
 
   voltarHistorico(): void {
     this.tela.set('historico');
-    this.pedidoVisualizado.set(null);
-  }
-
-  avaliarPedido(pedidoId: string): void {
-    this.router.navigate(['/mobile/avaliacao'], { queryParams: { pedidoId } });
+    this.selecionadoId.set(null);
   }
 
   formatarPreco(preco: number): string {
@@ -170,7 +182,7 @@ export class PedidosMobileComponent {
   fecharModal(): void {
     this.modalLoginAberto.set(false);
     this.loginEmail = ''; this.loginSenha = ''; this.loginErro = '';
-    this.cadastroNome = ''; this.cadastroTelefone = ''; this.cadastroSenhaConf = '';
+    this.cadastroNome = ''; this.cadastroTelefone = ''; this.cadastroEndereco = ''; this.cadastroSenhaConf = '';
     this.modalAba = 'login';
   }
 
@@ -188,10 +200,12 @@ export class PedidosMobileComponent {
     this.loginErro = '';
     if (!this.cadastroNome.trim())                  { this.loginErro = 'Informe seu nome.'; return; }
     if (!this.loginEmail.trim())                    { this.loginErro = 'Informe seu email.'; return; }
+    if (!this.cadastroTelefone.trim())              { this.loginErro = 'Informe seu telefone.'; return; }
+    if (!this.cadastroEndereco.trim())              { this.loginErro = 'Informe seu endereço de entrega.'; return; }
     if (this.loginSenha.length < 6)                 { this.loginErro = 'Senha deve ter mínimo 6 caracteres.'; return; }
     if (this.loginSenha !== this.cadastroSenhaConf) { this.loginErro = 'As senhas não coincidem.'; return; }
     const r = await this.clienteAuth.cadastrar(
-      this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone
+      this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone, this.cadastroEndereco
     );
     if (r.success) this.fecharModal();
     else this.loginErro = r.error ?? 'Erro ao cadastrar.';

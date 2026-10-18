@@ -868,3 +868,21 @@
   cursor: not-allowed !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
+
+// ── Estados da carga do cardápio ──
+.estado-carga {
+  text-align: center;
+  padding: 32px 16px;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  &.erro button {
+    margin-top: 12px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: var(--gold-2);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

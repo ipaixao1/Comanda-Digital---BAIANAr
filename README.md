@@ -16,7 +16,8 @@ O BAIANAr foi desenvolvido com:
 - **TypeScript** — linguagem de programação utilizada em toda a lógica da aplicação
 - **HTML** — estruturação dos templates de cada componente
 - **SCSS** — estilização visual de todas as telas do sistema
-- **Firebase (Firestore)** — banco de dados em tempo real, responsável por persistir pedidos, cardápio, estoque, funcionários, administradores, fornecedores, motoboys e avaliações
+
+> ⚠️ **Sprint atual (Back-end Java):** o Firebase/Firestore foi totalmente removido do front. Ver seção [Migração: saída do Firebase](#migração-saída-do-firebase) abaixo para detalhes de como cada tela persiste dados agora.
 
 ---
 
@@ -97,13 +98,14 @@ baianar/
 │   │   │   ├── permission.service.ts        # Regras de permissão por cargo
 │   │   │   ├── cliente-auth.service.ts      # Autenticação do cliente (mobile)
 │   │   │   ├── motoboy-auth.service.ts      # Autenticação do motoboy
-│   │   │   ├── motoboy-data.service.ts      # Cadastro e métricas dos motoboys (Firestore)
-│   │   │   ├── pedido.service.ts            # Pedidos em tempo real (Firestore)
+│   │   │   ├── motoboy-data.service.ts      # Cadastro e métricas dos motoboys (localStorage)
+│   │   │   ├── pedido.service.ts            # Pedidos (localStorage — candidato a religar à API real)
 │   │   │   ├── carrinho.service.ts          # Carrinho de compras do cliente
-│   │   │   ├── admin-data.service.ts        # Cardápio, estoque, funcionários, admins e fornecedores (Firestore)
-│   │   │   ├── estoque.service.ts           # Sincronização de status do estoque (KDS ↔ Admin)
-│   │   │   ├── cardapio-status.service.ts   # Sincronização de disponibilidade de pratos (KDS ↔ Admin ↔ Mobile)
-│   │   │   ├── avaliacao.service.ts         # Avaliações dos clientes (Firestore)
+│   │   │   ├── admin-data.service.ts        # Cardápio, estoque, funcionários, admins e fornecedores (localStorage)
+│   │   │   ├── estoque.service.ts           # Sincronização de status do estoque (KDS ↔ Admin) (localStorage)
+│   │   │   ├── cardapio-status.service.ts   # Sincronização de disponibilidade de pratos (KDS ↔ Admin ↔ Mobile) (localStorage)
+│   │   │   ├── avaliacao.service.ts         # Avaliações dos clientes (localStorage)
+│   │   │   ├── local-store.util.ts          # Helper de persistência local (substitui o Firestore)
 │   │   │   └── entregas.service.ts          # Apoio às entregas do motoboy
 │   │   │
 │   │   ├── pages/
@@ -144,15 +146,15 @@ baianar/
 │   │   │       └── shell/              # Layout da Dashboard (sidebar + navegação)
 │   │   │
 │   │   ├── app.component.ts
-│   │   ├── app.config.ts               # Configuração raiz (providers do Firebase, rotas)
+│   │   ├── app.config.ts               # Configuração raiz (HttpClient, rotas) — sem Firebase
 │   │   └── app.routes.ts               # Definição de todas as rotas da aplicação
 │   │
 │   ├── assets/
 │   │   └── images/                     # Imagens dos pratos e logo do restaurante
 │   │
 │   ├── environments/
-│   │   ├── environment.ts              # Configuração do Firebase (desenvolvimento)
-│   │   └── environment.prod.ts         # Configuração do Firebase (produção)
+│   │   ├── environment.ts              # apiUrl do backend (desenvolvimento) — ex.: http://localhost:8080/api
+│   │   └── environment.prod.ts         # apiUrl do backend (produção)
 │   │
 │   ├── index.html
 │   ├── main.ts
@@ -191,4 +193,56 @@ A aplicação abrirá automaticamente no fluxo do cliente (mobile), que é a por
 3. **Administração (Dashboard)** — acompanha todos os pedidos, gerencia cardápio, estoque, funcionários, fornecedores, motoboys e responde às avaliações dos clientes, com permissões diferentes de acordo com o cargo de cada administrador.
 4. **Motoboy** — recebe a notificação de novo pedido pronto para entrega, aceita a corrida e confirma a entrega, atualizando o status para o cliente e para a administração em tempo real.
 
-Todas as informações são sincronizadas via Firebase Firestore, garantindo que qualquer atualização feita em uma tela reflita instantaneamente nas demais, mesmo após o recarregamento da página.
+---
+
+## Migração: saída do Firebase
+
+Nesta sprint o back-end passou a ser um serviço próprio em **Java Spring Boot + MySQL** (ver `../backend`), então toda conexão com o Firebase/Firestore foi removida do front, conforme exigido pelo enunciado do projeto. Como nem toda tela do front tem um endpoint equivalente no novo backend (algumas — como Funcionários e Administradores por cargo — não fazem parte do escopo do SRS v3.2), a migração seguiu duas estratégias, tela por tela:
+
+### 1. Dados sem equivalente no backend → localStorage (mock local)
+Os serviços abaixo tinham `@angular/fire/firestore` (`onSnapshot`, `addDoc`, `updateDoc`, `deleteDoc`, `setDoc`) e foram reescritos para usar `signal()` + `localStorage`, através do helper `services/local-store.util.ts`. **A interface pública (tipos exportados e assinaturas dos métodos) foi mantida exatamente igual**, então nenhum componente que consome esses serviços precisou ser alterado:
+
+- `admin-data.service.ts` (Cardápio, Estoque/produtos, Funcionários, Administradores, Fornecedores)
+- `pedido.service.ts` (Pedidos)
+- `estoque.service.ts` (status de estoque KDS ↔ Admin)
+- `cardapio-status.service.ts` (disponibilidade de pratos KDS ↔ Admin ↔ Mobile)
+- `avaliacao.service.ts` (avaliações dos clientes)
+- `motoboy-data.service.ts` (cadastro de motoboys)
+
+Isso quer dizer que, por enquanto, esses dados vivem **somente no navegador de cada usuário** (sem sincronização em tempo real entre dispositivos diferentes, como existia com o Firestore) — suficiente para demonstrar o fluxo da aplicação, mas não para produção.
+
+### 2. Jornada do cliente → API real (Spring Boot)
+As telas do cliente (`/mobile/*`) falam com o backend via `HttpClient` (`environment.apiUrl`). O código fica em `src/app/services/api/`:
+
+| Arquivo | Função |
+|---|---|
+| `auth.interceptor.ts` | anexa `Authorization: Bearer <JWT>` nas chamadas à API; em caso de 401 limpa a sessão |
+| `auth-token.ts` | guarda o JWT no `localStorage` |
+| `api-types.ts` | tipos que espelham os DTOs do backend |
+| `cardapio-api.service.ts` | `GET /api/cardapio` e `GET /api/cardapio/{id}` (RF-001, RF-002) |
+| `pedido-api.service.ts` | `POST /api/pedidos`, `GET /api/pedidos/meus`, `GET /api/pedidos/{id}/status` (RF-006, RF-007, RF-008) |
+| `pedido-status.util.ts` | timeline `RECEBIDO > CONFIRMADO > EM_PREPARO > PRONTO > SAIU_ENTREGA` |
+| `../cliente-auth.service.ts` | `POST /api/auth/register` e `/login` (RF-004, RF-005) |
+
+Fluxo (SRS §8.1): cardápio público → detalhe do prato (quantidade + observação) → carrinho (observação por item, local) →
+**Continuar para pagamento**: se não estiver logado vai para login/cadastro e volta ao checkout → **Confirmar** cria o pedido
+(`RECEBIDO`) → status com atualização automática a cada 5 s → histórico em **Pedidos** (atualiza a cada 10 s).
+O pagamento (Pix/cartão/dinheiro) é simulado, como pede o SRS.
+
+Para testar: `cliente@email.com` / `senha123` (seed do backend) ou crie uma conta nova.
+
+### 3. O que ainda NÃO está ligado à API (próximos passos da dupla)
+- **KDS, painel admin (Pedidos, Cardápio, Estoque, Fornecedores…) e Motoboy** continuam lendo o `localStorage`
+  (`pedido.service.ts` etc.). Por isso **pedidos feitos pelo cliente via API ainda não aparecem no KDS/painel do front** —
+  eles já existem no backend (`/api/admin/**`, perfis ADMIN/GERENTE/COZINHEIRO) e precisam ser religados por quem ficou com o painel.
+- Telas sem requisito no SRS (Favoritos, Endereços salvos, Configurações, Avaliações, Funcionários, Motoboys) seguem locais.
+
+### Checklist
+- [x] Removido `@angular/fire` e `firebase` do `package.json`
+- [x] `environment.ts` / `environment.prod.ts` expõem `apiUrl` (sem config do Firebase)
+- [x] `angular.json` — `fileReplacements` da build de produção corrigido
+- [x] `app.config.ts` — sem providers do Firebase; `provideHttpClient(withInterceptors([authInterceptor]))`
+- [x] Serviços que usavam Firestore reescritos para `localStorage`, preservando a API pública
+- [x] Cadastro/login do cliente, cardápio, detalhe, carrinho, checkout, histórico e acompanhamento de status ligados à API
+- [ ] Trocar o `apiUrl` de `environment.prod.ts` pela URL do backend no Railway antes do deploy no Vercel
+- [ ] Religar KDS/painel admin à API

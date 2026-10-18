@@ -1,16 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import {
-  Firestore,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  Unsubscribe,
-  Timestamp,
-} from '@angular/fire/firestore';
+import { Injectable, signal, computed } from '@angular/core';
+import { loadCollection, saveCollection, nextLocalId } from './local-store.util';
 
 export interface AvaliacaoShared {
   id: string;
@@ -28,48 +17,28 @@ export interface AvaliacaoShared {
   dataResposta?: string;     // ISO
 }
 
-function docToAvaliacao(id: string, data: any): AvaliacaoShared {
-  const toISO = (v: any) =>
-    v instanceof Timestamp ? v.toDate().toISOString() : (typeof v === 'string' ? v : new Date().toISOString());
-  return {
-    ...data,
-    id,
-    dataHora:     toISO(data.dataHora),
-    dataResposta: data.dataResposta ? toISO(data.dataResposta) : undefined,
-  } as AvaliacaoShared;
+const STORAGE_KEY = 'baianar_avaliacoes';
+
+function ordenarPorDataDesc(lista: AvaliacaoShared[]): AvaliacaoShared[] {
+  return [...lista].sort((a, b) => b.dataHora.localeCompare(a.dataHora));
 }
 
 @Injectable({ providedIn: 'root' })
 export class AvaliacaoService {
 
-  private firestore = inject(Firestore);
-  private colRef    = collection(this.firestore, 'avaliacoes');
+  private _avaliacoes = signal<AvaliacaoShared[]>(
+    ordenarPorDataDesc(loadCollection<AvaliacaoShared>(STORAGE_KEY, []))
+  );
+  private _carregando = signal(false);
 
-  private _avaliacoes   = signal<AvaliacaoShared[]>([]);
-  private _carregando   = signal(true);
-  private _unsub: Unsubscribe | null = null;
-
-  readonly avaliacoes   = this._avaliacoes.asReadonly();
-  readonly carregando   = this._carregando.asReadonly();
+  readonly avaliacoes = this._avaliacoes.asReadonly();
+  readonly carregando = this._carregando.asReadonly();
 
   readonly mediaGeral = computed(() => {
     const l = this._avaliacoes();
     if (!l.length) return '0.0';
     return (l.reduce((s, a) => s + a.nota, 0) / l.length).toFixed(1);
   });
-
-  constructor() {
-    const q = query(this.colRef, orderBy('dataHora', 'desc'));
-    this._unsub = onSnapshot(q, snap => {
-      this._avaliacoes.set(snap.docs.map(d => docToAvaliacao(d.id, d.data())));
-      this._carregando.set(false);
-    }, err => {
-      console.error('[AvaliacaoService] onSnapshot erro:', err);
-      this._carregando.set(false);
-    });
-  }
-
-  ngOnDestroy(): void { this._unsub?.(); }
 
   // ── Cliente envia avaliação ──────────────────────────────────
   async avaliar(dados: {
@@ -81,20 +50,23 @@ export class AvaliacaoService {
     comentario: string;
     pratoResumo: string;
   }): Promise<void> {
-    const payload = this.limpar({
+    const nova: AvaliacaoShared = {
       ...dados,
+      id: nextLocalId('avaliacao'),
       dataHora: new Date().toISOString(),
-    });
-    await addDoc(this.colRef, payload);
+    };
+    const lista = ordenarPorDataDesc([nova, ...this._avaliacoes()]);
+    this._avaliacoes.set(lista);
+    saveCollection(STORAGE_KEY, lista);
   }
 
   // ── Admin responde avaliação ─────────────────────────────────
   async responder(id: string, resposta: string): Promise<void> {
-    const ref = doc(this.firestore, 'avaliacoes', id);
-    await updateDoc(ref, {
-      resposta,
-      dataResposta: new Date().toISOString(),
-    });
+    const lista = this._avaliacoes().map(a =>
+      a.id === id ? { ...a, resposta, dataResposta: new Date().toISOString() } : a
+    );
+    this._avaliacoes.set(lista);
+    saveCollection(STORAGE_KEY, lista);
   }
 
   // ── Buscar avaliações de um cliente ─────────────────────────
@@ -113,9 +85,5 @@ export class AvaliacaoService {
     const d = new Date(iso);
     return d.toLocaleDateString('pt-BR') + ', ' +
            d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  private limpar(obj: any): any {
-    return JSON.parse(JSON.stringify(obj, (_, v) => v === undefined ? null : v));
   }
 }

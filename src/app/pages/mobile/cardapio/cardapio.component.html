@@ -76,6 +76,13 @@
           </div>
         </div>
         <div class="modal-campo">
+          <label>Endereço de entrega</label>
+          <div class="campo-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" placeholder="Rua, número, bairro, cidade" [(ngModel)]="cadastroEndereco"/>
+          </div>
+        </div>
+        <div class="modal-campo">
           <label>Senha</label>
           <div class="campo-input">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -158,6 +165,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Estados da carga do cardápio (API) -->
+    <p class="estado-carga" *ngIf="carregando()">Carregando cardápio…</p>
+    <div class="estado-carga erro" *ngIf="!carregando() && erroCarga()">
+      <p>{{ erroCarga() }}</p>
+      <button type="button" (click)="carregarCardapio()">Tentar novamente</button>
+    </div>
+    <p class="estado-carga" *ngIf="!carregando() && !erroCarga() && produtos().length === 0">Nenhum prato disponível no momento.</p>
 
     <!-- Product sections -->
     <section class="categoria-secao" *ngFor="let cat of categoriasVisiveis()">

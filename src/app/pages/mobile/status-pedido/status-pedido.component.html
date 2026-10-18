@@ -17,6 +17,8 @@
       <p class="numero-valor">{{ numeroPedido }}</p>
     </div>
 
+    <p class="aviso-texto" *ngIf="cancelado" style="text-align:center;color:#f87171;font-weight:600;">Este pedido foi cancelado.</p>
+
     <!-- Timeline -->
     <div class="timeline-card">
       <div class="timeline-item" *ngFor="let etapa of etapas; let i = index" [class.ultima]="i === etapas.length - 1">
@@ -86,7 +88,7 @@
 
   <ng-template #semPedido>
     <main class="status-content">
-      <p style="text-align:center;color:rgba(255,255,255,0.5);margin-top:2rem;">Pedido não encontrado.</p>
+      <p style="text-align:center;color:rgba(255,255,255,0.5);margin-top:2rem;">{{ carregando() ? 'Carregando…' : 'Pedido não encontrado.' }}</p>
     </main>
   </ng-template>
 

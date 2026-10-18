@@ -1,9 +1,10 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CarrinhoService } from '../../../services/carrinho.service';
-import { PedidoService } from '../../../services/pedido.service';
+import { PedidoApiService } from '../../../services/api/pedido-api.service';
+import { mensagemDeErro } from '../../../services/api/api-error';
 import { ClienteAuthService } from '../../../services/cliente-auth.service';
 
 interface Endereco {
@@ -31,10 +32,10 @@ type Tela = 'checkout' | 'pix' | 'cartao' | 'confirmado';
   templateUrl: './finalizar-pedido.component.html',
   styleUrls: ['./finalizar-pedido.component.scss'],
 })
-export class FinalizarPedidoComponent implements OnDestroy {
+export class FinalizarPedidoComponent implements OnInit, OnDestroy {
 
   observacoesEntrega    = '';
-  enderecoSelecionado:  string | null = 'casa';
+  enderecoSelecionado:  string | null = null;
   pagamentoSelecionado: string | null = 'credito';
   enviando = false;
 
@@ -56,10 +57,8 @@ export class FinalizarPedidoComponent implements OnDestroy {
   // ID do pedido criado (para navegar ao status)
   private pedidoIdCriado = '';
 
-  enderecos: Endereco[] = [
-    { id: 'casa',     tipo: 'casa',     nome: 'Casa',     rua: 'Rua das Flores, 123 - Centro',         cidade: 'Salvador - BA' },
-    { id: 'trabalho', tipo: 'trabalho', nome: 'Trabalho', rua: 'Av. Sete de Setembro, 456 - Comércio', cidade: 'Salvador - BA' },
-  ];
+  // RF-006: endereço de entrega = endereço informado no cadastro do cliente.
+  enderecos: Endereco[] = [];
 
   pagamentos: Pagamento[] = [
     { id: 'credito',  tipo: 'cartao-credito', nome: 'Cartão de Crédito', detalhe: '**** **** **** 1234'    },
@@ -70,10 +69,29 @@ export class FinalizarPedidoComponent implements OnDestroy {
 
   constructor(
     public carrinho: CarrinhoService,
-    private pedidoService: PedidoService,
+    private pedidoApi: PedidoApiService,
     private clienteAuth: ClienteAuthService,
     private router: Router,
   ) {}
+
+  ngOnInit(): void {
+    // Checkout exige login (RF-005): se perdeu a sessão, volta para o login e retorna depois.
+    const cliente = this.clienteAuth.getCurrentCliente();
+    if (!this.clienteAuth.isAuthenticated() || !cliente) {
+      this.router.navigate(['/mobile/perfil'], {
+        queryParams: { login: '1', redirect: '/mobile/finalizar-pedido' },
+      });
+      return;
+    }
+    if (this.carrinho.itens().length === 0) {
+      this.router.navigate(['/mobile/carrinho']);
+      return;
+    }
+    if (cliente.endereco) {
+      this.enderecos = [{ id: 'cadastro', tipo: 'casa', nome: 'Endereço de entrega', rua: cliente.endereco, cidade: '' }];
+      this.enderecoSelecionado = 'cadastro';
+    }
+  }
 
   ngOnDestroy(): void {
     this.limparTimers();
@@ -137,24 +155,22 @@ export class FinalizarPedidoComponent implements OnDestroy {
 
     this.enviando = true;
     try {
-      const endObj  = this.enderecos.find(e => e.id === this.enderecoSelecionado);
-      const pagObj  = this.pagamentos.find(p => p.id === this.pagamentoSelecionado);
-      const cliente = this.clienteAuth.getCurrentCliente();
+      const endObj = this.enderecos.find(e => e.id === this.enderecoSelecionado);
+      const enderecoEntrega = [endObj?.rua, endObj?.cidade].filter(Boolean).join(' - ');
 
-      const pedido = await this.pedidoService.criarPedido({
+      // Observações do pedido = observações do carrinho + observações de entrega.
+      const obsPedido = [this.carrinho.observacoes().trim(), this.observacoesEntrega.trim()]
+        .filter(Boolean).join(' | ');
+
+      // RF-006: POST /api/pedidos — o back valida o estoque (RN03) e cria o pedido como RECEBIDO.
+      const pedido = await this.pedidoApi.criar({
         itens: this.carrinho.itens().map(i => ({
-          nome: i.nome, quantidade: i.quantidade, preco: i.preco,
+          pratoId: i.id,
+          quantidade: i.quantidade,
+          observacoes: i.obs?.trim() || undefined,
         })),
-        subtotal:           this.carrinho.subtotal(),
-        taxaEntrega:        this.carrinho.taxaEntrega,
-        total:              this.carrinho.total(),
-        observacoesPedido:  this.carrinho.observacoes() || undefined,
-        observacoesEntrega: this.observacoesEntrega || undefined,
-        endereco: endObj ? { nome: endObj.nome, rua: endObj.rua, cidade: endObj.cidade } : undefined,
-        pagamento: pagObj ? { nome: pagObj.nome, detalhe: pagObj.detalhe } : undefined,
-        clienteId:       cliente?.id,
-        clienteNome:     cliente?.nome,
-        clienteTelefone: cliente?.telefone,
+        enderecoEntrega,
+        observacoes: obsPedido || undefined,
       });
 
       this.pedidoIdCriado = pedido.id;
@@ -178,7 +194,7 @@ export class FinalizarPedidoComponent implements OnDestroy {
 
     } catch (err) {
       console.error('[FinalizarPedido] erro:', err);
-      alert('Erro ao enviar pedido. Verifique sua conexão e tente novamente.');
+      alert(mensagemDeErro(err, 'Erro ao enviar pedido. Verifique sua conexão e tente novamente.'));
     } finally {
       this.enviando = false;
     }

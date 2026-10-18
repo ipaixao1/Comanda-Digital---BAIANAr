@@ -317,3 +317,17 @@
     cursor: pointer;
   }
 }
+// ── Observação do item (RF-003) ──
+.obs-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  &::placeholder { color: rgba(255,255,255,0.4); }
+  &:focus { border-color: var(--gold); }
+}

@@ -1,6 +1,6 @@
 import { Component, signal, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ClienteAuthService } from '../../../services/cliente-auth.service';
 
@@ -24,11 +24,17 @@ export class PerfilMobileComponent implements OnInit {
   loginSenha        = '';
   cadastroNome      = '';
   cadastroTelefone  = '';
+  cadastroEndereco  = '';
   cadastroSenhaConf = '';
   loginErro         = '';
 
+  // RF-005: se o cliente veio do carrinho, depois do login volta direto para o checkout.
+  private redirectApos: string | null = null;
+
   constructor(
     private clienteAuth: ClienteAuthService,
+    private route: ActivatedRoute,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -41,6 +47,12 @@ export class PerfilMobileComponent implements OnInit {
       this.cliente.set(cliente);
       this.cdr.detectChanges();
     });
+
+    const q = this.route.snapshot.queryParamMap;
+    this.redirectApos = q.get('redirect');
+    if (q.get('login') && !this.clienteAuth.isAuthenticated()) {
+      this.abrirModal('login');
+    }
   }
 
   abrirModal(aba: 'login' | 'cadastro' = 'login'): void {
@@ -55,6 +67,7 @@ export class PerfilMobileComponent implements OnInit {
     this.loginErro  = '';
     this.cadastroNome = '';
     this.cadastroTelefone = '';
+    this.cadastroEndereco = '';
     this.cadastroSenhaConf = '';
     this.modalAba = 'login';
   }
@@ -62,12 +75,21 @@ export class PerfilMobileComponent implements OnInit {
   toggleSenhaVisivel(): void { this.senhaVisivel.update(v => !v); }
   toggleSenhaConfVisivel(): void { this.senhaConfVisivel.update(v => !v); }
 
+  private aposAutenticar(): void {
+    this.fecharModal();
+    this.cdr.detectChanges();
+    if (this.redirectApos) {
+      const destino = this.redirectApos;
+      this.redirectApos = null;
+      this.router.navigateByUrl(destino);
+    }
+  }
+
   async fazerLogin(): Promise<void> {
     this.loginErro = '';
     const result = await this.clienteAuth.login(this.loginEmail, this.loginSenha);
     if (result.success) {
-      this.fecharModal();
-      this.cdr.detectChanges();
+      this.aposAutenticar();
     } else {
       this.loginErro = result.error ?? 'Erro ao fazer login.';
     }
@@ -77,12 +99,15 @@ export class PerfilMobileComponent implements OnInit {
     this.loginErro = '';
     if (!this.cadastroNome.trim())                  { this.loginErro = 'Informe seu nome.'; return; }
     if (!this.loginEmail.trim())                    { this.loginErro = 'Informe seu email.'; return; }
+    if (!this.cadastroTelefone.trim())              { this.loginErro = 'Informe seu telefone.'; return; }
+    if (!this.cadastroEndereco.trim())              { this.loginErro = 'Informe seu endereço de entrega.'; return; }
     if (this.loginSenha.length < 6)                 { this.loginErro = 'Senha deve ter mínimo 6 caracteres.'; return; }
     if (this.loginSenha !== this.cadastroSenhaConf) { this.loginErro = 'As senhas não coincidem.'; return; }
-    const result = await this.clienteAuth.cadastrar(this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone);
+    const result = await this.clienteAuth.cadastrar(
+      this.cadastroNome, this.loginEmail, this.loginSenha, this.cadastroTelefone, this.cadastroEndereco
+    );
     if (result.success) {
-      this.fecharModal();
-      this.cdr.detectChanges();
+      this.aposAutenticar();
     } else {
       this.loginErro = result.error ?? 'Erro ao cadastrar.';
     }
