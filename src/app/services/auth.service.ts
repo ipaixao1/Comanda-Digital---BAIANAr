@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AdminBackendAuthService } from './api/admin-backend-auth.service';
+import { clearToken, getToken } from './api/auth-token';
 
 export interface User {
   matricula: string;
@@ -31,23 +33,92 @@ export class AuthService {
 
   public admins$ = this.admins.asObservable();
 
-  constructor(private router: Router) {
-    const saved = sessionStorage.getItem('baianar_user');
-    if (saved) this.currentUserSubject.next(JSON.parse(saved));
-  }
+  constructor(
+  private router: Router,
+  private backendAuth: AdminBackendAuthService
+) {
+  const saved = sessionStorage.getItem('baianar_user');
 
-  async login(matricula: string, senha: string): Promise<{ success: boolean; error?: string }> {
-    const found = this.admins.value.find(
-      a => a.matricula === matricula.toUpperCase() && a.senha === senha
-    );
-    if (found) {
-      const user = { ...found };
-      sessionStorage.setItem('baianar_user', JSON.stringify(user));
-      this.currentUserSubject.next(user);
-      return { success: true };
+  if (saved && getToken()) {
+    try {
+      const user = JSON.parse(saved) as User;
+      const { senha, ...usuarioSemSenha } = user;
+
+      this.currentUserSubject.next(usuarioSemSenha);
+      sessionStorage.setItem('baianar_user', JSON.stringify(usuarioSemSenha));
+    } catch {
+      sessionStorage.removeItem('baianar_user');
+      clearToken();
     }
-    return { success: false, error: 'Matrícula ou senha incorretos.' };
+  } else {
+    sessionStorage.removeItem('baianar_user');
   }
+}
+
+  async login(email: string, senha: string): Promise<{ success: boolean; error?: string }> {
+  clearToken();
+  sessionStorage.removeItem('baianar_user');
+  this.currentUserSubject.next(null);
+
+  try {
+    const resposta = await this.backendAuth.loginFuncionario(email.trim(), senha);
+    const perfil = resposta.perfil.toUpperCase();
+
+    let cargo: string;
+    let role: User['role'];
+
+    switch (perfil) {
+      case 'ADMIN':
+        cargo = 'Dono';
+        role = 'admin';
+        break;
+
+      case 'GERENTE':
+        cargo = 'Gerente';
+        role = 'admin';
+        break;
+
+      case 'COZINHEIRO':
+        cargo = 'Cozinheiro';
+        role = 'cozinha';
+        break;
+
+      default:
+        clearToken();
+        return {
+          success: false,
+          error: 'Perfil sem permissão para acessar o sistema.'
+        };
+    }
+
+    const user: User = {
+      matricula: `BACKEND-${resposta.id}`,
+      nomeCompleto: resposta.nome,
+      cargo,
+      role,
+      email: resposta.email,
+      telefone: resposta.telefone ?? '',
+      status: 'Ativo'
+    };
+
+    sessionStorage.setItem('baianar_user', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+
+    return { success: true };
+
+  } catch (erro) {
+    clearToken();
+    sessionStorage.removeItem('baianar_user');
+    this.currentUserSubject.next(null);
+
+    console.error('Erro no login do Spring Boot:', erro);
+
+    return {
+      success: false,
+      error: 'Não foi possível entrar. Verifique seu e-mail, sua senha e a conexão com o servidor.'
+    };
+  }
+}
 
   // Atualiza perfil do usuário logado e na lista de admins
   updateProfile(updates: Partial<User>): void {
@@ -78,10 +149,11 @@ export class AuthService {
   getAdmins(): User[] { return this.admins.value; }
 
   logout(): void {
-    sessionStorage.removeItem('baianar_user');
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
-  }
+  clearToken();
+  sessionStorage.removeItem('baianar_user');
+  this.currentUserSubject.next(null);
+  this.router.navigate(['/login']);
+}
 
   isAuthenticated(): boolean { return !!this.currentUserSubject.value; }
   isAdmin(): boolean    { return this.currentUserSubject.value?.role === 'admin'; }

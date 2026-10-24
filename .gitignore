@@ -28,8 +28,8 @@ node_modules/
 *.tgz
 *.rej
 
-# Ambiente (NÃO commitar credenciais!)
-src/environments/environment.prod.ts
+# Arquivos de ambiente podem ser versionados desde que não contenham credenciais.
+# Nunca adicionar senhas, tokens secretos ou chaves privadas ao frontend.
 
 # System
 .DS_Store

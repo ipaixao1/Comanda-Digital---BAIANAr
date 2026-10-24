@@ -14,22 +14,22 @@
     <div class="form-card">
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
 
-        <!-- Campo Matrícula -->
-        <div class="field-group">
-          <label for="matricula" class="field-label">Matrícula</label>
-          <input
-            id="matricula"
-            type="text"
-            formControlName="matricula"
-            class="field-input"
-            [class.field-input--error]="matriculaInvalid"
-            placeholder="Digite sua matrícula"
-            autocomplete="username"
-          />
-          <span class="field-error" *ngIf="matriculaInvalid">
-            Matrícula é obrigatória
-          </span>
-        </div>
+        <!-- Campo E-mail -->
+<div class="field-group">
+  <label for="email" class="field-label">E-mail</label>
+  <input
+    id="email"
+    type="email"
+    formControlName="email"
+    class="field-input"
+    [class.field-input--error]="emailInvalid"
+    placeholder="Digite seu e-mail"
+    autocomplete="username"
+  />
+  <span class="field-error" *ngIf="emailInvalid">
+    Informe um e-mail válido.
+  </span>
+</div>
 
         <!-- Campo Senha -->
         <div class="field-group">

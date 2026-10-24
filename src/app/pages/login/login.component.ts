@@ -33,24 +33,24 @@ export class LoginComponent implements OnInit {
       }
     }
 
-    this.loginForm = this.fb.group({
-      matricula: ['', [Validators.required]],
-      senha: ['', [Validators.required]]
-    });
-  }
+  this.loginForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    senha: ['', [Validators.required]]
+  });
+}
 
-  get matriculaControl() {
-    return this.loginForm.get('matricula');
-  }
+  get emailControl() {
+  return this.loginForm.get('email');
+}
 
   get senhaControl() {
     return this.loginForm.get('senha');
   }
 
-  get matriculaInvalid(): boolean {
-    const ctrl = this.matriculaControl;
-    return !!(ctrl && ctrl.invalid && ctrl.touched && ctrl.errors?.['required']);
-  }
+  get emailInvalid(): boolean {
+    const ctrl = this.emailControl;
+    return !!(ctrl && ctrl.invalid && ctrl.touched);
+}
 
   get senhaInvalid(): boolean {
     const ctrl = this.senhaControl;
@@ -66,8 +66,8 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { matricula, senha } = this.loginForm.value;
-    const result = await this.authService.login(matricula, senha);
+    const { email, senha } = this.loginForm.value;
+     const result = await this.authService.login(email, senha);
 
     this.isLoading = false;
 

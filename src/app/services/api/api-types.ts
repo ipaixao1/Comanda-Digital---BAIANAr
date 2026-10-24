@@ -79,3 +79,95 @@ export interface PedidoStatusApi {
   id: number;
   status: StatusPedidoApi;
 }
+
+/** RF-009: dados de uma categoria retornados pelo Back-end. */
+export interface CategoriaApi {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  ordem: number;
+  status: string;
+}
+
+/** RF-010: dados de um prato retornados pelo Back-end. */
+export interface PratoAdminApi {
+  id: number;
+  categoriaId: number;
+  categoriaNome: string;
+  nome: string;
+  descricao: string | null;
+  fotoUrl: string | null;
+  precoVenda: number;
+  tempoPreparoMin: number | null;
+  status: string;
+  temFichaTecnica: boolean;
+}
+
+/** RF-011: ingrediente utilizado na ficha técnica de um prato. */
+export interface FichaTecnicaItemApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  quantidade: number;
+  unidade: string;
+  fatorCorrecao: number;
+  custoUnitario: number;
+  custoItem: number;
+}
+
+/** RF-012 e RF-013: custos e food cost calculados pelo Back-end. */
+export interface CustoApi {
+  custoTotal: number;
+  custoPorPorcao: number;
+  foodCostPercent: number;
+  cor: 'VERDE' | 'AMARELO' | 'VERMELHO';
+  alertaFoodCostAlto: boolean;
+}
+
+/** RF-011 e RF-014: ficha técnica completa de um prato. */
+export interface FichaTecnicaApi {
+  id: number;
+  pratoId: number;
+  rendimento: number;
+  modoPreparo: string;
+  itens: FichaTecnicaItemApi[];
+  custo: CustoApi;
+}
+
+/** RF-010: dados enviados para cadastrar ou editar um prato. */
+export interface PratoAdminRequest {
+  categoriaId: number;
+  nome: string;
+  descricao: string;
+  fotoUrl: string;
+  precoVenda: number;
+  tempoPreparoMin: number;
+  status: string;
+}
+
+/** RF-011: dados de um ingrediente enviados na ficha técnica. */
+export interface FichaTecnicaItemRequest {
+  ingredienteId: number;
+  quantidade: number;
+  unidade: string;
+  fatorCorrecao: number;
+}
+
+/** RF-011 e RF-014: dados enviados para salvar a ficha técnica. */
+export interface FichaTecnicaRequest {
+  rendimento: number;
+  modoPreparo: string;
+  itens: FichaTecnicaItemRequest[];
+}
+
+/** Ingrediente retornado pelo Back-end para a ficha técnica. */
+export interface IngredienteApi {
+  id: number;
+  nome: string;
+  sku: string;
+  unidadePadrao: string;
+  estoqueMinimo: number;
+  custoUnitario: number;
+  status: string;
+  saldoAtual: number;
+}
