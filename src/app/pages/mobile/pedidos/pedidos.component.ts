@@ -7,7 +7,10 @@ import { Cliente, ClienteAuthService } from '../../../services/cliente-auth.serv
 import { CarrinhoService } from '../../../services/carrinho.service';
 import { PedidoApiService, PedidoCliente } from '../../../services/api/pedido-api.service';
 import { StatusPedidoApi } from '../../../services/api/api-types';
-import { calcularTimeline, isFinal, labelStatus } from '../../../services/api/pedido-status.util';
+import {
+  calcularTimeline, isFinal, labelStatus, EstimativaTempo,
+  minutosRestantes, horaPrevista, formatarMinutos,
+} from '../../../services/api/pedido-status.util';
 
 export interface EtapaStatus {
   label: string;
@@ -80,6 +83,22 @@ export class PedidosMobileComponent implements OnInit, OnDestroy {
     return !!p && !isFinal(p.status);
   });
 
+  // ── Estimativa de preparo + entrega (calculada pelo backend) ───────────
+  private agora = signal(Date.now());
+
+  /** Estimativa do pedido exibido na tela de status. */
+  estimativaExibida = computed<EstimativaTempo | null>(() => this.pedidoParaExibir()?.estimativa ?? null);
+  horaChegadaExibida = computed(() => horaPrevista(this.estimativaExibida()));
+  textoRestanteExibido = computed(() => {
+    const min = minutosRestantes(this.estimativaExibida(), this.agora());
+    return min > 0 ? `Faltam cerca de ${formatarMinutos(min)}` : 'Seu pedido deve chegar a qualquer momento';
+  });
+
+  /** Previsão do pedido ativo, mostrada no card da lista. */
+  horaChegadaAtiva = computed(() => horaPrevista(this.pedidoAtivo()?.estimativa ?? null));
+
+  fmt(min: number): string { return formatarMinutos(min); }
+
   numeroPedidoExibido = computed(() => this.pedidoParaExibir()?.numero ?? '');
   itensPedidoExibido  = computed(() => this.pedidoParaExibir()?.itens ?? []);
   totalPedidoExibido  = computed(() => this.pedidoParaExibir()?.total ?? 0);
@@ -137,6 +156,7 @@ export class PedidosMobileComponent implements OnInit, OnDestroy {
   private async carregar(): Promise<void> {
     try {
       this.pedidos.set(await this.pedidoApi.meusPedidos());
+      this.agora.set(Date.now());
     } catch {
       // mantém a lista anterior se a rede falhar; o próximo ciclo tenta de novo
     }

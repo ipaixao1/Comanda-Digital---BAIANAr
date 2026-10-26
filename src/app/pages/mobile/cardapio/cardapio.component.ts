@@ -59,6 +59,9 @@ export class CardapioComponent implements OnInit {
   carregando = signal<boolean>(true);
   erroCarga  = signal<string>('');
 
+  // Faixa de entrega da loja (calculada pelo backend), mostrada no topo do cardápio.
+  faixaEntrega = signal<{ min: number; max: number } | null>(null);
+
   // Filtro por categoria: montado a partir dos pratos que a API devolveu.
   get categorias(): Categoria[] {
     const vistas = new Map<string, Categoria>();
@@ -119,6 +122,12 @@ export class CardapioComponent implements OnInit {
 
   ngOnInit(): void {
     this.carregarCardapio();
+    this.carregarFaixaEntrega();
+  }
+
+  private async carregarFaixaEntrega(): Promise<void> {
+    const f = await this.cardapioApi.faixaEntrega();
+    if (f) this.faixaEntrega.set({ min: f.minimoMin, max: f.maximoMin });
   }
 
   async carregarCardapio(): Promise<void> {

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   CriarPedidoPayload, PageResponse, PedidoApi, PedidoStatusApi, StatusPedidoApi,
 } from './api-types';
+import { EstimativaTempo, isoUtc, paraEstimativa } from './pedido-status.util';
 
 /** Pedido já no formato usado pelas telas do cliente. */
 export interface PedidoCliente {
@@ -17,11 +18,14 @@ export interface PedidoCliente {
   enderecoEntrega: string;
   observacoes?: string;
   motivoCancelamento?: string;
+  /** Tempo estimado de preparo + entrega (calculado pelo backend). */
+  estimativa: EstimativaTempo;
 }
 
-/** O backend devolve LocalDateTime em UTC sem sufixo; acrescenta "Z" para o navegador converter ao fuso local. */
-function iso(utc: string): string {
-  return /Z$|[+-]\d{2}:\d{2}$/.test(utc) ? utc : `${utc}Z`;
+/** Resposta do polling de status (RF-007). */
+export interface StatusPedidoCliente {
+  status: StatusPedidoApi;
+  estimativa: EstimativaTempo;
 }
 
 export function paraPedidoCliente(p: PedidoApi): PedidoCliente {
@@ -29,7 +33,7 @@ export function paraPedidoCliente(p: PedidoApi): PedidoCliente {
     id: String(p.id),
     numero: `#${p.id}`,
     status: p.status,
-    dataHora: iso(p.createdAt),
+    dataHora: isoUtc(p.createdAt),
     itens: p.itens.map(i => ({
       nome: i.pratoNome,
       quantidade: i.quantidade,
@@ -40,6 +44,7 @@ export function paraPedidoCliente(p: PedidoApi): PedidoCliente {
     enderecoEntrega: p.enderecoEntrega,
     observacoes: p.observacoes ?? undefined,
     motivoCancelamento: p.motivoCancelamento ?? undefined,
+    estimativa: paraEstimativa(p),
   };
 }
 
@@ -63,8 +68,8 @@ export class PedidoApiService {
     return page.content.map(paraPedidoCliente);
   }
 
-  async status(id: string): Promise<StatusPedidoApi> {
+  async status(id: string): Promise<StatusPedidoCliente> {
     const r = await firstValueFrom(this.http.get<PedidoStatusApi>(`${this.base}/${id}/status`));
-    return r.status;
+    return { status: r.status, estimativa: paraEstimativa(r) };
   }
 }

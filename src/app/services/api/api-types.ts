@@ -65,6 +65,18 @@ export interface PedidoApi {
   itens: PedidoItemApi[];
   createdAt: string;
   updatedAt: string;
+  /** Estimativa calculada pelo backend (minutos). */
+  tempoPreparoMin: number;
+  tempoEntregaMin: number;
+  tempoTotalMin: number;
+  /** createdAt + tempoTotalMin (LocalDateTime UTC sem sufixo). */
+  previsaoEntregaEm: string | null;
+}
+
+/** GET /api/cardapio/estimativa-entrega: faixa de entrega da loja (ex.: 20–30 min). */
+export interface FaixaEntregaApi {
+  minimoMin: number;
+  maximoMin: number;
 }
 
 /** RF-006: corpo de POST /api/pedidos */
@@ -78,6 +90,11 @@ export interface CriarPedidoPayload {
 export interface PedidoStatusApi {
   id: number;
   status: StatusPedidoApi;
+  createdAt: string;
+  tempoPreparoMin: number;
+  tempoEntregaMin: number;
+  tempoTotalMin: number;
+  previsaoEntregaEm: string | null;
 }
 
 /** RF-009: dados de uma categoria retornados pelo Back-end. */
@@ -170,4 +187,30 @@ export interface IngredienteApi {
   custoUnitario: number;
   status: string;
   saldoAtual: number;
+}
+
+/** GET/POST/PUT /api/enderecos — endereços de entrega do cliente logado. */
+export interface EnderecoApi {
+  id: number;
+  nome: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento: string | null;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  padrao: boolean;
+}
+
+export interface EnderecoPayload {
+  nome: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  padrao?: boolean;
 }

@@ -1,5 +1,8 @@
 <div class="detalhe-page" *ngIf="produto() as p">
 
+  <!-- Área que rola: imagem + informações. O rodapé fica fora dela e nunca cobre o conteúdo. -->
+  <div class="rolagem">
+
   <!-- Imagem com botões -->
   <div class="imagem-wrapper">
     <img *ngIf="p.imagem" [src]="p.imagem" [alt]="p.nome" class="produto-imagem"/>
@@ -38,6 +41,27 @@
         <span class="preco-valor">{{ formatarPreco(p.preco) }}</span>
       </div>
 
+      <!-- Tempo de preparo deste prato (RF-002) -->
+      <div class="preparo" *ngIf="preparo() as t">
+        <div class="preparo-icone" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 14.5"/>
+            <line x1="9" y1="2" x2="15" y2="2"/>
+          </svg>
+        </div>
+        <div class="preparo-texto">
+          <span class="preparo-label">Tempo de preparo</span>
+          <span class="preparo-valor">{{ t.texto }}</span>
+        </div>
+        <div class="preparo-nivel" [attr.aria-label]="t.rotulo">
+          <span class="preparo-pontos">
+            <i *ngFor="let n of [1,2,3]" [class.on]="n <= t.nivel"></i>
+          </span>
+          <span class="preparo-rotulo">{{ t.rotulo }}</span>
+        </div>
+      </div>
+
       <!-- Divisor -->
       <div class="divisor"></div>
 
@@ -45,12 +69,6 @@
       <div class="secao">
         <h3 class="secao-titulo">Descrição</h3>
         <p class="secao-texto">{{ p.descricao }}</p>
-      </div>
-
-      <!-- Tempo de preparo (RF-002) -->
-      <div class="secao" *ngIf="p.tempoPreparoMin">
-        <h3 class="secao-titulo">Tempo de preparo</h3>
-        <p class="secao-texto">Aproximadamente {{ p.tempoPreparoMin }} minutos</p>
       </div>
 
       <!-- Observações (RF-003) -->
@@ -64,11 +82,12 @@
 
   </div>
 
-  <!-- Footer fixo -->
+  </div><!-- /rolagem -->
+
+  <!-- Rodapé: fica sempre embaixo, fora da área que rola -->
   <div class="footer">
     <div class="quantidade-area">
-      <span class="quantidade-label">Quantidade</span>
-      <div class="quantidade-control">
+      <div class="quantidade-control" aria-label="Quantidade">
         <button class="qty-btn" (click)="remover()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>

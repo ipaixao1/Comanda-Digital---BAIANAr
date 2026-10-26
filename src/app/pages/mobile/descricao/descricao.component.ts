@@ -28,6 +28,18 @@ export class DescricaoComponent implements OnInit {
     return p ? p.preco * this.quantidade() : 0;
   });
 
+  /** Tempo de preparo do prato e o quão elaborado ele é (3 níveis, pela duração). */
+  preparo = computed<{ texto: string; rotulo: string; nivel: 1 | 2 | 3 } | null>(() => {
+    const min = this.produto()?.tempoPreparoMin;
+    if (!min || min <= 0) return null;
+    const nivel = min <= 10 ? 1 : min <= 25 ? 2 : 3;
+    const rotulo = nivel === 1 ? 'Rápido' : nivel === 2 ? 'Médio' : 'Elaborado';
+    const texto = min >= 60
+      ? `${Math.floor(min / 60)} h${min % 60 ? ' ' + (min % 60) + ' min' : ''}`
+      : `${min} min`;
+    return { texto: `Aprox. ${texto}`, rotulo, nivel };
+  });
+
   constructor(private route: ActivatedRoute, private router: Router) {}
 
   async ngOnInit(): Promise<void> {

@@ -91,7 +91,7 @@
 // ── Content ──
 .favoritos-content {
   flex: 1;
-  padding: 0 16px calc(var(--bottom-nav-h) + 20px);
+  padding: 0 16px calc(var(--bottom-nav-h) + 20px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;        // ← adiciona isso
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
@@ -294,7 +294,7 @@
 // ── Bottom nav ──
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 28px);

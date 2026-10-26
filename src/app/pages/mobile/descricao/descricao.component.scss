@@ -15,21 +15,32 @@
 
   display: block;
   background: var(--bg);
-  min-height: 100dvh;
+  height: 100%;
   font-family: var(--font-body);
   max-width: 430px;
   margin: 0 auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .detalhe-page {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100%;
+  min-height: 0;
   background: var(--bg);
   color: var(--text-white);
   max-width: 430px;
   margin: 0 auto;
+}
+
+// Só esta área rola; o rodapé (quantidade + adicionar) é irmão dela, então nunca sobrepõe nada.
+.rolagem {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 // ── Imagem ──
@@ -104,7 +115,7 @@
 // ── Conteúdo ──
 .conteudo {
   flex: 1;
-  padding: 16px 16px calc(var(--footer-h) + 16px);
+  padding: 16px;
 }
 
 .info-card {
@@ -217,30 +228,22 @@
   background: rgba(255,255,255,0.05);
 }
 
-// ── Footer ──
+// ── Footer (fora da rolagem, em linha: quantidade + botão) ──
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 430px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: var(--bg);
-  padding: 16px 16px 24px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--border);
+  z-index: 5;
 }
 
 .quantidade-area {
+  flex: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.quantidade-label {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-white);
 }
 
 .quantidade-control {
@@ -277,8 +280,10 @@
 }
 
 .adicionar-btn {
-  width: 100%;
-  padding: 15px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 14px 10px;
+  white-space: nowrap;
   border-radius: 50px;
   border: none;
   background: var(--gold-2);
@@ -304,7 +309,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100dvh;
+  height: 100%;
   gap: 16px;
   color: var(--text-muted);
 
@@ -331,3 +336,79 @@
   &::placeholder { color: rgba(255,255,255,0.4); }
   &:focus { border-color: var(--gold); }
 }
+
+
+/* ── Tempo de preparo do prato ───────────────────────────── */
+.preparo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(242, 159, 5, 0.10);
+  border: 1px solid rgba(242, 159, 5, 0.28);
+}
+.preparo-icone {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  background: rgba(242, 159, 5, 0.16);
+}
+.preparo-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.preparo-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.preparo-valor {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-white);
+}
+.preparo-nivel {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.preparo-pontos {
+  display: flex;
+  gap: 4px;
+  i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    &.on { background: var(--gold); }
+  }
+}
+.preparo-rotulo {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gold);
+}
+@media (max-width: 359px) {
+  .preparo { padding: 10px 12px; gap: 10px; }
+  .preparo-valor { font-size: 15px; }
+}
+
+// telas bem estreitas: botão mais enxuto para o preço nunca ser cortado
+@media (max-width: 359px) {
+  .footer { gap: 8px; padding-left: 12px; padding-right: 12px; }
+  .adicionar-btn { font-size: 14px; padding: 14px 8px; gap: 0; svg { display: none; } }
+  .qty-btn { width: 30px; }
+}
+.adicionar-btn { overflow: hidden; text-overflow: ellipsis; }

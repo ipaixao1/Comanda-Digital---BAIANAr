@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { PageResponse, PratoPublicoApi } from './api-types';
+import { FaixaEntregaApi, PageResponse, PratoPublicoApi } from './api-types';
 
 /** Prato do cardápio já no formato que as telas do cliente usam. */
 export interface ProdutoCardapio {
@@ -56,6 +56,15 @@ export class CardapioApiService {
       this.http.get<PageResponse<PratoPublicoApi>>(this.base, { params: { size: 200 } })
     );
     return page.content.map(paraProduto).sort((a, b) => a.id - b.id);
+  }
+
+  /** Faixa de entrega da loja (estilo iFood: "20–30 min"). Se falhar, devolve null e a tela só não mostra o selo. */
+  async faixaEntrega(): Promise<FaixaEntregaApi | null> {
+    try {
+      return await firstValueFrom(this.http.get<FaixaEntregaApi>(`${this.base}/estimativa-entrega`));
+    } catch {
+      return null;
+    }
   }
 
   async detalhar(id: number): Promise<ProdutoCardapio> {

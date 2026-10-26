@@ -46,6 +46,7 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 {{ labelStatusAtual() }}
               </p>
+              <p class="pedido-previsao" *ngIf="horaChegadaAtiva()">Chega por volta das {{ horaChegadaAtiva() }}</p>
               <div class="pedido-rodape">
                 <span class="pedido-itens">{{ totalItensPedidoAtual() }} {{ totalItensPedidoAtual() === 1 ? 'item' : 'itens' }}</span>
                 <span class="pedido-total">{{ formatarPreco(totalValorPedidoAtual()) }}</span>
@@ -169,15 +170,30 @@
           </div>
         </div>
 
-        <!-- Tempo estimado -->
-        <div class="tempo-card">
+        <!-- Tempo estimado: calculado pelo backend (preparo + entrega) -->
+        <div class="tempo-card" *ngIf="estimativaExibida() as est">
           <div class="tempo-topo">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span>Tempo estimado</span>
+            <span>Previsão de chegada</span>
           </div>
-          <p class="tempo-valor">20–25 minutos</p>
+          <p class="tempo-valor">Por volta das {{ horaChegadaExibida() }}</p>
+          <p class="tempo-restante">{{ textoRestanteExibido() }}</p>
+          <div class="tempo-detalhe">
+            <div class="tempo-detalhe-item">
+              <span class="tempo-detalhe-label">Preparo</span>
+              <span class="tempo-detalhe-valor">~{{ fmt(est.preparoMin) }}</span>
+            </div>
+            <div class="tempo-detalhe-item">
+              <span class="tempo-detalhe-label">Entrega</span>
+              <span class="tempo-detalhe-valor">~{{ fmt(est.entregaMin) }}</span>
+            </div>
+            <div class="tempo-detalhe-item">
+              <span class="tempo-detalhe-label">Total</span>
+              <span class="tempo-detalhe-valor">~{{ fmt(est.totalMin) }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Aviso -->

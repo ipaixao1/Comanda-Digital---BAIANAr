@@ -71,7 +71,7 @@
 
 .cardapio-content {
   flex: 1;
-  padding: 0 14px calc(var(--bottom-nav-h) + 20px);
+  padding: 0 14px calc(var(--bottom-nav-h) + 20px + env(safe-area-inset-bottom, 0px));
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
@@ -80,12 +80,29 @@
 
 .cardapio-title {
   font-family: var(--font-title);
-  font-size: 32px;
+  font-size: clamp(26px, 8.2vw, 32px);
   font-weight: 300;
   font-style: normal;
   color: var(--gold);
   margin: 0 0 12px;
   letter-spacing: 0.3px;
+}
+
+.entrega-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(242,135,5,0.12);
+  border: 1px solid rgba(242,135,5,0.3);
+  color: var(--gold-2);
+  font-family: var(--font-body);
+  font-size: 13px;
+
+  .entrega-label { color: var(--text-muted); font-weight: 400; }
+  .entrega-tempo { color: var(--gold-2); font-weight: 600; }
 }
 
 .select-container { position: relative; z-index: 50; }
@@ -510,7 +527,7 @@
 // ──────────────────────────────────────────────
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 28px); align-self: center;
@@ -623,6 +640,9 @@
   padding: 24px 20px;
   width: 100%;
   max-width: 360px;
+  max-height: 90dvh;        // o cadastro tem 6 campos: em telas baixas o modal rola, em vez de cortar os botões
+  overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 
@@ -789,7 +809,7 @@
 // ── Botão flutuante carrinho ──
 .fab-carrinho {
   position: absolute;
-  bottom: calc(var(--bottom-nav-h) + 26px);
+  bottom: calc(var(--bottom-nav-h) + 26px + env(safe-area-inset-bottom, 0px));
   right: 20px;
   width: 54px;
   height: 54px;

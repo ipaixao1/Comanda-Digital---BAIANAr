@@ -18,7 +18,14 @@
       Adicionar novo endereço
     </button>
 
-    <div class="lista" *ngIf="enderecos().length > 0">
+    <p class="lista-aviso" *ngIf="carregando()">Carregando seus endereços…</p>
+
+    <div class="lista-erro" *ngIf="erroLista() && !carregando()">
+      <p>{{ erroLista() }}</p>
+      <button type="button" (click)="carregar()">Tentar novamente</button>
+    </div>
+
+    <div class="lista" *ngIf="!carregando() && enderecos().length > 0">
       <div class="endereco-card" *ngFor="let endereco of enderecos()">
         <div class="card-topo">
           <div class="card-esquerda">
@@ -68,7 +75,7 @@
       </div>
     </div>
 
-    <div class="estado-vazio" *ngIf="enderecos().length === 0">
+    <div class="estado-vazio" *ngIf="!carregando() && !erroLista() && enderecos().length === 0">
       <svg class="vazio-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
       </svg>
@@ -103,8 +110,12 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
           </svg>
-          <input type="text" placeholder="00000-000" [(ngModel)]="form.cep"/>
+          <input type="text" inputmode="numeric" autocomplete="postal-code" maxlength="9"
+            placeholder="00000-000" [ngModel]="form.cep" (ngModelChange)="aoDigitarCep($event)"/>
+          <span class="cep-spinner" *ngIf="buscandoCep()" aria-label="Buscando CEP"></span>
         </div>
+        <p class="cep-msg" *ngIf="buscandoCep()">Buscando endereço…</p>
+        <p class="cep-msg" *ngIf="!buscandoCep() && cepMsg() as m" [class.ok]="m.tipo === 'ok'" [class.erro]="m.tipo === 'erro'">{{ m.texto }}</p>
       </div>
 
       <div class="modal-campo">
@@ -118,7 +129,7 @@
         <div class="modal-campo flex-1">
           <label>Número</label>
           <div class="campo-input">
-            <input type="text" placeholder="123" [(ngModel)]="form.numero"/>
+            <input id="campo-numero" type="text" inputmode="numeric" placeholder="123" [(ngModel)]="form.numero"/>
           </div>
         </div>
         <div class="modal-campo flex-2">
@@ -158,8 +169,8 @@
 
       <p class="modal-erro" *ngIf="erro">{{ erro }}</p>
 
-      <button class="modal-btn-salvar" (click)="salvarEndereco()">
-        {{ enderecoEditando ? 'Salvar endereço' : 'Salvar endereço' }}
+      <button class="modal-btn-salvar" [disabled]="salvando()" (click)="salvarEndereco()">
+        {{ salvando() ? 'Salvando…' : 'Salvar endereço' }}
       </button>
 
     </div>

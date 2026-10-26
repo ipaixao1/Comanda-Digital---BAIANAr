@@ -162,7 +162,8 @@
 .item-rodape {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;          // em telas estreitas o botão de remover desce, em vez de ser cortado
+  gap: 8px 10px;
   justify-content: space-between;
 }
 
@@ -204,7 +205,14 @@
   color: var(--gold);
   white-space: nowrap;
   flex: 1;
+  min-width: 0;
   text-align: right;
+}
+
+// celulares bem estreitos (≤ 359 px, ex.: 320 px): card mais compacto
+@media (max-width: 359px) {
+  .item-card  { padding: 10px; gap: 10px; }
+  .item-thumb { width: 56px; height: 56px; }
 }
 
 .btn-remover {

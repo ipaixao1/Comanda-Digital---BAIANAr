@@ -55,3 +55,49 @@ export function labelStatus(status: StatusPedidoApi): string {
   };
   return map[status] ?? status;
 }
+
+/** Estimativa de tempo do pedido (calculada pelo backend), já com a data convertida para ISO com "Z". */
+export interface EstimativaTempo {
+  preparoMin: number;
+  entregaMin: number;
+  totalMin: number;
+  /** Momento previsto de chegada, ISO (UTC). */
+  previsaoEntregaEm: string | null;
+}
+
+/** O backend devolve LocalDateTime em UTC sem sufixo; acrescenta "Z" para o navegador converter ao fuso local. */
+export function isoUtc(utc: string): string {
+  return /Z$|[+-]\d{2}:\d{2}$/.test(utc) ? utc : `${utc}Z`;
+}
+
+export function paraEstimativa(r: {
+  tempoPreparoMin: number; tempoEntregaMin: number; tempoTotalMin: number; previsaoEntregaEm: string | null;
+}): EstimativaTempo {
+  return {
+    preparoMin: r.tempoPreparoMin,
+    entregaMin: r.tempoEntregaMin,
+    totalMin: r.tempoTotalMin,
+    previsaoEntregaEm: r.previsaoEntregaEm ? isoUtc(r.previsaoEntregaEm) : null,
+  };
+}
+
+/** Minutos que faltam até a previsão de chegada (0 se já passou ou se não há previsão). */
+export function minutosRestantes(est: EstimativaTempo | null, agora: number): number {
+  if (!est?.previsaoEntregaEm) return 0;
+  const ms = new Date(est.previsaoEntregaEm).getTime() - agora;
+  return Math.max(0, Math.ceil(ms / 60000));
+}
+
+/** "HH:mm" no fuso do navegador. */
+export function horaPrevista(est: EstimativaTempo | null): string {
+  if (!est?.previsaoEntregaEm) return '';
+  return new Date(est.previsaoEntregaEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** "45 min" ou "1 h 05 min". */
+export function formatarMinutos(min: number): string {
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')} min`;
+}

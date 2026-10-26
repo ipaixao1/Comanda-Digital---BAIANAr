@@ -6,6 +6,7 @@ import { CarrinhoService } from '../../../services/carrinho.service';
 import { PedidoApiService } from '../../../services/api/pedido-api.service';
 import { mensagemDeErro } from '../../../services/api/api-error';
 import { ClienteAuthService } from '../../../services/cliente-auth.service';
+import { EnderecoApiService, enderecoEmLinha } from '../../../services/api/endereco-api.service';
 
 interface Endereco {
   id: string;
@@ -13,6 +14,8 @@ interface Endereco {
   nome: string;
   rua: string;
   cidade: string;
+  /** Linha completa gravada no pedido (endereços vindos da API). */
+  completo?: string;
 }
 
 interface Pagamento {
@@ -71,10 +74,11 @@ export class FinalizarPedidoComponent implements OnInit, OnDestroy {
     public carrinho: CarrinhoService,
     private pedidoApi: PedidoApiService,
     private clienteAuth: ClienteAuthService,
+    private enderecoApi: EnderecoApiService,
     private router: Router,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Checkout exige login (RF-005): se perdeu a sessão, volta para o login e retorna depois.
     const cliente = this.clienteAuth.getCurrentCliente();
     if (!this.clienteAuth.isAuthenticated() || !cliente) {
@@ -87,8 +91,30 @@ export class FinalizarPedidoComponent implements OnInit, OnDestroy {
       this.router.navigate(['/mobile/carrinho']);
       return;
     }
-    if (cliente.endereco) {
-      this.enderecos = [{ id: 'cadastro', tipo: 'casa', nome: 'Endereço de entrega', rua: cliente.endereco, cidade: '' }];
+    await this.carregarEnderecos(cliente.endereco);
+  }
+
+  /** Endereços salvos em "Meus Endereços" (o padrão já vem selecionado); sem nenhum, usa o do cadastro. */
+  private async carregarEnderecos(enderecoCadastro?: string): Promise<void> {
+    try {
+      const lista = await this.enderecoApi.listar();
+      if (lista.length > 0) {
+        this.enderecos = lista.map(e => ({
+          id: String(e.id),
+          tipo: /trabalho|empresa|escrit/i.test(e.nome) ? 'trabalho' : 'casa',
+          nome: e.padrao ? `${e.nome} · padrão` : e.nome,
+          rua: `${e.rua}, ${e.numero}${e.complemento ? ' - ' + e.complemento : ''}`,
+          cidade: `${e.bairro} - ${e.cidade}/${e.estado}`,
+          completo: enderecoEmLinha(e),
+        }));
+        this.enderecoSelecionado = String((lista.find(e => e.padrao) ?? lista[0]).id);
+        return;
+      }
+    } catch {
+      // sem rede/servidor: cai no endereço do cadastro abaixo
+    }
+    if (enderecoCadastro) {
+      this.enderecos = [{ id: 'cadastro', tipo: 'casa', nome: 'Endereço de entrega', rua: enderecoCadastro, cidade: '' }];
       this.enderecoSelecionado = 'cadastro';
     }
   }
@@ -119,7 +145,7 @@ export class FinalizarPedidoComponent implements OnInit, OnDestroy {
   selecionarEndereco(id: string):  void { this.enderecoSelecionado  = id; }
   selecionarPagamento(id: string): void { this.pagamentoSelecionado = id; }
 
-  adicionarEndereco():  void { this.router.navigate(['/mobile/enderecos']); }
+  adicionarEndereco():  void { this.router.navigate(['/mobile/enderecos'], { queryParams: { origem: 'checkout' } }); }
   adicionarPagamento(): void {
     this.router.navigate(['/mobile/configuracoes'], {
       queryParams: { tela: 'adicionar-cartao', origem: 'checkout' },
@@ -156,7 +182,7 @@ export class FinalizarPedidoComponent implements OnInit, OnDestroy {
     this.enviando = true;
     try {
       const endObj = this.enderecos.find(e => e.id === this.enderecoSelecionado);
-      const enderecoEntrega = [endObj?.rua, endObj?.cidade].filter(Boolean).join(' - ');
+      const enderecoEntrega = endObj?.completo ?? [endObj?.rua, endObj?.cidade].filter(Boolean).join(' - ');
 
       // Observações do pedido = observações do carrinho + observações de entrega.
       const obsPedido = [this.carrinho.observacoes().trim(), this.observacoesEntrega.trim()]

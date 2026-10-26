@@ -68,20 +68,38 @@
       </div>
     </div>
 
-    <!-- Tempo estimado (só exibe se não entregue) -->
-    <div class="tempo-card" *ngIf="!entregue">
-      <div class="tempo-icone">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
+    <!-- Tempo estimado: calculado pelo backend (preparo + entrega) -->
+    <ng-container *ngIf="mostrarTempo">
+      <div class="tempo-card">
+        <div class="tempo-icone">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="tempo-info">
+          <p class="tempo-label">Previsão de chegada</p>
+          <p class="tempo-valor">Por volta das {{ horaChegada }}</p>
+          <p class="tempo-restante">{{ textoRestante }}</p>
+        </div>
       </div>
-      <div class="tempo-info">
-        <p class="tempo-label">Tempo estimado</p>
-        <p class="tempo-valor">20–25 minutos</p>
-      </div>
-    </div>
 
-    <p class="aviso-texto" *ngIf="!entregue">Você será notificado quando o pedido estiver pronto.</p>
+      <div class="tempo-detalhe">
+        <div class="tempo-detalhe-item">
+          <span class="tempo-detalhe-label">Preparo</span>
+          <span class="tempo-detalhe-valor">~{{ fmt(estimativa()!.preparoMin) }}</span>
+        </div>
+        <div class="tempo-detalhe-item">
+          <span class="tempo-detalhe-label">Entrega</span>
+          <span class="tempo-detalhe-valor">~{{ fmt(estimativa()!.entregaMin) }}</span>
+        </div>
+        <div class="tempo-detalhe-item">
+          <span class="tempo-detalhe-label">Total</span>
+          <span class="tempo-detalhe-valor">~{{ fmt(estimativa()!.totalMin) }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <p class="aviso-texto" *ngIf="!entregue && !cancelado">Você será notificado quando o pedido estiver pronto.</p>
     <p class="aviso-texto" *ngIf="entregue" style="text-align:center;color:#4ade80;font-weight:600;">Seu pedido foi entregue! Bom apetite! 🎉</p>
 
   </main>
