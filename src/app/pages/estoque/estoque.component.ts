@@ -1,12 +1,13 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-import { EstoqueService, StatusEstoqueAdmin } from '../../services/estoque.service';
-import { AdminDataService, ProdutoEstoque } from '../../services/admin-data.service';
+import { EstoqueService } from '../../services/estoque.service';
 import { PermissionService } from '../../services/permission.service';
+import { EstoqueApiService } from '../../services/api/estoque-api.service';
+import { IngredienteApi, MovimentacaoApi } from '../../services/api/api-types';
+import { mensagemDeErro } from '../../services/api/api-error';
 
 export type StatusEstoque = 'Normal' | 'Baixo' | 'Crítico';
-export type Produto = ProdutoEstoque; // alias para o HTML não precisar mudar
 
 // Mapeamento nome → id KDS (usando escape unicode para evitar problemas de encoding)
 function getKdsId(nome: string): string | undefined {
@@ -72,47 +73,102 @@ function getKdsId(nome: string): string | undefined {
   return map[nome.toLowerCase().trim()];
 }
 
+const MOTIVOS_SAIDA = [
+  { valor: 'DESPERDICIO', rotulo: 'Desperdício' },
+  { valor: 'VENCIMENTO',  rotulo: 'Vencimento' },
+  { valor: 'QUEBRA',      rotulo: 'Quebra' },
+  { valor: 'USO_INTERNO', rotulo: 'Uso interno' },
+];
+
+const ROTULO_MOTIVO: Record<string, string> = {
+  COMPRA: 'Compra', VENDA: 'Venda', DESPERDICIO: 'Desperdício', VENCIMENTO: 'Vencimento',
+  QUEBRA: 'Quebra', AJUSTE: 'Ajuste', USO_INTERNO: 'Uso interno', ESTORNO: 'Estorno (pedido cancelado)',
+};
+
 @Component({
   selector: 'app-estoque', standalone: true, imports: [CommonModule],
   templateUrl: './estoque.component.html', styleUrls: ['./estoque.component.scss']
 })
-export class EstoqueComponent {
+export class EstoqueComponent implements OnInit {
   private authService = inject(AuthService);
-  private estoqueSvc  = inject(EstoqueService);
-  private adminData   = inject(AdminDataService);
+  private estoqueSvc  = inject(EstoqueService);      // só o status do KDS (cozinha)
+  private api         = inject(EstoqueApiService);
   permission           = inject(PermissionService);
 
   // Esta página só é editável pelo Dono — Gerente e Supervisor têm acesso somente leitura
   podeEditar = this.permission.podeEditar('estoque');
 
-  // Dados vivos do Firestore
-  produtos = this.adminData.estoqueItens;
+  readonly unidades = ['KG', 'G', 'L', 'ML', 'UN'];
+  readonly motivosSaida = MOTIVOS_SAIDA;
 
-  showModal         = signal(false);
-  editando          = signal<Produto | null>(null);
-  isSaving          = signal(false);
+  aba          = signal<'ingredientes' | 'movimentacoes'>('ingredientes');
+  ingredientes = signal<IngredienteApi[]>([]);
+  carregando   = signal(true);
+  erro         = signal('');
+
+  // ── Modal ingrediente ────────────────────────────────────────
+  showModal  = signal(false);
+  editando   = signal<IngredienteApi | null>(null);
+  isSaving   = signal(false);
+  erroModal  = signal('');
+  mNome   = signal('');
+  mSku    = signal('');
+  mUnidade= signal('KG');
+  mMinimo = signal('0');
+  mCusto  = signal('0');
+
+  // ── Modal movimentação manual ────────────────────────────────
+  showMov   = signal(false);
+  movItem   = signal<IngredienteApi | null>(null);
+  movTipo   = signal<'ENTRADA' | 'SAIDA'>('SAIDA');
+  movMotivo = signal('DESPERDICIO');
+  movQtd    = signal('');
+  movLote   = signal('');
+  movValid  = signal('');
+  erroMov   = signal('');
+
+  // ── Exclusão ─────────────────────────────────────────────────
   showModalExclusao = signal(false);
-  prodParaExcluir   = signal<Produto | null>(null);
+  prodParaExcluir   = signal<IngredienteApi | null>(null);
+  erroExclusao      = signal('');
 
-  mNome      = signal('');
-  mCategoria = signal('');
-  mFornecedor= signal('');
-  mQtd       = signal('0');
-  mUnidade   = signal('kg');
-  mMinimo    = signal('0');
-  mPreco     = signal('0');
-  mDescricao = signal('');
-  mEmoji     = signal('📦');
+  // ── Histórico ────────────────────────────────────────────────
+  movimentacoes   = signal<MovimentacaoApi[]>([]);
+  filtroIng       = signal<number | null>(null);
+  paginaMov       = signal(0);
+  totalPaginasMov = signal(0);
+  carregandoMov   = signal(false);
 
-  unidades = ['kg', 'g', 'litro', 'ml', 'unidade'];
+  totalItens     = computed(() => this.ingredientes().length);
+  estoqueBaixo   = computed(() => this.ingredientes().filter(i => this.status(i) === 'Baixo').length);
+  estoqueCritico = computed(() => this.ingredientes().filter(i => this.status(i) === 'Crítico').length);
 
-  totalItens     = computed(() => this.produtos().length);
-  estoqueBaixo   = computed(() => this.produtos().filter(p => p.status === 'Baixo').length);
-  estoqueCritico = computed(() => this.produtos().filter(p => p.status === 'Crítico').length);
+  ngOnInit(): void { this.carregar(); }
+
+  async carregar(): Promise<void> {
+    this.carregando.set(true);
+    this.erro.set('');
+    try {
+      const lista = await this.api.listarIngredientes();
+      this.ingredientes.set(lista.filter(i => i.status === 'ATIVO'));
+      this.api.atualizarAlertas();
+    } catch (err) {
+      this.erro.set(mensagemDeErro(err, 'Não foi possível carregar o estoque.'));
+    } finally {
+      this.carregando.set(false);
+    }
+  }
 
   getPrimeiroNome(): string {
     const u = this.authService.getCurrentUser();
     return u?.nomeCompleto?.split(' ')[0] || u?.matricula || '';
+  }
+
+  /** Crítico: saldo ≤ 50% do mínimo; Baixo: abaixo do mínimo (RF-032). */
+  status(i: IngredienteApi): StatusEstoque {
+    if (i.saldoAtual <= i.estoqueMinimo * 0.5 && i.estoqueMinimo > 0) return 'Crítico';
+    if (i.saldoAtual < i.estoqueMinimo) return 'Baixo';
+    return 'Normal';
   }
 
   getStatusClass(s: StatusEstoque): string {
@@ -125,34 +181,23 @@ export class EstoqueComponent {
     return this.estoqueSvc.getStatusKds(kdsId);
   }
 
-  private calcStatus(qtd: number, min: number): StatusEstoque {
-    if (qtd <= min * 0.5) return 'Crítico';
-    if (qtd < min)        return 'Baixo';
-    return 'Normal';
-  }
+  rotuloMotivo(m: string): string { return ROTULO_MOTIVO[m] ?? m; }
 
-  private hoje(): string {
-    return new Date().toLocaleDateString('pt-BR');
-  }
-
-  // ── Modal ─────────────────────────────────────────────────────
+  // ── Ingrediente: criar / editar ──────────────────────────────
   abrirModalNovo(): void {
     this.editando.set(null);
-    this.mNome.set(''); this.mCategoria.set(''); this.mFornecedor.set('');
-    this.mQtd.set('0'); this.mUnidade.set('kg');
-    this.mMinimo.set('0'); this.mPreco.set('0');
-    this.mDescricao.set(''); this.mEmoji.set('📦');
+    this.mNome.set(''); this.mSku.set(''); this.mUnidade.set('KG');
+    this.mMinimo.set('0'); this.mCusto.set('0');
+    this.erroModal.set('');
     this.showModal.set(true);
   }
 
-  abrirModalEditar(p: Produto, e: Event): void {
+  abrirModalEditar(p: IngredienteApi, e: Event): void {
     e.stopPropagation();
     this.editando.set(p);
-    this.mNome.set(p.nome); this.mCategoria.set(p.categoria);
-    this.mFornecedor.set(p.fornecedor); this.mQtd.set(String(p.qtdAtual));
-    this.mUnidade.set(p.unidade); this.mMinimo.set(String(p.nivelMinimo));
-    this.mPreco.set(String(p.preco)); this.mDescricao.set(p.descricao);
-    this.mEmoji.set('📦');
+    this.mNome.set(p.nome); this.mSku.set(p.sku); this.mUnidade.set(p.unidadePadrao);
+    this.mMinimo.set(String(p.estoqueMinimo)); this.mCusto.set(String(p.custoUnitario));
+    this.erroModal.set('');
     this.showModal.set(true);
   }
 
@@ -160,43 +205,71 @@ export class EstoqueComponent {
 
   async salvar(): Promise<void> {
     if (!this.podeEditar) return;
-    if (!this.mNome().trim()) return;
+    if (!this.mNome().trim() || !this.mSku().trim()) {
+      this.erroModal.set('Informe o nome e o SKU do ingrediente.');
+      return;
+    }
     this.isSaving.set(true);
+    this.erroModal.set('');
     try {
-      const qtd = parseFloat(this.mQtd()) || 0;
-      const min = parseFloat(this.mMinimo()) || 0;
-      const novoStatus = this.calcStatus(qtd, min);
-      const dados: Omit<ProdutoEstoque, 'firestoreId' | 'id'> = {
-        nome: this.mNome(), categoria: this.mCategoria(),
-        fornecedor: this.mFornecedor(), qtdAtual: qtd,
-        unidade: this.mUnidade(), nivelMinimo: min,
-        preco: parseFloat(this.mPreco()) || 0,
-        descricao: this.mDescricao(),
-        status: novoStatus,
-        ultimaAtualizacao: this.hoje(),
+      const payload = {
+        nome: this.mNome().trim(), sku: this.mSku().trim(),
+        unidadePadrao: this.mUnidade(),
+        estoqueMinimo: parseFloat(this.mMinimo()) || 0,
+        custoUnitario: parseFloat(this.mCusto()) || 0,
       };
       const ed = this.editando();
-      if (ed?.firestoreId) {
-        await this.adminData.atualizarProduto(ed.firestoreId, dados);
-      } else {
-        await this.adminData.adicionarProduto(dados);
-      }
-      // Sincroniza com KDS via EstoqueService
-      const kdsId = getKdsId(this.mNome());
-      if (kdsId) {
-        await this.estoqueSvc.setStatusAdmin(kdsId, this.mNome(), novoStatus as StatusEstoqueAdmin)
-          .catch(err => console.error('[Estoque] sync KDS erro:', err));
-      }
-      this.fecharModal();
+      if (ed) await this.api.atualizarIngrediente(ed.id, payload);
+      else    await this.api.criarIngrediente(payload);
+      this.showModal.set(false);
+      await this.carregar();
     } catch (err) {
-      console.error('[Estoque] salvar erro:', err);
+      this.erroModal.set(mensagemDeErro(err, 'Não foi possível salvar o ingrediente.'));
     } finally {
       this.isSaving.set(false);
     }
   }
 
-  confirmarExclusao(p: Produto, e: Event): void {
+  // ── Movimentação manual (RF-028 / RF-030) ────────────────────
+  abrirMov(p: IngredienteApi, tipo: 'ENTRADA' | 'SAIDA', e: Event): void {
     e.stopPropagation();
+    this.movItem.set(p);
+    this.movTipo.set(tipo);
+    this.movMotivo.set(tipo === 'ENTRADA' ? 'AJUSTE' : 'DESPERDICIO');
+    this.movQtd.set(''); this.movLote.set(''); this.movValid.set('');
+    this.erroMov.set('');
+    this.showMov.set(true);
+  }
+
+  fecharMov(): void { if (!this.isSaving()) this.showMov.set(false); }
+
+  async salvarMov(): Promise<void> {
+    const item = this.movItem();
+    if (!this.podeEditar || !item) return;
+    const qtd = parseFloat(this.movQtd());
+    if (!qtd || qtd <= 0) { this.erroMov.set('Informe uma quantidade maior que zero.'); return; }
+    this.isSaving.set(true);
+    this.erroMov.set('');
+    try {
+      await this.api.registrarMovimentacao({
+        ingredienteId: item.id, tipo: this.movTipo(), quantidade: qtd, motivo: this.movMotivo(),
+        lote: this.movLote().trim() || undefined,
+        validade: this.movValid() || undefined,
+      });
+      this.showMov.set(false);
+      await this.carregar();
+      if (this.aba() === 'movimentacoes') await this.carregarMovimentacoes();
+    } catch (err) {
+      this.erroMov.set(mensagemDeErro(err, 'Não foi possível registrar a movimentação.'));
+    } finally {
+      this.isSaving.set(false);
+    }
+  }
+
+  // ── Exclusão (lógica) ────────────────────────────────────────
+  confirmarExclusao(p: IngredienteApi, e: Event): void {
+    e.stopPropagation();
+    this.erroExclusao.set('');
     this.prodParaExcluir.set(p);
     this.showModalExclusao.set(true);
   }
@@ -209,25 +282,60 @@ export class EstoqueComponent {
   async confirmarExclusaoFinal(): Promise<void> {
     if (!this.podeEditar) return;
     const p = this.prodParaExcluir();
-    if (p?.firestoreId) {
-      await this.adminData.excluirProduto(p.firestoreId).catch(console.error);
+    if (!p) return;
+    try {
+      await this.api.desativarIngrediente(p.id);
+      this.cancelarExclusao();
+      await this.carregar();
+    } catch (err) {
+      this.erroExclusao.set(mensagemDeErro(err, 'Não foi possível excluir o ingrediente.'));
     }
-    this.cancelarExclusao();
+  }
+
+  // ── Histórico (RF-033) ───────────────────────────────────────
+  trocarAba(aba: 'ingredientes' | 'movimentacoes'): void {
+    this.aba.set(aba);
+    if (aba === 'movimentacoes') { this.paginaMov.set(0); this.carregarMovimentacoes(); }
+  }
+
+  async carregarMovimentacoes(): Promise<void> {
+    this.carregandoMov.set(true);
+    try {
+      const r = await this.api.listarMovimentacoes(this.filtroIng() ?? undefined, this.paginaMov());
+      this.movimentacoes.set(r.content);
+      this.totalPaginasMov.set(r.totalPages);
+    } catch (err) {
+      this.erro.set(mensagemDeErro(err, 'Não foi possível carregar as movimentações.'));
+    } finally {
+      this.carregandoMov.set(false);
+    }
+  }
+
+  onFiltroIngrediente(e: Event): void {
+    const v = (e.target as HTMLSelectElement).value;
+    this.filtroIng.set(v ? Number(v) : null);
+    this.paginaMov.set(0);
+    this.carregarMovimentacoes();
+  }
+
+  mudarPagina(delta: number): void {
+    const n = this.paginaMov() + delta;
+    if (n < 0 || n >= this.totalPaginasMov()) return;
+    this.paginaMov.set(n);
+    this.carregarMovimentacoes();
   }
 
   onInput(field: string, e: Event): void {
-    const v = (e.target as HTMLInputElement | HTMLTextAreaElement).value;
-    if (field === 'nome')       this.mNome.set(v);
-    if (field === 'categoria')  this.mCategoria.set(v);
-    if (field === 'fornecedor') this.mFornecedor.set(v);
-    if (field === 'qtd')        this.mQtd.set(v);
-    if (field === 'minimo')     this.mMinimo.set(v);
-    if (field === 'preco')      this.mPreco.set(v);
-    if (field === 'descricao')  this.mDescricao.set(v);
-    if (field === 'emoji')      this.mEmoji.set(v);
+    const v = (e.target as HTMLInputElement).value;
+    if (field === 'nome')   this.mNome.set(v);
+    if (field === 'sku')    this.mSku.set(v);
+    if (field === 'minimo') this.mMinimo.set(v);
+    if (field === 'custo')  this.mCusto.set(v);
+    if (field === 'movQtd')   this.movQtd.set(v);
+    if (field === 'movLote')  this.movLote.set(v);
+    if (field === 'movValid') this.movValid.set(v);
   }
 
-  onSelectUnidade(e: Event): void {
-    this.mUnidade.set((e.target as HTMLSelectElement).value);
-  }
+  onSelectUnidade(e: Event): void { this.mUnidade.set((e.target as HTMLSelectElement).value); }
+  onSelectMotivo(e: Event): void  { this.movMotivo.set((e.target as HTMLSelectElement).value); }
 }

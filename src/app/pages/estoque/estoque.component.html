@@ -10,7 +10,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
-      Adicionar Produto
+      Novo Ingrediente
     </button>
   </div>
 
@@ -45,44 +45,43 @@
     </div>
   </div>
 
-  <!-- Tabela -->
-  <div class="table-card">
+  <p class="msg-erro" *ngIf="erro()">{{ erro() }}</p>
+
+  <!-- Abas -->
+  <div class="abas">
+    <button class="aba" [class.aba--ativa]="aba()==='ingredientes'" (click)="trocarAba('ingredientes')">Ingredientes</button>
+    <button class="aba" [class.aba--ativa]="aba()==='movimentacoes'" (click)="trocarAba('movimentacoes')">Movimentações</button>
+  </div>
+
+  <!-- Tabela de ingredientes -->
+  <div class="table-card" *ngIf="aba()==='ingredientes'">
     <div class="table-head">
-      <span>Imagem</span><span>Nome do Produto</span><span>Categoria</span>
-      <span>Fornecedor</span><span>Qtd. Atual</span><span>Unidade</span>
-      <span>Nível Mínimo</span><span>Status</span><span>Última Atualização</span><span>Ações</span>
+      <span>Nome</span><span>SKU</span><span>Saldo</span><span>Unidade</span>
+      <span>Mínimo</span><span>Custo (R$)</span><span>Status</span><span>Ações</span>
     </div>
 
-    <div *ngFor="let p of produtos()" class="produto-row">
-      <div class="cell-img">
-        <div class="produto-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-        </div>
-      </div>
+    <p class="vazio" *ngIf="carregando()">Carregando estoque...</p>
+    <p class="vazio" *ngIf="!carregando() && !ingredientes().length">Nenhum ingrediente cadastrado.</p>
+
+    <div *ngFor="let p of ingredientes()" class="produto-row">
       <span class="cell cell--nome">{{ p.nome }}</span>
-      <span class="cell cell--cat">{{ p.categoria }}</span>
-      <span class="cell cell--forn">{{ p.fornecedor }}</span>
-      <span class="cell cell--center">{{ p.qtdAtual }}</span>
-      <span class="cell cell--center">{{ p.unidade }}</span>
-      <span class="cell cell--center">{{ p.nivelMinimo }}</span>
+      <span class="cell cell--forn">{{ p.sku }}</span>
+      <span class="cell cell--center">{{ p.saldoAtual }}</span>
+      <span class="cell cell--center">{{ p.unidadePadrao }}</span>
+      <span class="cell cell--center">{{ p.estoqueMinimo }}</span>
+      <span class="cell cell--center">{{ p.custoUnitario | number:'1.2-2' }}</span>
       <span class="cell">
-        <span class="status-badge" [ngClass]="getStatusClass(p.status)">
-          <svg *ngIf="p.status==='Crítico'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="badge-icon"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          {{ p.status }}
+        <span class="status-badge" [ngClass]="getStatusClass(status(p))">
+          <svg *ngIf="status(p)==='Crítico'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="badge-icon"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {{ status(p) }}
         </span>
-        <!-- Badge "Em falta na cozinha" vindo do KDS -->
         <span class="status-badge status--falta-kds"
           *ngIf="getStatusKdsProduto(p.nome) === 'em_falta'"
-          title="Cozinha marcou como em falta">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="badge-icon" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Em falta na cozinha
-        </span>
-      </span>
-      <span class="cell cell--data">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="cal-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        {{ p.ultimaAtualizacao }}
+          title="Cozinha marcou como em falta">Em falta na cozinha</span>
       </span>
       <span class="cell cell--acoes" *ngIf="podeEditar">
+        <button class="btn-acao btn-mov btn-mov--in" (click)="abrirMov(p,'ENTRADA',$event)" title="Entrada (ajuste)">+</button>
+        <button class="btn-acao btn-mov btn-mov--out" (click)="abrirMov(p,'SAIDA',$event)" title="Saída (perda)">−</button>
         <button class="btn-acao btn-editar" (click)="abrirModalEditar(p, $event)" title="Editar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -93,89 +92,125 @@
     </div>
   </div>
 
+  <!-- Histórico de movimentações (RF-033) -->
+  <div class="table-card" *ngIf="aba()==='movimentacoes'">
+    <div class="filtro-mov">
+      <label class="field-label">Ingrediente</label>
+      <select class="field-input field-select" (change)="onFiltroIngrediente($event)">
+        <option value="">Todos</option>
+        <option *ngFor="let i of ingredientes()" [value]="i.id">{{ i.nome }}</option>
+      </select>
+    </div>
+    <div class="mov-head">
+      <span>Data</span><span>Ingrediente</span><span>Tipo</span><span>Qtd.</span>
+      <span>Motivo</span><span>Usuário</span><span>Referência</span>
+    </div>
+    <p class="vazio" *ngIf="carregandoMov()">Carregando...</p>
+    <p class="vazio" *ngIf="!carregandoMov() && !movimentacoes().length">Nenhuma movimentação encontrada.</p>
+    <div class="mov-row" *ngFor="let m of movimentacoes()">
+      <span class="cell cell--data">{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      <span class="cell cell--nome">{{ m.ingredienteNome }}</span>
+      <span class="cell"><span class="tipo-tag" [ngClass]="'tipo-tag--' + m.tipo.toLowerCase()">{{ m.tipo }}</span></span>
+      <span class="cell cell--center">{{ m.quantidade }}</span>
+      <span class="cell">{{ rotuloMotivo(m.motivo) }}</span>
+      <span class="cell cell--forn">{{ m.usuarioNome }}</span>
+      <span class="cell cell--forn">
+        <ng-container *ngIf="m.pedidoId">Pedido #{{ m.pedidoId }}</ng-container>
+        <ng-container *ngIf="m.pedidoCompraId">Compra #{{ m.pedidoCompraId }}</ng-container>
+        <ng-container *ngIf="!m.pedidoId && !m.pedidoCompraId">—</ng-container>
+      </span>
+    </div>
+    <div class="paginacao" *ngIf="totalPaginasMov() > 1">
+      <button (click)="mudarPagina(-1)" [disabled]="paginaMov()===0">‹ Anterior</button>
+      <span>{{ paginaMov()+1 }} / {{ totalPaginasMov() }}</span>
+      <button (click)="mudarPagina(1)" [disabled]="paginaMov()+1>=totalPaginasMov()">Próxima ›</button>
+    </div>
+  </div>
+
 </div>
 
-<!-- ── Modal Adicionar / Editar ─────────────────────────────── -->
+<!-- ── Modal Novo / Editar ingrediente ──────────────────────── -->
 <div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-scroll">
+      <h2 class="modal-title">{{ editando() ? 'Editar Ingrediente' : 'Novo Ingrediente' }}</h2>
 
-      <h2 class="modal-title">{{ editando() ? 'Editar Produto' : 'Adicionar Produto' }}</h2>
-
-      <!-- Imagem (emoji) -->
       <div class="field-group">
-        <label class="field-label">Imagem (emoji)</label>
-        <input type="text" class="field-input" [value]="mEmoji()"
-          (input)="onInput('emoji',$event)" />
+        <label class="field-label">Nome</label>
+        <input type="text" class="field-input" [value]="mNome()" (input)="onInput('nome',$event)" placeholder="Ex: Peixe fresco" />
       </div>
-
-      <!-- Nome do Produto -->
-      <div class="field-group">
-        <label class="field-label">Nome do Produto</label>
-        <input type="text" class="field-input" [value]="mNome()"
-          (input)="onInput('nome',$event)" placeholder="Digite o nome do produto" />
-      </div>
-
-      <!-- Categoria -->
-      <div class="field-group">
-        <label class="field-label">Categoria</label>
-        <input type="text" class="field-input" [value]="mCategoria()"
-          (input)="onInput('categoria',$event)" placeholder="Ex: Frutos do Mar" />
-      </div>
-
-      <!-- Fornecedor -->
-      <div class="field-group">
-        <label class="field-label">Fornecedor</label>
-        <input type="text" class="field-input" [value]="mFornecedor()"
-          (input)="onInput('fornecedor',$event)" placeholder="Digite o nome do fornecedor" />
-      </div>
-
-      <!-- Quantidade + Unidade -->
       <div class="modal-row">
         <div class="field-group">
-          <label class="field-label">Quantidade Atual</label>
-          <input type="number" class="field-input" [value]="mQtd()"
-            (input)="onInput('qtd',$event)" min="0" step="0.5" />
+          <label class="field-label">SKU</label>
+          <input type="text" class="field-input" [value]="mSku()" (input)="onInput('sku',$event)" placeholder="Ex: ING-001" />
         </div>
         <div class="field-group">
-          <label class="field-label">Unidade de Medida</label>
+          <label class="field-label">Unidade</label>
           <select class="field-input field-select" (change)="onSelectUnidade($event)">
             <option *ngFor="let u of unidades" [value]="u" [selected]="mUnidade()===u">{{ u }}</option>
           </select>
         </div>
       </div>
-
-      <!-- Nível Mínimo + Preço -->
       <div class="modal-row">
         <div class="field-group">
-          <label class="field-label">Nível Mínimo de Estoque</label>
-          <input type="number" class="field-input" [value]="mMinimo()"
-            (input)="onInput('minimo',$event)" min="0" step="0.5" />
+          <label class="field-label">Estoque mínimo</label>
+          <input type="number" class="field-input" [value]="mMinimo()" (input)="onInput('minimo',$event)" min="0" step="0.5" />
         </div>
         <div class="field-group">
-          <label class="field-label">Preço de Compra (R$)</label>
-          <input type="number" class="field-input" [value]="mPreco()"
-            (input)="onInput('preco',$event)" min="0" step="0.01" />
+          <label class="field-label">Custo unitário (R$)</label>
+          <input type="number" class="field-input" [value]="mCusto()" (input)="onInput('custo',$event)" min="0" step="0.01" />
         </div>
       </div>
+      <p class="dica" *ngIf="!editando()">O saldo começa em zero. Use a entrada (+) para lançar o estoque inicial.</p>
+      <p class="msg-erro" *ngIf="erroModal()">{{ erroModal() }}</p>
 
-      <!-- Descrição -->
-      <div class="field-group">
-        <label class="field-label">Descrição (Opcional)</label>
-        <textarea class="field-input field-textarea" [value]="mDescricao()"
-          (input)="onInput('descricao',$event)" rows="4"
-          placeholder="Informações adicionais sobre o produto"></textarea>
-      </div>
-
-      <!-- Footer -->
       <div class="modal-footer">
         <button class="btn-cancelar-lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
-        <button class="btn-salvar-lg"   (click)="salvar()"      [disabled]="isSaving()">
-          <span *ngIf="!isSaving()">Salvar Produto</span>
+        <button class="btn-salvar-lg" (click)="salvar()" [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">Salvar</span>
           <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
         </button>
       </div>
+    </div>
+  </div>
+</div>
 
+<!-- ── Modal Movimentação manual ────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showMov()" (click)="fecharMov()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-scroll">
+      <h2 class="modal-title">{{ movTipo()==='ENTRADA' ? 'Entrada (ajuste)' : 'Saída (perda)' }}</h2>
+      <p class="dica">{{ movItem()?.nome }} — saldo atual: {{ movItem()?.saldoAtual }} {{ movItem()?.unidadePadrao }}</p>
+
+      <div class="field-group">
+        <label class="field-label">Quantidade</label>
+        <input type="number" class="field-input" [value]="movQtd()" (input)="onInput('movQtd',$event)" min="0" step="0.001" />
+      </div>
+      <div class="field-group" *ngIf="movTipo()==='SAIDA'">
+        <label class="field-label">Motivo</label>
+        <select class="field-input field-select" (change)="onSelectMotivo($event)">
+          <option *ngFor="let m of motivosSaida" [value]="m.valor" [selected]="movMotivo()===m.valor">{{ m.rotulo }}</option>
+        </select>
+      </div>
+      <div class="modal-row" *ngIf="movTipo()==='ENTRADA'">
+        <div class="field-group">
+          <label class="field-label">Lote (opcional)</label>
+          <input type="text" class="field-input" [value]="movLote()" (input)="onInput('movLote',$event)" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Validade (opcional)</label>
+          <input type="date" class="field-input" [value]="movValid()" (input)="onInput('movValid',$event)" />
+        </div>
+      </div>
+      <p class="msg-erro" *ngIf="erroMov()">{{ erroMov() }}</p>
+
+      <div class="modal-footer">
+        <button class="btn-cancelar-lg" (click)="fecharMov()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn-salvar-lg" (click)="salvarMov()" [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">Registrar</span>
+          <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -183,12 +218,13 @@
 <!-- ── Modal Excluir ────────────────────────────────────────── -->
 <div class="exclusao-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
   <div class="exclusao-card" (click)="$event.stopPropagation()">
-    <h2 class="exclusao-titulo">Excluir Produto</h2>
-    <p class="exclusao-texto">Tem certeza que deseja excluir este produto do estoque?</p>
-    <p class="exclusao-aviso">Essa ação removerá permanentemente o item do sistema.</p>
+    <h2 class="exclusao-titulo">Excluir Ingrediente</h2>
+    <p class="exclusao-texto">Tem certeza que deseja excluir este ingrediente do estoque?</p>
+    <p class="exclusao-aviso">O ingrediente deixa de aparecer, mas o histórico de movimentações é preservado.
+      <span class="msg-erro" *ngIf="erroExclusao()">{{ erroExclusao() }}</span></p>
     <div class="exclusao-btns">
       <button class="exclusao-btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
-      <button class="exclusao-btn-excluir"  (click)="confirmarExclusaoFinal()">Excluir Produto</button>
+      <button class="exclusao-btn-excluir"  (click)="confirmarExclusaoFinal()">Excluir</button>
     </div>
   </div>
 </div>

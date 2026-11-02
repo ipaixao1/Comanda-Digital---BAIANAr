@@ -214,3 +214,51 @@ export interface EnderecoPayload {
   estado: string;
   padrao?: boolean;
 }
+
+/** RF-027: dados enviados para criar/editar um ingrediente. */
+export interface IngredientePayload {
+  nome: string;
+  sku: string;
+  unidadePadrao: string;   // G | ML | UN | KG | L
+  estoqueMinimo: number;
+  custoUnitario: number;
+}
+
+/** RF-033: linha do histórico de movimentações de estoque. */
+export interface MovimentacaoApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  tipo: 'ENTRADA' | 'SAIDA' | 'ESTORNO';
+  quantidade: number;
+  motivo: string;
+  lote: string | null;
+  validade: string | null;
+  custoUnitario: number | null;
+  pedidoCompraId: number | null;
+  pedidoId: number | null;
+  usuarioNome: string;
+  createdAt: string;
+}
+
+/** RF-028/RF-030: entrada (AJUSTE) ou saída (perda) manual. */
+export interface MovimentacaoManualPayload {
+  ingredienteId: number;
+  tipo: 'ENTRADA' | 'SAIDA';
+  quantidade: number;
+  motivo: string;
+  lote?: string;
+  validade?: string;
+  custoUnitario?: number;
+}
+
+/** RF-031/RF-032: saldo de um ingrediente e se está abaixo do mínimo. */
+export interface EstoqueSaldoApi {
+  ingredienteId: number;
+  nome: string;
+  sku: string;
+  unidadePadrao: string;
+  saldoAtual: number;
+  estoqueMinimo: number;
+  abaixoDoMinimo: boolean;
+}

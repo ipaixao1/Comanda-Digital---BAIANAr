@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { AuthService } from '../../../services/auth.service';
 import { User } from '../../../services/auth.service';
 import { PermissionService } from '../../../services/permission.service';
+import { EstoqueApiService } from '../../../services/api/estoque-api.service';
 
 @Component({
   selector: 'app-shell',
@@ -14,6 +15,9 @@ import { PermissionService } from '../../../services/permission.service';
 })
 export class ShellComponent implements OnInit {
   private authService = inject(AuthService);
+  private estoqueApi  = inject(EstoqueApiService);
+  /** RF-032: quantidade de ingredientes abaixo do mínimo (selo vermelho no menu). */
+  alertasEstoque = this.estoqueApi.qtdAlertas;
   private router      = inject(Router);
   permission           = inject(PermissionService);
 
@@ -41,6 +45,7 @@ export class ShellComponent implements OnInit {
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser.set(user);
+      if (user && this.permission.podeAcessarPagina('estoque')) this.estoqueApi.atualizarAlertas();
     });
   }
 
