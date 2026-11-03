@@ -262,3 +262,44 @@ export interface EstoqueSaldoApi {
   estoqueMinimo: number;
   abaixoDoMinimo: boolean;
 }
+
+/** RF-021: fornecedor retornado pelo backend. */
+export interface FornecedorApi {
+  id: number;
+  razaoSocial: string;
+  cnpj: string;
+  telefone: string | null;
+  email: string | null;
+  status: string;   // ATIVO | INATIVO
+}
+
+export interface FornecedorPayload {
+  razaoSocial: string;
+  cnpj: string;
+  telefone?: string;
+  email?: string;
+}
+
+/** RF-022: ingrediente vendido por um fornecedor (catálogo). */
+export interface FornecedorProdutoApi {
+  id: number;
+  fornecedorId: number;
+  fornecedorNome: string;
+  ingredienteId: number;
+  ingredienteNome: string;
+  preco: number;
+  unidadeVenda: string;
+}
+
+export interface FornecedorProdutoPayload {
+  ingredienteId: number;
+  preco: number;
+  unidadeVenda: string;   // G | ML | UN | KG | L
+}
+
+/** RF-023: cotação comparativa de um ingrediente. */
+export interface CotacaoApi {
+  ingredienteId: number;
+  ingredienteNome: string;
+  ofertas: { fornecedorId: number; fornecedorNome: string; preco: number; unidadeVenda: string }[];
+}
