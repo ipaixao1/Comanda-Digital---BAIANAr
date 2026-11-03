@@ -33,6 +33,7 @@ export class ShellComponent implements OnInit {
     { label: 'Administradores', icon: 'admins',       route: '/administradores', pagina: 'administradores' },
     { label: 'Estoque',         icon: 'estoque',      route: '/estoque',         pagina: 'estoque'         },
     { label: 'Fornecedores',    icon: 'fornecedores', route: '/fornecedores',    pagina: 'fornecedores'    },
+    { label: 'Compras',         icon: 'compras',      route: '/compras',         pagina: 'compras'         },
     { label: 'Motoboys',        icon: 'motoboys',     route: '/motoboys',        pagina: 'motoboys'        },
     { label: 'Avaliações',      icon: 'avaliacoes',   route: '/avaliacoes',      pagina: 'avaliacoes'      },
   ];

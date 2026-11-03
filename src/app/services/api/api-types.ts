@@ -303,3 +303,29 @@ export interface CotacaoApi {
   ingredienteNome: string;
   ofertas: { fornecedorId: number; fornecedorNome: string; preco: number; unidadeVenda: string }[];
 }
+
+/** RF-024: item de um pedido de compra. */
+export interface PedidoCompraItemApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  quantidade: number;
+  precoUnitario: number;
+  subtotal: number;
+}
+
+/** RF-024/RF-025: pedido de compra a um fornecedor. */
+export interface PedidoCompraApi {
+  id: number;
+  fornecedorId: number;
+  fornecedorNome: string;
+  status: 'RASCUNHO' | 'ENVIADO' | 'RECEBIDO' | 'CANCELADO';
+  valorTotal: number;
+  itens: PedidoCompraItemApi[];
+  createdAt: string;
+}
+
+export interface PedidoCompraPayload {
+  fornecedorId: number;
+  itens: { ingredienteId: number; quantidade: number }[];
+}
