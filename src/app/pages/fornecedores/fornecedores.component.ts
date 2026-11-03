@@ -49,6 +49,7 @@ export class FornecedoresComponent implements OnInit {
   mCnpj     = signal('');
   mTelefone = signal('');
   mEmail    = signal('');
+  mCategorias = signal('');
 
   // ── Exclusão (desativar) ─────────────────────────────────────
   showModalExclusao = signal(false);
@@ -99,7 +100,7 @@ export class FornecedoresComponent implements OnInit {
   // ── Fornecedor: criar / editar ───────────────────────────────
   abrirModalNovo(): void {
     this.editando.set(null);
-    this.mNome.set(''); this.mCnpj.set(''); this.mTelefone.set(''); this.mEmail.set('');
+    this.mNome.set(''); this.mCnpj.set(''); this.mTelefone.set(''); this.mEmail.set(''); this.mCategorias.set('');
     this.erroModal.set('');
     this.showModal.set(true);
   }
@@ -108,7 +109,7 @@ export class FornecedoresComponent implements OnInit {
     e.stopPropagation();
     this.editando.set(f);
     this.mNome.set(f.razaoSocial); this.mCnpj.set(f.cnpj);
-    this.mTelefone.set(f.telefone ?? ''); this.mEmail.set(f.email ?? '');
+    this.mTelefone.set(f.telefone ?? ''); this.mEmail.set(f.email ?? ''); this.mCategorias.set(f.categorias ?? '');
     this.erroModal.set('');
     this.showModal.set(true);
   }
@@ -128,6 +129,7 @@ export class FornecedoresComponent implements OnInit {
         razaoSocial: this.mNome().trim(), cnpj: this.mCnpj().trim(),
         telefone: this.mTelefone().trim() || undefined,
         email: this.mEmail().trim() || undefined,
+        categorias: this.mCategorias().trim() || undefined,
       };
       const ed = this.editando();
       if (ed) await this.api.atualizar(ed.id, payload);
@@ -249,6 +251,7 @@ export class FornecedoresComponent implements OnInit {
     if (field === 'cnpj')     this.mCnpj.set(mascaraCnpj(v));
     if (field === 'telefone') this.mTelefone.set(v);
     if (field === 'email')    this.mEmail.set(v);
+    if (field === 'categorias') this.mCategorias.set(v);
     if (field === 'cPreco')   this.cPreco.set(v);
   }
 

@@ -270,6 +270,7 @@ export interface FornecedorApi {
   cnpj: string;
   telefone: string | null;
   email: string | null;
+  categorias: string | null;
   status: string;   // ATIVO | INATIVO
 }
 
@@ -278,6 +279,7 @@ export interface FornecedorPayload {
   cnpj: string;
   telefone?: string;
   email?: string;
+  categorias?: string;
 }
 
 /** RF-022: ingrediente vendido por um fornecedor (catálogo). */

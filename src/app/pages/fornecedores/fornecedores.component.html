@@ -39,7 +39,7 @@
             <circle cx="5.5" cy="18.5" r="2.5"/>
             <circle cx="18.5" cy="18.5" r="2.5"/>
           </svg></div></div>
-      <span class="cell cell--nome">{{ f.razaoSocial }}</span>
+      <span class="cell cell--nome">{{ f.razaoSocial }}<small class="categorias" *ngIf="f.categorias">{{ f.categorias }}</small></span>
       <span class="cell cell--cnpj">{{ f.cnpj }}</span>
       <span class="cell cell--tel">{{ f.telefone || '—' }}</span>
       <span class="cell cell--email">{{ f.email || '—' }}</span>
@@ -115,6 +115,10 @@
           <label class="field-label">Email</label>
           <input type="text" class="field-input" [value]="mEmail()" (input)="onInput('email',$event)" placeholder="fornecedor@email.com" />
         </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Categorias de produtos</label>
+        <input type="text" class="field-input" [value]="mCategorias()" (input)="onInput('categorias',$event)" placeholder="Ex.: Carnes, Laticínios, Bebidas" maxlength="200" />
       </div>
       <p class="msg-erro" *ngIf="erroModal()">{{ erroModal() }}</p>
 

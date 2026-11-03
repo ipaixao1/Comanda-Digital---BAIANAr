@@ -110,3 +110,5 @@ $colsCat: 1.6fr 1fr 80px;
 .cat-head, .cat-row { display: grid; grid-template-columns: $colsCat; gap: 8px; padding: 10px 6px; align-items: center; }
 .cat-head span { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 14px; color: $color-accent; }
 .cat-row { border-bottom: 1px solid rgba($color-accent,.07); &--click { cursor: pointer; &:hover { background: rgba($color-accent,.06); } } }
+
+.categorias { display: block; font-size: 11px; font-weight: 300; color: rgba($color-white,.55); margin-top: 2px; }
