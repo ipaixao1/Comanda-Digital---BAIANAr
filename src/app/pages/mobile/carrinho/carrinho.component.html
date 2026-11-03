@@ -33,6 +33,9 @@
         <div class="item-info">
           <p class="item-nome">{{ item.nome }}</p>
           <p class="item-preco-unit">{{ formatarPreco(item.preco) }}</p>
+          <input class="item-obs" type="text" maxlength="120"
+            placeholder="Observação (ex: sem cebola)"
+            [ngModel]="item.obs ?? ''" (ngModelChange)="carrinho.setObsItem(item.id, $event)"/>
 
           <div class="item-rodape">
             <div class="quantidade-control">
@@ -70,10 +73,6 @@
         <div class="resumo-linha">
           <span>Subtotal</span>
           <span>{{ formatarPreco(carrinho.subtotal()) }}</span>
-        </div>
-        <div class="resumo-linha">
-          <span>Taxa de entrega</span>
-          <span>{{ formatarPreco(carrinho.taxaEntrega) }}</span>
         </div>
         <div class="resumo-divider"></div>
         <div class="resumo-linha resumo-total">

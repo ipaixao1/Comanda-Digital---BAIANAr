@@ -1,7 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
-import {
-  Firestore, doc, setDoc, onSnapshot, Unsubscribe, getDoc,
-} from '@angular/fire/firestore';
+import { Injectable, signal, computed } from '@angular/core';
+import { loadRecord, saveRecord } from './local-store.util';
 
 export type StatusIngrediente = 'available' | 'em_falta';
 export type StatusEstoqueAdmin = 'Normal' | 'Baixo' | 'Crítico';
@@ -12,44 +10,31 @@ export interface EstoqueItemFirestore {
   statusAdmin: StatusEstoqueAdmin; // admin controla na página de estoque
 }
 
-const DOC_PATH = 'config/estoque';
+const STORAGE_KEY = 'baianar_estoque_config';
 
 @Injectable({ providedIn: 'root' })
 export class EstoqueService {
 
-  private firestore = inject(Firestore);
-  private _itens    = signal<Record<string, EstoqueItemFirestore>>({});
-  private _unsub: Unsubscribe | null = null;
+  private _itens = signal<Record<string, EstoqueItemFirestore>>(
+    loadRecord<Record<string, EstoqueItemFirestore>>(STORAGE_KEY, {})
+  );
 
   readonly itens = this._itens.asReadonly();
 
-  constructor() {
-    const ref = doc(this.firestore, DOC_PATH);
-    this._unsub = onSnapshot(ref, snap => {
-      if (snap.exists()) {
-        this._itens.set(snap.data() as Record<string, EstoqueItemFirestore>);
-      }
-    }, err => console.error('[EstoqueService] erro:', err));
-  }
-
-  ngOnDestroy(): void { this._unsub?.(); }
-
   // ── KDS: cozinheiro alterna disponível ↔ em falta ────────────
   async toggleStatusKds(id: string, nome: string, novoStatus: StatusIngrediente): Promise<void> {
-    const ref    = doc(this.firestore, DOC_PATH);
-    const atual  = this._itens()[id] ?? { id, nome, statusKds: 'available', statusAdmin: 'Normal' };
-    await setDoc(ref, {
-      [id]: { ...atual, id, statusKds: novoStatus },
-    }, { merge: true });
+    const atual = this._itens()[id] ?? { id, nome, statusKds: 'available', statusAdmin: 'Normal' };
+    const novo  = { ...this._itens(), [id]: { ...atual, id, statusKds: novoStatus } };
+    this._itens.set(novo);
+    saveRecord(STORAGE_KEY, novo);
   }
 
   // ── Admin: atualiza nível (Normal/Baixo/Crítico) ─────────────
   async setStatusAdmin(id: string, nome: string, statusAdmin: StatusEstoqueAdmin): Promise<void> {
-    const ref   = doc(this.firestore, DOC_PATH);
     const atual = this._itens()[id] ?? { id, nome, statusKds: 'available', statusAdmin: 'Normal' };
-    await setDoc(ref, {
-      [id]: { ...atual, id, statusAdmin },
-    }, { merge: true });
+    const novo  = { ...this._itens(), [id]: { ...atual, id, statusAdmin } };
+    this._itens.set(novo);
+    saveRecord(STORAGE_KEY, novo);
   }
 
   // ── Getters reativos ─────────────────────────────────────────

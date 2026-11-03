@@ -1,0 +1,167 @@
+<div class="compras-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Compras</h1>
+    </div>
+    <button class="btn-adicionar" (click)="abrirNovo()" *ngIf="podeEditar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Novo Pedido de Compra
+    </button>
+  </div>
+
+  <p class="msg-erro" *ngIf="erro()">{{ erro() }}</p>
+
+  <div class="abas">
+    <button class="aba" [class.aba--ativa]="aba()==='pedidos'" (click)="trocarAba('pedidos')">Pedidos de compra</button>
+    <button class="aba" [class.aba--ativa]="aba()==='precos'" (click)="trocarAba('precos')">Histórico de preços</button>
+  </div>
+
+  <!-- Pedidos de compra -->
+  <div class="table-card" *ngIf="aba()==='pedidos'">
+    <div class="table-head">
+      <span>Nº</span><span>Fornecedor</span><span>Status</span><span>Valor total</span><span>Data</span><span>Ações</span>
+    </div>
+
+    <p class="vazio" *ngIf="carregando()">Carregando pedidos...</p>
+    <p class="vazio" *ngIf="!carregando() && !pedidos().length">Nenhum pedido de compra ainda. Clique em "Novo Pedido de Compra" para criar o primeiro.</p>
+
+    <ng-container *ngFor="let p of pedidos()">
+      <div class="ped-row" (click)="toggle(p)">
+        <span class="cell cell--nome">#{{ p.id }}</span>
+        <span class="cell cell--nome">{{ p.fornecedorNome }}</span>
+        <span class="cell">
+          <span class="status-badge" [ngClass]="'st-' + p.status.toLowerCase()">{{ rotuloStatus(p.status) }}</span>
+        </span>
+        <span class="cell cell--valor">{{ formatPreco(p.valorTotal) }}</span>
+        <span class="cell cell--data">{{ p.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span class="cell cell--acoes">
+          <ng-container *ngIf="podeEditar">
+            <button class="btn-txt btn-txt--env" *ngIf="p.status==='RASCUNHO'" (click)="pedirAcao('enviar', p, $event)">Enviar</button>
+            <button class="btn-txt btn-txt--rec" *ngIf="p.status==='RASCUNHO' || p.status==='ENVIADO'" (click)="pedirAcao('receber', p, $event)">Receber</button>
+            <button class="btn-txt btn-txt--can" *ngIf="p.status==='RASCUNHO' || p.status==='ENVIADO'" (click)="pedirAcao('cancelar', p, $event)">Cancelar</button>
+          </ng-container>
+          <span class="ver">{{ expandido()===p.id ? 'Ocultar' : 'Ver itens' }}</span>
+        </span>
+      </div>
+      <div class="itens-box" *ngIf="expandido()===p.id">
+        <div class="it-head"><span>Ingrediente</span><span>Quantidade</span><span>Preço unit.</span><span>Subtotal</span></div>
+        <div class="it-row" *ngFor="let i of p.itens">
+          <span class="cell cell--nome">{{ i.ingredienteNome }}</span>
+          <span class="cell">{{ i.quantidade }}</span>
+          <span class="cell">{{ formatPreco(i.precoUnitario) }}</span>
+          <span class="cell cell--valor">{{ formatPreco(i.subtotal) }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="paginacao" *ngIf="totalPaginas() > 1">
+      <button (click)="mudarPagina(-1)" [disabled]="pagina()===0">‹ Anterior</button>
+      <span>{{ pagina()+1 }} / {{ totalPaginas() }}</span>
+      <button (click)="mudarPagina(1)" [disabled]="pagina()+1>=totalPaginas()">Próxima ›</button>
+    </div>
+  </div>
+
+  <!-- Histórico de preços (RF-026) -->
+  <div class="table-card" *ngIf="aba()==='precos'">
+    <div class="filtro-cot filtros-hist">
+      <div>
+        <label class="field-label">Ingrediente</label>
+        <select class="field-input field-select" (change)="onPrecoIngrediente($event)">
+          <option value="">Escolha um ingrediente...</option>
+          <option *ngFor="let i of ingredientes()" [value]="i.id">{{ i.nome }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Fornecedor</label>
+        <select class="field-input field-select" (change)="onPrecoFornecedor($event)">
+          <option value="">Todos os fornecedores</option>
+          <option *ngFor="let f of fornecedores()" [value]="f.id">{{ f.razaoSocial }}</option>
+        </select>
+      </div>
+    </div>
+    <p class="vazio" *ngIf="carregandoHist()">Carregando...</p>
+    <p class="msg-erro pad" *ngIf="erroHist()">{{ erroHist() }}</p>
+    <p class="vazio" *ngIf="!precoIngrediente() && !carregandoHist()">Escolha um ingrediente para ver o preço pago em cada compra recebida.</p>
+    <p class="vazio" *ngIf="precoIngrediente() && !carregandoHist() && !historicoFiltrado().length && !erroHist()">Ainda não há compras recebidas deste ingrediente{{ precoFornecedor() ? ' neste fornecedor' : '' }}.</p>
+    <div class="grafico-box" [hidden]="!historicoFiltrado().length"><canvas #grafico></canvas></div>
+    <div class="hist-head" *ngIf="historicoFiltrado().length"><span>Data</span><span>Preço pago</span><span>Quantidade</span><span>Variação</span><span>Pedido</span></div>
+    <div class="hist-row" *ngFor="let h of historicoFiltrado(); let i = index">
+      <span class="cell cell--data">{{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      <span class="cell cell--valor">{{ h.custoUnitario != null ? formatPreco(h.custoUnitario) : '—' }}</span>
+      <span class="cell">{{ h.quantidade }}</span>
+      <span class="cell">
+        <ng-container *ngIf="variacao(i) as v">
+          <span [class.sobe]="v > 0" [class.desce]="v < 0">{{ v > 0 ? '▲' : '▼' }} {{ (v < 0 ? -v : v) | number:'1.0-1' }}%</span>
+        </ng-container>
+        <ng-container *ngIf="variacao(i) === null">—</ng-container>
+      </span>
+      <span class="cell">{{ h.pedidoCompraId ? '#' + h.pedidoCompraId : '—' }}</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal Novo Pedido ────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-scroll">
+      <h2 class="modal-title">Novo Pedido de Compra</h2>
+
+      <div class="field-group">
+        <label class="field-label">Fornecedor</label>
+        <select class="field-input field-select" (change)="onFornecedor($event)">
+          <option value="">Escolha um fornecedor...</option>
+          <option *ngFor="let f of fornecedoresAtivos()" [value]="f.id">{{ f.razaoSocial }}</option>
+        </select>
+      </div>
+
+      <p class="vazio" *ngIf="carregandoCat()">Carregando catálogo...</p>
+      <p class="vazio" *ngIf="fornEscolhido() && !carregandoCat() && !linhas().length">
+        Este fornecedor não tem produtos no catálogo. Cadastre em Fornecedores → Catálogo.
+      </p>
+
+      <ng-container *ngIf="linhas().length">
+        <p class="dica">Informe a quantidade dos produtos que deseja comprar. O preço vem do catálogo do fornecedor.</p>
+        <div class="np-head"><span>Produto</span><span>Preço</span><span>Quantidade</span><span>Subtotal</span></div>
+        <div class="np-row" *ngFor="let l of linhas(); let i = index">
+          <span class="cell cell--nome">{{ l.item.ingredienteNome }}</span>
+          <span class="cell">{{ formatPreco(l.item.preco) }} / {{ l.item.unidadeVenda }}</span>
+          <input type="number" class="field-input qtd" [value]="l.qtd" (input)="onQtd(i, $event)" min="0" step="0.5" placeholder="0" />
+          <span class="cell cell--valor">{{ formatPreco(subtotal(l)) }}</span>
+        </div>
+        <p class="total">Total do pedido: <strong>{{ formatPreco(totalNovo()) }}</strong></p>
+      </ng-container>
+
+      <p class="msg-erro" *ngIf="erroModal()">{{ erroModal() }}</p>
+
+      <div class="modal-footer">
+        <button class="btn-cancelar-lg" (click)="fecharModal()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn-salvar-lg" (click)="salvarNovo()" [disabled]="isSaving()">
+          <span *ngIf="!isSaving()">Criar Pedido</span>
+          <span *ngIf="isSaving()" class="saving-dots"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirmação (enviar / receber / cancelar) ────────────── -->
+<div class="exclusao-overlay" *ngIf="acao()" (click)="cancelarAcao()">
+  <div class="exclusao-card" [class.card-ok]="acao()?.tipo !== 'cancelar'" (click)="$event.stopPropagation()">
+    <h2 class="exclusao-titulo" [class.titulo-ok]="acao()?.tipo !== 'cancelar'">
+      {{ acao()?.tipo === 'enviar' ? 'Enviar pedido' : acao()?.tipo === 'receber' ? 'Receber pedido' : 'Cancelar pedido' }}
+    </h2>
+    <p class="exclusao-texto">{{ textoAcao() }}</p>
+    <p class="exclusao-aviso">{{ avisoAcao() }}
+      <span class="msg-erro" *ngIf="erroAcao()">{{ erroAcao() }}</span></p>
+    <div class="exclusao-btns">
+      <button class="exclusao-btn-cancelar" (click)="cancelarAcao()">Voltar</button>
+      <button class="exclusao-btn-excluir" [class.btn-ok]="acao()?.tipo !== 'cancelar'" (click)="confirmarAcao()">Confirmar</button>
+    </div>
+  </div>
+</div>
