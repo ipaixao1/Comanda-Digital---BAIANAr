@@ -21,7 +21,34 @@ O BAIANAr foi desenvolvido com:
 
 ---
 
-## Credenciais de acesso
+## Produção (deploy)
+
+| Parte | Onde | URL |
+|---|---|---|
+| Front-end (Angular) | Vercel | https://comanda-digital-baian-ar.vercel.app |
+| Back-end (Spring Boot, Docker) | Render (plano gratuito) | https://baianar-api.onrender.com |
+| Documentação da API (Swagger) | Render | https://baianar-api.onrender.com/swagger-ui.html |
+| Banco de dados (MySQL compatível) | TiDB Cloud Starter | acesso só pelo backend, via variáveis de ambiente |
+
+> ⏱️ O backend gratuito "dorme" após ~15 min sem uso. A primeira requisição depois disso pode levar até ~1 minuto. Antes de uma demonstração, abra o Swagger e aguarde carregar.
+
+**Logins de demonstração (seed do backend, senha `senha123`):**
+
+| E-mail | Perfil | Onde entrar |
+|---|---|---|
+| `admin@email.com` | Administrador (Dono) | `/login` |
+| `gerente@email.com` | Gerente | `/login` |
+| `cozinha@email.com` | Cozinheiro | `/login` → redireciona para `/kds` |
+| `cliente@email.com` | Cliente | `/mobile/cardapio` (login ao finalizar pedido) |
+
+**Variáveis de ambiente do backend (Render):** `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS` (URL do front, sem barra final). Nenhum segredo fica no repositório.
+
+**Status da integração com a API:** Dashboard, Pedidos (admin), KDS, Estoque, Fornecedores e Compras já consomem o backend. Ainda locais (`localStorage`): Motoboy, Funcionários/Administradores e as listas de disponibilidade do KDS.
+
+**Build de produção do front:** `environment.prod.ts` aponta para `https://baianar-api.onrender.com/api`; a Vercel usa o `vercel.json` (`dist/baianar/browser` + rewrite SPA).
+
+---
+## Credenciais de acesso (legado - telas ainda locais)
 
 ### 🖥️ Dashboard (Administrativo) — rota `/login`
 
@@ -244,5 +271,6 @@ Para testar: `cliente@email.com` / `senha123` (seed do backend) ou crie uma cont
 - [x] `app.config.ts` — sem providers do Firebase; `provideHttpClient(withInterceptors([authInterceptor]))`
 - [x] Serviços que usavam Firestore reescritos para `localStorage`, preservando a API pública
 - [x] Cadastro/login do cliente, cardápio, detalhe, carrinho, checkout, histórico e acompanhamento de status ligados à API
-- [ ] Trocar o `apiUrl` de `environment.prod.ts` pela URL do backend no Railway antes do deploy no Vercel
-- [ ] Religar KDS/painel admin à API
+- [x] `environment.prod.ts` aponta para o backend no Render; front publicado na Vercel
+- [x] Dashboard, Pedidos e KDS ligados à API
+- [ ] Funcionários/Administradores ligados a /api/admin/usuarios
