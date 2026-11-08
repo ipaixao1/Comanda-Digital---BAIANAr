@@ -4,7 +4,7 @@
   <div class="page-header">
     <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
     <h1 class="page-title">Gerenciamento de Pedidos</h1>
-    <p class="page-subtitle">Acompanhe e gerencie os pedidos do restaurante em tempo real</p>
+    <p class="page-subtitle">Acompanhe e gerencie os pedidos do restaurante (atualiza sozinho a cada 15 s)</p>
   </div>
 
   <!-- KPI Cards -->
@@ -18,7 +18,7 @@
         </svg>
       </div>
       <p class="kpi-value">{{ totalSemana() }}</p>
-      <p class="kpi-label">Total de pedidos da semana</p>
+      <p class="kpi-label">Pedidos nos últimos 7 dias</p>
     </div>
 
     <div class="kpi-card">
@@ -58,15 +58,22 @@
 
   <!-- Gráfico -->
   <div class="chart-card">
-    <h2 class="chart-title">Quantidade de Pedidos por Dia da Semana</h2>
+    <h2 class="chart-title">Pedidos por dia (últimos 7 dias)</h2>
     <div class="chart-wrapper">
-      <canvas #chartDia></canvas>
+      <canvas id="chartDia"></canvas>
     </div>
   </div>
 
   <!-- Tabela de pedidos -->
   <div class="table-card">
     <h2 class="chart-title">Pedidos Realizados</h2>
+
+    <p class="msg-erro" *ngIf="erro()">{{ erro() }}</p>
+
+    <!-- Filtro por status (RF-019) -->
+    <div class="filtros">
+      <button *ngFor="let f of filtros" class="chip" [class.chip--ativo]="filtro() === f.valor" (click)="onFiltro(f.valor)">{{ f.rotulo }}</button>
+    </div>
 
     <!-- Cabeçalho -->
     <div class="table-head">
@@ -78,41 +85,43 @@
       <span>Ações</span>
     </div>
 
+    <p class="vazio" *ngIf="carregando()">Carregando pedidos...</p>
+    <p class="vazio" *ngIf="!carregando() && !pedidos().length && !erro()">Nenhum pedido encontrado.</p>
+
     <!-- Linhas -->
     <div *ngFor="let p of pedidos()" class="pedido-group">
 
-      <!-- Linha resumo -->
-      <div
-        class="pedido-row"
-        [class.pedido-row--open]="pedidoAberto() === p.numero"
-        (click)="togglePedido(p.numero)"
-      >
-        <span class="cell cell--numero">#{{ p.numero }}</span>
-        <span class="cell cell--data">{{ formatDataHora(p.dataHora) }}</span>
-        <span class="cell cell--qtd">{{ p.qtdItens }}</span>
+      <div class="pedido-row" [class.pedido-row--open]="pedidoAberto() === p.id" (click)="togglePedido(p.id)">
+        <span class="cell cell--numero">#{{ p.id }}</span>
+        <span class="cell cell--data">{{ formatDataHora(p.createdAt) }}</span>
+        <span class="cell cell--qtd">{{ qtdItens(p) }}</span>
         <span class="cell cell--status">
-          <span class="status-badge" [ngClass]="getPreparoClass(p.statusPreparo)">
-            {{ p.statusPreparo }}
-          </span>
+          <span class="status-badge" [ngClass]="getPreparoClass(p.status)">{{ rotulo(p.status) }}</span>
         </span>
         <span class="cell cell--comanda">
-          <span class="status-badge" [ngClass]="getComandaClass(p.statusComanda)">
-            {{ p.statusComanda }}
-          </span>
+          <span class="status-badge" [ngClass]="getComandaClass(comanda(p))">{{ comanda(p) }}</span>
         </span>
         <span class="cell cell--acoes">
-          <svg class="chevron" [class.chevron--up]="pedidoAberto() === p.numero"
+          <ng-container *ngIf="podeMovimentar">
+            <button class="btn-acao btn-acao--ok" *ngIf="proximo(p) as prox" (click)="avancar(p, $event)">{{ prox.rotulo }}</button>
+            <button class="btn-acao btn-acao--cancel" *ngIf="podeCancelar(p)" (click)="abrirCancelar(p, $event)">Cancelar</button>
+          </ng-container>
+          <svg class="chevron" [class.chevron--up]="pedidoAberto() === p.id"
             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </span>
       </div>
 
-      <!-- Detalhe expandido -->
-      <div class="detalhe-wrap" *ngIf="pedidoAberto() === p.numero">
+      <!-- Detalhe (RF-020) -->
+      <div class="detalhe-wrap" *ngIf="pedidoAberto() === p.id">
         <div class="detalhe-card">
 
-          <p class="detalhe-titulo">Detalhes do Pedido #{{ p.numero }}</p>
+          <p class="detalhe-titulo">Detalhes do Pedido #{{ p.id }}</p>
+          <p class="detalhe-info">Cliente: {{ p.clienteNome }}</p>
+          <p class="detalhe-info">Endereço: {{ p.enderecoEntrega }}</p>
+          <p class="detalhe-info" *ngIf="p.observacoes">Observações: {{ p.observacoes }}</p>
+          <p class="detalhe-info detalhe-info--cancel" *ngIf="p.motivoCancelamento">Motivo do cancelamento: {{ p.motivoCancelamento }}</p>
           <p class="detalhe-subtitulo">Itens do Pedido:</p>
 
           <div class="itens-lista">
@@ -120,13 +129,11 @@
               <div class="item-left">
                 <span class="item-qtd">{{ item.quantidade }}x</span>
                 <div class="item-info">
-                  <span class="item-nome">{{ item.nome }}</span>
-                  <span *ngIf="item.obs" class="item-obs">Obs: {{ item.obs }}</span>
+                  <span class="item-nome">{{ item.pratoNome }}</span>
+                  <span *ngIf="item.observacoes" class="item-obs">Obs: {{ item.observacoes }}</span>
                 </div>
               </div>
-              <span class="item-badge" [ngClass]="getItemClass(item.status)">
-                {{ item.status }}
-              </span>
+              <span class="item-preco">R$ {{ formatValor(item.precoUnitario * item.quantidade) }}</span>
             </div>
           </div>
 
@@ -139,6 +146,26 @@
       </div>
 
     </div>
+
+    <div class="paginacao" *ngIf="totalPaginas() > 1">
+      <button (click)="mudarPagina(-1)" [disabled]="pagina() === 0">‹ Anterior</button>
+      <span>{{ pagina() + 1 }} / {{ totalPaginas() }}</span>
+      <button (click)="mudarPagina(1)" [disabled]="pagina() + 1 >= totalPaginas()">Próxima ›</button>
+    </div>
   </div>
 
+</div>
+
+<!-- Cancelamento com motivo (RF-018) -->
+<div class="modal-overlay" *ngIf="pedidoCancelar() as pc" (click)="fecharCancelar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <h2 class="modal-titulo">Cancelar pedido #{{ pc.id }}</h2>
+    <p class="modal-texto">Informe o motivo. Se o pedido já foi confirmado, o estoque é devolvido automaticamente.</p>
+    <textarea class="modal-input" rows="3" placeholder="Motivo do cancelamento" [value]="motivo()" (input)="onMotivo($event)"></textarea>
+    <p class="msg-erro" *ngIf="erroAcao()">{{ erroAcao() }}</p>
+    <div class="modal-btns">
+      <button class="btn-voltar" (click)="fecharCancelar()" [disabled]="salvando()">Voltar</button>
+      <button class="btn-confirmar" (click)="confirmarCancelar()" [disabled]="salvando()">Cancelar pedido</button>
+    </div>
+  </div>
 </div>

@@ -1,7 +1,10 @@
-import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { PedidoService, PedidoShared, StatusPedido } from '../../services/pedido.service';
+import { PedidoAdminApiService } from '../../services/api/pedido-admin-api.service';
+import { PedidoApi, StatusPedidoApi } from '../../services/api/api-types';
+import { isoUtc } from '../../services/api/pedido-status.util';
+import { mensagemDeErro } from '../../services/api/api-error';
 import { EstoqueService } from '../../services/estoque.service';
 import { CardapioStatusService } from '../../services/cardapio-status.service';
 
@@ -21,9 +24,9 @@ export interface Order {
   time: string;
   createdAt: Date;
   items: OrderItem[];
-  numeroPedido?: string;  // ex: "#8750" — só nos pedidos reais
-  isReal?: boolean;       // true = veio do PedidoService
-  pedidoId?: string;      // id do PedidoShared (para atualizar status)
+  numeroPedido?: string;       // ex: "#4"
+  pedidoId?: number;           // id do pedido na API
+  apiStatus?: StatusPedidoApi; // status real no backend
 }
 
 export interface StockItem {
@@ -72,109 +75,9 @@ export class KdsComponent implements OnInit, OnDestroy {
   expandedDishCategories  = new Set<string>();
 
   // ─── Pedidos ────────────────────────────────────────────────
-  orders: Order[] = [
-    {
-      id: 147, status: 'received', time: '14:23',
-      createdAt: new Date(Date.now() - 15 * 60000),
-      items: [
-        { id: 1, name: 'Moqueca de Peixe',  quantity: 2 },
-        { id: 2, name: 'Arroz de Polvo',    quantity: 1 },
-        { id: 3, name: 'Refrigerante',      quantity: 2 }
-      ]
-    },
-    {
-      id: 151, status: 'received', time: '14:32',
-      createdAt: new Date(Date.now() - 6 * 60000),
-      items: [
-        { id: 1, name: 'Mini Abarás',               quantity: 3 },
-        { id: 2, name: 'Caldo de Sururu',            quantity: 2 },
-        { id: 3, name: 'Caipirinhas e Caipiroskas',  quantity: 2, observation: 'Uma de cada' }
-      ]
-    },
-    {
-      id: 153, status: 'received', time: '14:38',
-      createdAt: new Date(Date.now() - 3 * 60000),
-      items: [
-        { id: 1, name: 'Moqueca de Peixe',    quantity: 1 },
-        { id: 2, name: 'Porção de Pititinga', quantity: 1 },
-        { id: 3, name: 'Refrigerante',        quantity: 2 }
-      ]
-    },
-    {
-      id: 148, status: 'preparing', time: '14:25',
-      createdAt: new Date(Date.now() - 12 * 60000),
-      items: [
-        { id: 1, name: 'Mini Acarajés',    quantity: 1, observation: 'Sem pimenta' },
-        { id: 2, name: 'Camarão à Baiana', quantity: 2 },
-        { id: 3, name: 'Cerveja',          quantity: 3 }
-      ]
-    },
-    {
-      id: 149, status: 'preparing', time: '14:28',
-      createdAt: new Date(Date.now() - 11 * 60000),
-      items: [
-        { id: 1, name: 'Casquinhas de Siri', quantity: 1 },
-        { id: 2, name: 'Bobó de Camarão',    quantity: 2 },
-        { id: 3, name: 'Sucos Naturais',     quantity: 2 }
-      ]
-    },
-    {
-      id: 157, status: 'preparing', time: '14:47',
-      createdAt: new Date(Date.now() - 4 * 60000),
-      items: [
-        { id: 1, name: 'Caldo de Sururu', quantity: 2 },
-        { id: 2, name: 'Mini Acarajés',   quantity: 2 },
-        { id: 3, name: 'Coice de Mula',   quantity: 2 }
-      ]
-    },
-    {
-      id: 150, status: 'ready', time: '14:30',
-      createdAt: new Date(Date.now() - 5 * 60000),
-      items: [
-        { id: 1, name: 'Baião de Dois',                     quantity: 2 },
-        { id: 2, name: 'Carne do Sol com Purê de Mandioca', quantity: 1 },
-        { id: 3, name: 'Água',                              quantity: 2 }
-      ]
-    },
-    {
-      id: 156, status: 'ready', time: '14:45',
-      createdAt: new Date(Date.now() - 5 * 60000),
-      items: [
-        { id: 1, name: 'Carne do Sol com Purê de Mandioca', quantity: 1 },
-        { id: 2, name: 'Baião de Dois',                     quantity: 1 },
-        { id: 3, name: 'Queijadinha',                       quantity: 2 }
-      ]
-    },
-    {
-      id: 152, status: 'out_for_delivery', time: '14:35',
-      createdAt: new Date(Date.now() - 25 * 60000),
-      items: [
-        { id: 1, name: 'Arroz de Polvo',         quantity: 1 },
-        { id: 2, name: 'Mini Pastel de Camarão', quantity: 1 },
-        { id: 3, name: 'Torta de Cocada',        quantity: 1 },
-        { id: 4, name: 'Gin Tônica',             quantity: 1 }
-      ]
-    },
-    {
-      id: 154, status: 'out_for_delivery', time: '14:40',
-      createdAt: new Date(Date.now() - 23 * 60000),
-      items: [
-        { id: 1, name: 'Camarão à Baiana', quantity: 2 },
-        { id: 2, name: 'Pudim de Tapioca', quantity: 2 },
-        { id: 3, name: 'Cerveja',          quantity: 2 }
-      ]
-    },
-    {
-      id: 155, status: 'out_for_delivery', time: '14:42',
-      createdAt: new Date(Date.now() - 21 * 60000),
-      items: [
-        { id: 1, name: 'Casquinhas de Siri',   quantity: 2 },
-        { id: 2, name: 'Bobó de Camarão',      quantity: 1 },
-        { id: 3, name: 'Bolinho de Estudante', quantity: 3 },
-        { id: 4, name: 'Drinks Tropicais',     quantity: 2 }
-      ]
-    }
-  ];
+  // Pedidos vindos da API (atualizados a cada 10 s)
+  orders = signal<Order[]>([]);
+  erroPedidos = '';
 
   // ─── Estoque (toggle simples: available | em_falta) ──────────
   stockCategories: StockCategory[] = [
@@ -329,76 +232,85 @@ export class KdsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  // ─── PedidoService (injetado via inject()) ───────────────────
-  private pedidoService      = inject(PedidoService);
+  private pedidoApi          = inject(PedidoAdminApiService);
   private estoqueService     = inject(EstoqueService);
   private cardapioStatusSvc  = inject(CardapioStatusService);
-
-  // Pedidos reais do Firestore convertidos para Order (computed puro)
-  ordersReais = computed<Order[]>(() =>
-    this.pedidoService.pedidosParaKds().map(p => ({
-      id:           `real_${p.id}` as any,
-      status:       this.toOrderStatus(p.status) ?? 'received',
-      time:         new Date(p.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      createdAt:    new Date(p.dataHora),
-      numeroPedido: p.numero,
-      isReal:       true,
-      pedidoId:     p.id,
-      items:        p.itens.map((item, idx) => ({
-        id:          idx + 1,
-        name:        item.nome,
-        quantity:    item.quantidade,
-        observation: item.obs,
-      })),
-    }))
-  );
+  private pedidoTimer: any;
 
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     this.updateClock();
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
+    this.carregarPedidos();
+    this.pedidoTimer = setInterval(() => this.carregarPedidos(), 10000);
   }
 
   ngOnDestroy(): void {
     if (this.clockInterval) clearInterval(this.clockInterval);
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.pedidoTimer) clearInterval(this.pedidoTimer);
   }
 
-  // Converte StatusPedido → OrderStatus
-  private toOrderStatus(s: StatusPedido): OrderStatus | null {
-    const map: Partial<Record<StatusPedido, OrderStatus>> = {
-      recebido:   'received',
-      em_preparo: 'preparing',
-      pronto:     'ready',
-      enviado:    'out_for_delivery',
+  // ─── Pedidos (API) ───────────────────────────────────────────
+  /** Coluna do KDS para cada status do backend. Finalizado e cancelado saem do quadro. */
+  private toOrderStatus(s: StatusPedidoApi): OrderStatus | null {
+    const map: Partial<Record<StatusPedidoApi, OrderStatus>> = {
+      RECEBIDO:     'received',
+      CONFIRMADO:   'received',
+      EM_PREPARO:   'preparing',
+      PRONTO:       'ready',
+      SAIU_ENTREGA: 'out_for_delivery',
     };
     return map[s] ?? null;
   }
 
-  // Avança pedido mock (local) ou real (Firestore)
-  advanceOrder(order: Order): void {
-    const map: Partial<Record<OrderStatus, OrderStatus>> = {
-      received:  'preparing',
-      preparing: 'ready',
-      ready:     'out_for_delivery',
+  private paraOrder(p: PedidoApi): Order | null {
+    const status = this.toOrderStatus(p.status);
+    if (!status) return null;
+    const criado = new Date(isoUtc(p.createdAt));
+    return {
+      id: p.id,
+      status,
+      apiStatus: p.status,
+      time: criado.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      createdAt: criado,
+      numeroPedido: `#${p.id}`,
+      pedidoId: p.id,
+      items: p.itens.map((i, idx) => ({
+        id: idx + 1, name: i.pratoNome, quantity: i.quantidade, observation: i.observacoes ?? undefined,
+      })),
     };
-    const next = map[order.status];
-    if (!next) return;
+  }
 
-    if ((order as any).isReal && (order as any).pedidoId) {
-      // Pedido real → persiste no Firestore (onSnapshot atualiza a UI)
-      const statusMap: Record<OrderStatus, StatusPedido> = {
-        received:         'recebido',
-        preparing:        'em_preparo',
-        ready:            'pronto',
-        out_for_delivery: 'enviado',
-      };
-      this.pedidoService.atualizarStatus((order as any).pedidoId, statusMap[next])
-        .catch(err => console.error('[KDS] erro ao avançar pedido:', err));
-    } else {
-      // Pedido mock → muta localmente
-      order.status = next;
+  async carregarPedidos(): Promise<void> {
+    try {
+      const r = await this.pedidoApi.listar({ size: 100 });
+      const lista = r.content.map(p => this.paraOrder(p)).filter((o): o is Order => o !== null);
+      // Mais antigos primeiro: quem chegou antes é atendido antes.
+      lista.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      this.orders.set(lista);
+      this.erroPedidos = '';
+    } catch (err) {
+      this.erroPedidos = mensagemDeErro(err, 'Não foi possível carregar os pedidos.');
+    }
+  }
+
+  /** Próximo status no backend: Recebido→Confirmado (baixa o estoque)→Em preparo→Pronto→Saiu para entrega. */
+  private static readonly PROXIMO: Partial<Record<StatusPedidoApi, StatusPedidoApi>> = {
+    RECEBIDO: 'CONFIRMADO', CONFIRMADO: 'EM_PREPARO', EM_PREPARO: 'PRONTO', PRONTO: 'SAIU_ENTREGA',
+  };
+
+  async advanceOrder(order: Order): Promise<void> {
+    const atual = order.apiStatus;
+    const proximo = atual ? KdsComponent.PROXIMO[atual] : undefined;
+    if (!proximo || order.pedidoId == null) return;
+    this.erroPedidos = '';
+    try {
+      await this.pedidoApi.mudarStatus(order.pedidoId, proximo);
+      await this.carregarPedidos();
+    } catch (err) {
+      this.erroPedidos = mensagemDeErro(err, 'Não foi possível atualizar o pedido.');
     }
   }
 
@@ -497,12 +409,7 @@ export class KdsComponent implements OnInit, OnDestroy {
 
   // ─── Helpers pedidos ─────────────────────────────────────────
   getOrdersByStatus(status: OrderStatus): Order[] {
-    // Reais vindos do Firestore (computed reativo)
-    const reais  = this.ordersReais().filter(o => o.status === status);
-    // Mockados locais
-    const mocks  = this.orders.filter(o => o.status === status);
-    // Reais primeiro
-    return [...reais, ...mocks];
+    return this.orders().filter(o => o.status === status);
   }
 
   getStatusColor(status: OrderStatus): string {
@@ -522,14 +429,14 @@ export class KdsComponent implements OnInit, OnDestroy {
     return `${diff} min`;
   }
 
-  getButtonLabel(status: OrderStatus): string {
-    const map: Record<OrderStatus, string> = {
-      received:         'Iniciar Preparo',
-      preparing:        'Marcar Pronto',
-      ready:            'Saiu para Entrega',
-      out_for_delivery: ''
+  getButtonLabel(order: Order): string {
+    const map: Partial<Record<StatusPedidoApi, string>> = {
+      RECEBIDO:   'Confirmar Pedido',
+      CONFIRMADO: 'Iniciar Preparo',
+      EM_PREPARO: 'Marcar Pronto',
+      PRONTO:     'Saiu para Entrega',
     };
-    return map[status];
+    return (order.apiStatus && map[order.apiStatus]) || '';
   }
 
   columns: { status: OrderStatus; label: string }[] = [

@@ -1,299 +1,177 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, signal, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth.service';
-import { User } from '../../services/auth.service';
-import { Subject, interval } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { DashboardApiService } from '../../services/api/dashboard-api.service';
+import {
+  DashboardResumoApi, EstoqueSaldoApi, TopPratoApi, VendaPeriodoApi
+} from '../../services/api/api-types';
+import { mensagemDeErro } from '../../services/api/api-error';
 
-declare const Chart: any;
+Chart.register(...registerables);
 
-export interface KpiData {
-  faturamentoAno: number;
-  faturamentoVariacao: number;
-  totalPedidosAno: number;
-  pedidosMesMedia: number;
-  mediaAvaliacoes: number;
-  totalAvaliacoes: number;
-}
+const ACCENT = '#F29F05';
+const GRID   = 'rgba(255,255,255,0.06)';
+const TICK   = 'rgba(255,255,255,0.55)';
 
-export interface StatusOperacional {
-  aguardandoPreparo: number;
-  emPreparo: number;
-  prontoEntrega: number;
-  finalizadosHoje: number;
-  canceladosHoje: number;
-}
-
+/**
+ * Dashboard administrativo (RF-034 a RF-037), ligado à API:
+ * KPIs do dia, top 5 pratos, alertas de estoque e vendas por período.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('chartFaturamento') chartFaturamentoRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('chartPedidos')     chartPedidosRef!:     ElementRef<HTMLCanvasElement>;
-  @ViewChild('chartAvaliacoes')  chartAvaliacoesRef!:  ElementRef<HTMLCanvasElement>;
+export class DashboardComponent implements OnInit, OnDestroy {
+  @ViewChild('chartTop')    chartTopRef?:    ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartVendas') chartVendasRef?: ElementRef<HTMLCanvasElement>;
 
-  private destroy$ = new Subject<void>();
-  private chartFaturamento: any;
-  private chartPedidos: any;
-  private chartAvaliacoes: any;
+  private auth = inject(AuthService);
+  private api  = inject(DashboardApiService);
 
-  private authService = inject(AuthService);
+  private chartTop?: Chart;
+  private chartVendas?: Chart;
+  private timer?: ReturnType<typeof setInterval>;
 
-  constructor() {}
+  readonly periodos = [7, 30, 90];
+  periodo = signal(30);
 
-  currentUser = signal<User | null>(null);
+  resumo   = signal<DashboardResumoApi | null>(null);
+  top      = signal<TopPratoApi[]>([]);
+  vendas   = signal<VendaPeriodoApi[]>([]);
+  alertas  = signal<EstoqueSaldoApi[]>([]);
 
-  kpi = signal<KpiData>({
-    faturamentoAno: 625990,
-    faturamentoVariacao: 18,
-    totalPedidosAno: 12638,
-    pedidosMesMedia: 1053,
-    mediaAvaliacoes: 4.7,
-    totalAvaliacoes: 4850
+  carregando = signal(true);
+  erro       = signal('');
+  erroTop    = signal('');
+  erroVendas = signal('');
+  erroAlertas = signal('');
+
+  totalVendas = computed(() => this.vendas().reduce((s, v) => s + v.total, 0));
+
+  /** Cores do food cost (RF-013): verde até 30%, amarelo de 31 a 35%, vermelho acima. */
+  corFoodCost = computed(() => {
+    const f = this.resumo()?.foodCostMedio ?? 0;
+    return f <= 30 ? 'fc-verde' : f <= 35 ? 'fc-amarelo' : 'fc-vermelho';
   });
-
-  status = signal<StatusOperacional>({
-    aguardandoPreparo: 12,
-    emPreparo: 8,
-    prontoEntrega: 5,
-    finalizadosHoje: 45,
-    canceladosHoje: 2
-  });
-
-  meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
-  faturamentoMensal = [42000, 45000, 43000, 47000, 54947, 52000, 55000, 54000, 56000, 58000, 65000, 68000];
-  pedidosMensal     = [720, 680, 760, 900, 980, 825, 1050, 1020, 1050, 1060, 1080, 1380];
-  avaliacoesMensal  = [4.8, 4.6, 4.7, 4.7, 4.6, 4.8, 4.9, 4.8, 4.9, 4.9, 4.8, 4.7];
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe((user: User | null) => {
-      this.currentUser.set(user);
-    });
-
-    // Atualização em tempo real a cada 5s
-    // TODO: substituir por Firestore onSnapshot()
-    interval(5000).pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.simulateRealTimeUpdate();
-    });
-  }
-
-  ngAfterViewInit(): void {
-    this.waitForChartJs().then(() => this.initCharts());
-  }
-
-  private waitForChartJs(): Promise<void> {
-    return new Promise(resolve => {
-      if (typeof Chart !== 'undefined') { resolve(); return; }
-      const check = setInterval(() => {
-        if (typeof Chart !== 'undefined') { clearInterval(check); resolve(); }
-      }, 100);
-    });
-  }
-
-  private initCharts(): void {
-    const accent     = '#F29F05';
-    const accentFill = 'rgba(242, 159, 5, 0.22)';
-    const grid       = 'rgba(255,255,255,0.06)';
-    const tick       = 'rgba(255,255,255,0.45)';
-    const cardBg     = '#3A3550';
-
-    const tooltipBase = {
-      backgroundColor: cardBg,
-      borderColor: accent,
-      borderWidth: 1.5,
-      cornerRadius: 8,
-      padding: 12,
-      titleColor: 'rgba(255,255,255,0.7)',
-      bodyColor: accent,
-      titleFont: { family: "'Poppins', sans-serif", style: 'italic' as const, size: 12, weight: '200' as const },
-      bodyFont:  { family: "'Poppins', sans-serif", style: 'italic' as const, size: 14, weight: '200' as const },
-      displayColors: false,
-    };
-
-    const scaleBase = {
-      x: {
-        grid: { color: grid, drawBorder: false },
-        ticks: { color: tick, font: { family: "'Poppins', sans-serif", style: 'italic' as const, size: 11 } }
-      },
-      y: {
-        grid: { color: grid, drawBorder: false },
-        ticks: { color: tick, font: { family: "'Poppins', sans-serif", style: 'italic' as const, size: 11 } }
-      }
-    };
-
-    // ── Faturamento (area) ─────────────────────────────────────
-    this.chartFaturamento = new Chart(this.chartFaturamentoRef.nativeElement, {
-      type: 'line',
-      data: {
-        labels: this.meses,
-        datasets: [{
-          data: [...this.faturamentoMensal],
-          borderColor: accent,
-          backgroundColor: accentFill,
-          fill: true,
-          tension: 0.45,
-          pointRadius: 4,
-          pointHoverRadius: 7,
-          pointBackgroundColor: accent,
-          pointBorderColor: cardBg,
-          pointBorderWidth: 2,
-          pointHoverBackgroundColor: accent,
-          pointHoverBorderColor: '#fff',
-          pointHoverBorderWidth: 2,
-          borderWidth: 2.5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...tooltipBase,
-            callbacks: {
-              title: (items: any[]) => items[0]?.label ?? '',
-              label: (item: any) => `valor : ${item.raw.toLocaleString('pt-BR')}`
-            }
-          }
-        },
-        scales: scaleBase
-      }
-    });
-
-    // ── Pedidos (bar) ──────────────────────────────────────────
-    this.chartPedidos = new Chart(this.chartPedidosRef.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: this.meses,
-        datasets: [{
-          data: [...this.pedidosMensal],
-          backgroundColor: accent,
-          hoverBackgroundColor: 'rgba(242,159,5,0.5)',
-          borderRadius: 4,
-          borderSkipped: false
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...tooltipBase,
-            callbacks: {
-              title: (items: any[]) => items[0]?.label ?? '',
-              label: (item: any) => `pedidos : ${item.raw}`
-            }
-          }
-        },
-        scales: scaleBase
-      }
-    });
-
-    // ── Avaliações (line) ──────────────────────────────────────
-    this.chartAvaliacoes = new Chart(this.chartAvaliacoesRef.nativeElement, {
-      type: 'line',
-      data: {
-        labels: this.meses,
-        datasets: [{
-          data: [...this.avaliacoesMensal],
-          borderColor: accent,
-          backgroundColor: 'transparent',
-          fill: false,
-          tension: 0.5,
-          pointRadius: 4,
-          pointHoverRadius: 7,
-          pointBackgroundColor: accent,
-          pointBorderColor: cardBg,
-          pointBorderWidth: 2,
-          pointHoverBackgroundColor: accent,
-          pointHoverBorderColor: '#fff',
-          pointHoverBorderWidth: 2,
-          borderWidth: 2.5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            ...tooltipBase,
-            callbacks: {
-              title: (items: any[]) => items[0]?.label ?? '',
-              label: (item: any) => `média : ${item.raw}`
-            }
-          }
-        },
-        scales: {
-          ...scaleBase,
-          y: {
-            ...scaleBase.y,
-            min: 0,
-            max: 5,
-            ticks: { ...scaleBase.y.ticks, stepSize: 1 }
-          }
-        }
-      }
-    });
-  }
-
-  private simulateRealTimeUpdate(): void {
-    // TODO: substituir por Firestore onSnapshot()
-    const statusAtual = this.status();
-
-    this.status.set({
-      aguardandoPreparo: Math.max(0, statusAtual.aguardandoPreparo + Math.floor(Math.random() * 3) - 1),
-      emPreparo:         Math.max(0, statusAtual.emPreparo         + Math.floor(Math.random() * 3) - 1),
-      prontoEntrega:     Math.max(0, statusAtual.prontoEntrega     + Math.floor(Math.random() * 3) - 1),
-      finalizadosHoje:   statusAtual.finalizadosHoje + (Math.random() > 0.5 ? 1 : 0),
-      canceladosHoje:    statusAtual.canceladosHoje  + (Math.random() > 0.9 ? 1 : 0)
-    });
-
-    if (this.chartFaturamento && this.chartPedidos) {
-      const lastFat = this.faturamentoMensal[11] + Math.floor(Math.random() * 600 - 300);
-      this.chartFaturamento.data.datasets[0].data[11] = lastFat;
-      this.chartFaturamento.update('none');
-
-      const lastPed = this.pedidosMensal[11] + Math.floor(Math.random() * 6 - 3);
-      this.chartPedidos.data.datasets[0].data[11] = lastPed;
-      this.chartPedidos.update('none');
-
-      const novoFat = (this.chartFaturamento.data.datasets[0].data as number[]).reduce((a, b) => a + b, 0);
-      const novoPed = (this.chartPedidos.data.datasets[0].data as number[]).reduce((a, b) => a + b, 0);
-
-      this.kpi.set({
-        ...this.kpi(),
-        faturamentoAno:  Math.round(novoFat),
-        totalPedidosAno: Math.round(novoPed),
-        pedidosMesMedia: Math.round(novoPed / 12)
-      });
-    }
-  }
-
-  getPrimeiroNome(): string {
-    const user = this.currentUser();
-    if (!user) return '';
-    return user.nomeCompleto?.split(' ')[0] || user.matricula;
-  }
-
-  formatCurrency(value: number): string {
-    return value.toLocaleString('pt-BR');
+    this.carregar();
+    // Os números são do banco: atualiza sozinho a cada 60 s.
+    this.timer = setInterval(() => this.carregar(false), 60000);
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.chartFaturamento?.destroy();
-    this.chartPedidos?.destroy();
-    this.chartAvaliacoes?.destroy();
+    if (this.timer) clearInterval(this.timer);
+    this.chartTop?.destroy();
+    this.chartVendas?.destroy();
+  }
+
+  getPrimeiroNome(): string {
+    const u = this.auth.getCurrentUser();
+    return u?.nomeCompleto?.split(' ')[0] || u?.matricula || '';
+  }
+
+  formatMoeda(v: number | null | undefined): string {
+    return (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  formatDia(dia: string): string {
+    const [a, m, d] = dia.split('-');
+    return `${d}/${m}/${a}`;
+  }
+
+  onPeriodo(e: Event): void {
+    this.periodo.set(Number((e.target as HTMLSelectElement).value));
+    this.carregar();
+  }
+
+  async carregar(mostrarLoading = true): Promise<void> {
+    if (mostrarLoading) this.carregando.set(true);
+    const fim = new Date();
+    const inicio = new Date();
+    inicio.setDate(inicio.getDate() - (this.periodo() - 1));
+    inicio.setHours(0, 0, 0, 0);
+
+    const [r, t, v, a] = await Promise.allSettled([
+      this.api.resumo(),
+      this.api.topPratos(inicio, fim),
+      this.api.vendasPeriodo(inicio, fim),
+      this.api.alertasEstoque(),
+    ]);
+
+    this.erro.set(r.status === 'rejected' ? mensagemDeErro(r.reason, 'Não foi possível carregar o dashboard.') : '');
+    this.resumo.set(r.status === 'fulfilled' ? r.value : null);
+
+    this.erroTop.set(t.status === 'rejected' ? mensagemDeErro(t.reason, 'Não foi possível carregar o ranking.') : '');
+    this.top.set(t.status === 'fulfilled' ? t.value : []);
+
+    this.erroVendas.set(v.status === 'rejected' ? mensagemDeErro(v.reason, 'Não foi possível carregar as vendas.') : '');
+    this.vendas.set(v.status === 'fulfilled' ? v.value : []);
+
+    this.erroAlertas.set(a.status === 'rejected' ? mensagemDeErro(a.reason, 'Não foi possível carregar os alertas.') : '');
+    this.alertas.set(a.status === 'fulfilled' ? a.value : []);
+
+    this.carregando.set(false);
+    setTimeout(() => this.desenhar());
+  }
+
+  private opcoesBase(): any {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: GRID }, ticks: { color: TICK } },
+        y: { grid: { color: GRID }, ticks: { color: TICK }, beginAtZero: true },
+      },
+    };
+  }
+
+  /** RF-035 (barras) e RF-037 (linha) com Chart.js. */
+  private desenhar(): void {
+    this.chartTop?.destroy();
+    this.chartVendas?.destroy();
+    this.chartTop = this.chartVendas = undefined;
+
+    const topCanvas = this.chartTopRef?.nativeElement;
+    if (topCanvas && this.top().length) {
+      const opts = this.opcoesBase();
+      opts.indexAxis = 'y';
+      opts.scales.x.ticks.precision = 0;
+      this.chartTop = new Chart(topCanvas, {
+        type: 'bar',
+        data: {
+          labels: this.top().map(p => p.nome),
+          datasets: [{
+            label: 'Unidades vendidas',
+            data: this.top().map(p => p.totalVendido),
+            backgroundColor: ACCENT, borderRadius: 4,
+          }],
+        },
+        options: opts,
+      });
+    }
+
+    const vendasCanvas = this.chartVendasRef?.nativeElement;
+    if (vendasCanvas && this.vendas().length) {
+      this.chartVendas = new Chart(vendasCanvas, {
+        type: 'line',
+        data: {
+          labels: this.vendas().map(v => this.formatDia(v.dia).slice(0, 5)),
+          datasets: [{
+            label: 'Faturamento (R$)',
+            data: this.vendas().map(v => v.total),
+            borderColor: ACCENT, backgroundColor: 'rgba(242,159,5,0.2)',
+            fill: true, tension: 0.35, pointBackgroundColor: ACCENT,
+          }],
+        },
+        options: this.opcoesBase(),
+      });
+    }
   }
 }

@@ -331,3 +331,24 @@ export interface PedidoCompraPayload {
   fornecedorId: number;
   itens: { ingredienteId: number; quantidade: number }[];
 }
+
+/** RF-034: KPIs do dia. */
+export interface DashboardResumoApi {
+  faturamentoDoDia: number;
+  totalPedidosDoDia: number;
+  ticketMedio: number;
+  foodCostMedio: number;
+}
+
+/** RF-035: prato no ranking dos mais vendidos. */
+export interface TopPratoApi {
+  pratoId: number;
+  nome: string;
+  totalVendido: number;
+}
+
+/** RF-037: faturamento de um dia (dia = AAAA-MM-DD). */
+export interface VendaPeriodoApi {
+  dia: string;
+  total: number;
+}
