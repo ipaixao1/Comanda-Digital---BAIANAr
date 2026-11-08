@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AdminBackendAuthService } from './api/admin-backend-auth.service';
-import { clearToken, getToken } from './api/auth-token';
+import { clearToken, EVENTO_SESSAO_ADMIN_EXPIRADA, getToken } from './api/auth-token';
 
 export interface User {
   matricula: string;
@@ -39,7 +39,7 @@ export class AuthService {
 ) {
   const saved = sessionStorage.getItem('baianar_user');
 
-  if (saved && getToken()) {
+  if (saved && getToken('admin')) {
     try {
       const user = JSON.parse(saved) as User;
       const { senha, ...usuarioSemSenha } = user;
@@ -48,15 +48,20 @@ export class AuthService {
       sessionStorage.setItem('baianar_user', JSON.stringify(usuarioSemSenha));
     } catch {
       sessionStorage.removeItem('baianar_user');
-      clearToken();
+      clearToken('admin');
     }
   } else {
     sessionStorage.removeItem('baianar_user');
   }
+
+  // O interceptor dispara este evento quando a API responde 401 ao painel (token expirado — RF-042).
+  window.addEventListener(EVENTO_SESSAO_ADMIN_EXPIRADA, () => {
+    if (this.currentUserSubject.value) this.logout();
+  });
 }
 
   async login(email: string, senha: string): Promise<{ success: boolean; error?: string }> {
-  clearToken();
+  clearToken('admin');
   sessionStorage.removeItem('baianar_user');
   this.currentUserSubject.next(null);
 
@@ -84,7 +89,7 @@ export class AuthService {
         break;
 
       default:
-        clearToken();
+        clearToken('admin');
         return {
           success: false,
           error: 'Perfil sem permissão para acessar o sistema.'
@@ -107,7 +112,7 @@ export class AuthService {
     return { success: true };
 
   } catch (erro) {
-    clearToken();
+    clearToken('admin');
     sessionStorage.removeItem('baianar_user');
     this.currentUserSubject.next(null);
 
@@ -149,7 +154,7 @@ export class AuthService {
   getAdmins(): User[] { return this.admins.value; }
 
   logout(): void {
-  clearToken();
+  clearToken('admin');
   sessionStorage.removeItem('baianar_user');
   this.currentUserSubject.next(null);
   this.router.navigate(['/login']);

@@ -19,7 +19,7 @@ export class AdminBackendAuthService {
   constructor(private http: HttpClient) {}
 
   async login(email: string, senha: string): Promise<void> {
-    clearToken();
+    clearToken('admin');
 
     const resposta = await firstValueFrom(
       this.http.post<LoginBackendResponse>(
@@ -36,7 +36,7 @@ export class AdminBackendAuthService {
       throw new Error('Esta conta não possui perfil de administrador.');
     }
 
-    setToken(resposta.token);
+    setToken(resposta.token, 'admin');
   }
 
   async loginFuncionario(email: string, senha: string): Promise<LoginBackendResponse> {
@@ -57,12 +57,12 @@ export class AdminBackendAuthService {
     throw new Error('Esta conta não possui permissão para acessar o painel de funcionários.');
   }
 
-  setToken(resposta.token);
+  setToken(resposta.token, 'admin');
 
   return resposta;
 }
 
   logout(): void {
-    clearToken();
+    clearToken('admin');
   }
 }
