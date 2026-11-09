@@ -53,6 +53,7 @@ export const routes: Routes = [
       { path: 'administradores', canActivate: [pageAccessGuard], data: { pagina: 'administradores' }, loadComponent: () => import('./pages/administradores/administradores.component').then(m => m.AdministradoresComponent) },
       { path: 'estoque',         canActivate: [pageAccessGuard], data: { pagina: 'estoque' },         loadComponent: () => import('./pages/estoque/estoque.component').then(m => m.EstoqueComponent) },
       { path: 'fornecedores',    canActivate: [pageAccessGuard], data: { pagina: 'fornecedores' },    loadComponent: () => import('./pages/fornecedores/fornecedores.component').then(m => m.FornecedoresComponent) },
+      { path: 'compras',         canActivate: [pageAccessGuard], data: { pagina: 'compras' },         loadComponent: () => import('./pages/compras/compras.component').then(m => m.ComprasComponent) },
       { path: 'motoboys',        canActivate: [pageAccessGuard], data: { pagina: 'motoboys' },        loadComponent: () => import('./pages/motoboys-admin/motoboys-admin.component').then(m => m.MotoboysAdminComponent) },
       { path: 'avaliacoes',      canActivate: [pageAccessGuard], data: { pagina: 'avaliacoes' },      loadComponent: () => import('./pages/avaliacoes/avaliacoes.component').then(m => m.AvaliacoesComponent) },
       { path: 'perfil',          canActivate: [pageAccessGuard], data: { pagina: 'perfil' },          loadComponent: () => import('./pages/perfil/perfil.component').then(m => m.PerfilComponent) },

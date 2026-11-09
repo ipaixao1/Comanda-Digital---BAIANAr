@@ -221,3 +221,33 @@ $font-body:     'Poppins', sans-serif;
   font-family: $font-title; font-style: italic; font-weight: 300;
   font-size: 28px; color: $color-accent;
 }
+
+// ── Pedidos ligados à API ──────────────────────────────────────
+.msg-erro { color: #E74C3C; font-size: 13px; padding: 4px 18px; }
+.vazio { color: rgba($color-white, .55); font-style: italic; font-size: 13px; padding: 14px 18px; }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 18px 14px; }
+.chip {
+  background: transparent; color: rgba($color-white, .7); border: 1px solid rgba($color-accent, .35); border-radius: 18px;
+  padding: 5px 14px; font-family: $font-body; font-size: 12px; cursor: pointer;
+  &--ativo { background: rgba($color-accent, .18); color: $color-accent; border-color: $color-accent; }
+}
+.cell--acoes { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.btn-acao {
+  background: none; border: 1.5px solid; border-radius: 14px; padding: 3px 10px; font-family: $font-body; font-size: 12px; cursor: pointer;
+  &--ok { color: #2ECC71; border-color: #2ECC71; }
+  &--cancel { color: #E74C3C; border-color: #E74C3C; }
+  &:hover { filter: brightness(1.25); }
+}
+.detalhe-info { font-size: 13px; color: rgba($color-white, .75); margin: 2px 0; &--cancel { color: #E74C3C; } }
+.item-preco { color: $color-accent; font-size: 13px; white-space: nowrap; }
+.paginacao { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 14px; font-size: 13px; color: rgba($color-white, .75);
+  button { background: none; border: 1px solid rgba($color-accent, .4); border-radius: 8px; padding: 6px 14px; color: $color-accent; cursor: pointer; &:disabled { opacity: .4; cursor: default; } } }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.modal-card { background: $color-card; border: 1.5px solid rgba($color-accent, .5); border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; }
+.modal-titulo { font-family: $font-title; font-style: italic; font-weight: 300; font-size: 26px; color: #E74C3C; margin: 0 0 8px; }
+.modal-texto { font-size: 13px; color: rgba($color-white, .7); margin-bottom: 12px; }
+.modal-input { width: 100%; box-sizing: border-box; background: rgba(0,0,0,.2); color: $color-white; border: 1.5px solid rgba($color-accent, .4); border-radius: 10px; padding: 10px 12px; font-family: $font-body; font-size: 14px; resize: vertical; &:focus { outline: none; border-color: $color-accent; } }
+.modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.btn-voltar, .btn-confirmar { border-radius: 10px; padding: 9px 18px; font-family: $font-body; font-size: 13px; cursor: pointer; }
+.btn-voltar { background: none; color: rgba($color-white, .8); border: 1px solid rgba($color-white, .3); }
+.btn-confirmar { background: #E74C3C; color: $color-white; border: none; &:disabled { opacity: .6; } }

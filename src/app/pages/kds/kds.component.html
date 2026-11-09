@@ -162,6 +162,7 @@
 
 <!-- KANBAN -->
 <main class="kanban-container">
+  <p *ngIf="erroPedidos" style="color:#E74C3C;font-size:14px;padding:8px 16px;margin:0">{{ erroPedidos }}</p>
   <div class="kanban-grid">
 
     <div *ngFor="let col of columns" class="kanban-col">
@@ -219,7 +220,7 @@
           <button *ngIf="order.status !== 'out_for_delivery'" class="action-btn"
             [style.backgroundColor]="getStatusColor(order.status)"
             (click)="advanceOrder(order)">
-            {{ getButtonLabel(order.status) }}
+            {{ getButtonLabel(order) }}
           </button>
 
         </div>

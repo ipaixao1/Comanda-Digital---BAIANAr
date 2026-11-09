@@ -1,16 +1,25 @@
-import { Component, OnInit, computed, signal, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
-import { PedidoService, PedidoShared, StatusPedido } from '../../../services/pedido.service';
+import { PedidoApiService } from '../../../services/api/pedido-api.service';
+import { StatusPedidoApi } from '../../../services/api/api-types';
+import {
+  calcularTimeline, isFinal, IconeEtapa, EstimativaTempo,
+  minutosRestantes, horaPrevista, formatarMinutos,
+} from '../../../services/api/pedido-status.util';
 
 type StatusEtapa = 'concluido' | 'atual' | 'pendente';
 
 interface EtapaPedido {
   titulo: string;
-  icone: 'check' | 'chef' | 'box' | 'bike' | 'done';
+  icone: IconeEtapa;
   status: StatusEtapa;
 }
 
+/**
+ * RF-007: acompanhamento do pedido com timeline
+ * RECEBIDO > CONFIRMADO > EM_PREPARO > PRONTO > SAIU_ENTREGA (GET /api/pedidos/{id}/status, atualizado a cada 5 s).
+ */
 @Component({
   selector: 'app-status-pedido',
   standalone: true,
@@ -18,63 +27,88 @@ interface EtapaPedido {
   templateUrl: './status-pedido.component.html',
   styleUrls: ['./status-pedido.component.scss'],
 })
-export class StatusPedidoComponent implements OnInit {
+export class StatusPedidoComponent implements OnInit, OnDestroy {
 
-  private pedidoService = inject(PedidoService);
-  private route         = inject(ActivatedRoute);
-  private router        = inject(Router);
+  private pedidoApi = inject(PedidoApiService);
+  private route     = inject(ActivatedRoute);
+  private router    = inject(Router);
 
-  private pedidoId = signal('');
+  private pedidoId     = signal('');
+  private statusAtual  = signal<StatusPedidoApi | null>(null);
+  private timer: ReturnType<typeof setInterval> | null = null;
 
-  // Pedido reativo: sempre reflete o estado atual do signal do serviço
-  pedido = computed<PedidoShared | null>(() => {
+  carregando = signal(true);
+
+  // Estimativa de preparo + entrega (calculada pelo backend) e relógio para o "faltam X min".
+  estimativa = signal<EstimativaTempo | null>(null);
+  private agora = signal(Date.now());
+
+  pedido = computed<{ id: string; numero: string; status: StatusPedidoApi } | null>(() => {
     const id = this.pedidoId();
-    if (!id) return null;
-    return this.pedidoService.getPedido(id) ?? null;
+    const status = this.statusAtual();
+    if (!id || !status) return null;
+    return { id, numero: `#${id}`, status };
   });
 
   get numeroPedido(): string { return this.pedido()?.numero ?? ''; }
 
   get etapas(): EtapaPedido[] {
-    const status = this.pedido()?.status ?? 'recebido';
-    return this.calcularEtapas(status);
+    const status = this.pedido()?.status ?? 'RECEBIDO';
+    return calcularTimeline(status).map(e => ({ titulo: e.titulo, icone: e.icone, status: e.estado }));
   }
 
-  get entregue(): boolean { return this.pedido()?.status === 'entregue'; }
+  /** Só mostra a previsão enquanto o pedido está em andamento. */
+  get mostrarTempo(): boolean {
+    const s = this.pedido()?.status;
+    return !!s && !isFinal(s) && !!this.estimativa();
+  }
+  get horaChegada(): string { return horaPrevista(this.estimativa()); }
+  get textoRestante(): string {
+    const min = minutosRestantes(this.estimativa(), this.agora());
+    return min > 0
+      ? `Faltam cerca de ${formatarMinutos(min)}`
+      : 'Seu pedido deve chegar a qualquer momento';
+  }
+  fmt(min: number): string { return formatarMinutos(min); }
+
+  get entregue(): boolean { return this.pedido()?.status === 'FINALIZADO'; }
+  get cancelado(): boolean { return this.pedido()?.status === 'CANCELADO'; }
 
   ngOnInit(): void {
     const id = this.route.snapshot.queryParamMap.get('id') ?? '';
     this.pedidoId.set(id);
+    if (!id) {
+      this.carregando.set(false);
+      return;
+    }
+    this.atualizar();
+    this.timer = setInterval(() => this.atualizar(), 5000);
   }
 
-  private calcularEtapas(status: StatusPedido): EtapaPedido[] {
-    const ordem: StatusPedido[] = ['recebido', 'em_preparo', 'pronto', 'a_caminho', 'entregue'];
-    const idxAtual = ordem.indexOf(status);
+  ngOnDestroy(): void {
+    this.pararPolling();
+  }
 
-    const etapasConfig: { titulo: string; icone: EtapaPedido['icone']; statusRef: StatusPedido }[] = [
-      { titulo: 'Pedido Recebido',   icone: 'check', statusRef: 'recebido'   },
-      { titulo: 'Em Preparo',        icone: 'chef',  statusRef: 'em_preparo' },
-      { titulo: 'Pronto',            icone: 'box',   statusRef: 'pronto'     },
-      { titulo: 'Saiu para Entrega', icone: 'bike',  statusRef: 'a_caminho'  },
-      { titulo: 'Entregue',          icone: 'done',  statusRef: 'entregue'   },
-    ];
+  private pararPolling(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
 
-    return etapasConfig.map((e, i) => {
-      const etapaIdx = ordem.indexOf(e.statusRef);
-      let etapaStatus: StatusEtapa;
-
-      if (status === 'enviado') {
-        if (i < 3) etapaStatus = 'concluido';
-        else if (i === 3) etapaStatus = 'atual';
-        else etapaStatus = 'pendente';
-      } else {
-        if (etapaIdx < idxAtual)       etapaStatus = 'concluido';
-        else if (etapaIdx === idxAtual) etapaStatus = 'atual';
-        else                            etapaStatus = 'pendente';
-      }
-
-      return { titulo: e.titulo, icone: e.icone, status: etapaStatus };
-    });
+  private async atualizar(): Promise<void> {
+    try {
+      const r = await this.pedidoApi.status(this.pedidoId());
+      this.estimativa.set(r.estimativa);
+      this.agora.set(Date.now());
+      this.statusAtual.set(r.status);
+      if (isFinal(r.status)) this.pararPolling();
+    } catch {
+      // 403/404 (pedido de outro cliente ou inexistente) ou rede fora: se nunca carregou, mostra "não encontrado".
+      if (!this.statusAtual()) this.pararPolling();
+    } finally {
+      this.carregando.set(false);
+    }
   }
 
   voltar(): void { this.router.navigate(['/mobile/cardapio']); }

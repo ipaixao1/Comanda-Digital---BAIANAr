@@ -1,0 +1,376 @@
+/**
+ * Tipos que espelham os DTOs do backend Spring Boot (pacote dto/request e dto/response).
+ * Qualquer mudança nos DTOs do backend deve ser refletida aqui.
+ */
+
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+/** Resposta de POST /api/auth/login e /api/auth/register */
+export interface AuthResponse {
+  token: string;
+  id: number;
+  nome: string;
+  email: string;
+  perfil: 'ADMIN' | 'GERENTE' | 'COZINHEIRO' | 'CLIENTE';
+  telefone?: string | null;
+  endereco?: string | null;
+}
+
+/** RF-001/RF-002: GET /api/cardapio e /api/cardapio/{id} */
+export interface PratoPublicoApi {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  fotoUrl: string | null;
+  precoVenda: number;
+  tempoPreparoMin: number | null;
+  categoriaId: number;
+  categoriaNome: string;
+}
+
+export type StatusPedidoApi =
+  | 'RECEBIDO'
+  | 'CONFIRMADO'
+  | 'EM_PREPARO'
+  | 'PRONTO'
+  | 'SAIU_ENTREGA'
+  | 'FINALIZADO'
+  | 'CANCELADO';
+
+export interface PedidoItemApi {
+  id: number;
+  pratoId: number;
+  pratoNome: string;
+  quantidade: number;
+  precoUnitario: number;
+  observacoes?: string | null;
+}
+
+export interface PedidoApi {
+  id: number;
+  clienteId: number;
+  clienteNome: string;
+  status: StatusPedidoApi;
+  valorTotal: number;
+  enderecoEntrega: string;
+  observacoes?: string | null;
+  motivoCancelamento?: string | null;
+  itens: PedidoItemApi[];
+  createdAt: string;
+  updatedAt: string;
+  /** Estimativa calculada pelo backend (minutos). */
+  tempoPreparoMin: number;
+  tempoEntregaMin: number;
+  tempoTotalMin: number;
+  /** createdAt + tempoTotalMin (LocalDateTime UTC sem sufixo). */
+  previsaoEntregaEm: string | null;
+}
+
+/** GET /api/cardapio/estimativa-entrega: faixa de entrega da loja (ex.: 20–30 min). */
+export interface FaixaEntregaApi {
+  minimoMin: number;
+  maximoMin: number;
+}
+
+/** RF-006: corpo de POST /api/pedidos */
+export interface CriarPedidoPayload {
+  itens: { pratoId: number; quantidade: number; observacoes?: string }[];
+  enderecoEntrega: string;
+  observacoes?: string;
+}
+
+/** RF-007: GET /api/pedidos/{id}/status */
+export interface PedidoStatusApi {
+  id: number;
+  status: StatusPedidoApi;
+  createdAt: string;
+  tempoPreparoMin: number;
+  tempoEntregaMin: number;
+  tempoTotalMin: number;
+  previsaoEntregaEm: string | null;
+}
+
+/** RF-009: dados de uma categoria retornados pelo Back-end. */
+export interface CategoriaApi {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  ordem: number;
+  status: string;
+}
+
+/** RF-010: dados de um prato retornados pelo Back-end. */
+export interface PratoAdminApi {
+  id: number;
+  categoriaId: number;
+  categoriaNome: string;
+  nome: string;
+  descricao: string | null;
+  fotoUrl: string | null;
+  precoVenda: number;
+  tempoPreparoMin: number | null;
+  status: string;
+  temFichaTecnica: boolean;
+}
+
+/** RF-011: ingrediente utilizado na ficha técnica de um prato. */
+export interface FichaTecnicaItemApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  quantidade: number;
+  unidade: string;
+  fatorCorrecao: number;
+  custoUnitario: number;
+  custoItem: number;
+}
+
+/** RF-012 e RF-013: custos e food cost calculados pelo Back-end. */
+export interface CustoApi {
+  custoTotal: number;
+  custoPorPorcao: number;
+  foodCostPercent: number;
+  cor: 'VERDE' | 'AMARELO' | 'VERMELHO';
+  alertaFoodCostAlto: boolean;
+}
+
+/** RF-011 e RF-014: ficha técnica completa de um prato. */
+export interface FichaTecnicaApi {
+  id: number;
+  pratoId: number;
+  rendimento: number;
+  modoPreparo: string;
+  itens: FichaTecnicaItemApi[];
+  custo: CustoApi;
+}
+
+/** RF-010: dados enviados para cadastrar ou editar um prato. */
+export interface PratoAdminRequest {
+  categoriaId: number;
+  nome: string;
+  descricao: string;
+  fotoUrl: string;
+  precoVenda: number;
+  tempoPreparoMin: number;
+  status: string;
+}
+
+/** RF-011: dados de um ingrediente enviados na ficha técnica. */
+export interface FichaTecnicaItemRequest {
+  ingredienteId: number;
+  quantidade: number;
+  unidade: string;
+  fatorCorrecao: number;
+}
+
+/** RF-011 e RF-014: dados enviados para salvar a ficha técnica. */
+export interface FichaTecnicaRequest {
+  rendimento: number;
+  modoPreparo: string;
+  itens: FichaTecnicaItemRequest[];
+}
+
+/** Ingrediente retornado pelo Back-end para a ficha técnica. */
+export interface IngredienteApi {
+  id: number;
+  nome: string;
+  sku: string;
+  unidadePadrao: string;
+  estoqueMinimo: number;
+  custoUnitario: number;
+  status: string;
+  saldoAtual: number;
+}
+
+/** GET/POST/PUT /api/enderecos — endereços de entrega do cliente logado. */
+export interface EnderecoApi {
+  id: number;
+  nome: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento: string | null;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  padrao: boolean;
+}
+
+export interface EnderecoPayload {
+  nome: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  padrao?: boolean;
+}
+
+/** RF-027: dados enviados para criar/editar um ingrediente. */
+export interface IngredientePayload {
+  nome: string;
+  sku: string;
+  unidadePadrao: string;   // G | ML | UN | KG | L
+  estoqueMinimo: number;
+  custoUnitario: number;
+}
+
+/** RF-033: linha do histórico de movimentações de estoque. */
+export interface MovimentacaoApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  tipo: 'ENTRADA' | 'SAIDA' | 'ESTORNO';
+  quantidade: number;
+  motivo: string;
+  lote: string | null;
+  validade: string | null;
+  custoUnitario: number | null;
+  pedidoCompraId: number | null;
+  pedidoId: number | null;
+  usuarioNome: string;
+  createdAt: string;
+}
+
+/** RF-028/RF-030: entrada (AJUSTE) ou saída (perda) manual. */
+export interface MovimentacaoManualPayload {
+  ingredienteId: number;
+  tipo: 'ENTRADA' | 'SAIDA';
+  quantidade: number;
+  motivo: string;
+  lote?: string;
+  validade?: string;
+  custoUnitario?: number;
+}
+
+/** RF-031/RF-032: saldo de um ingrediente e se está abaixo do mínimo. */
+export interface EstoqueSaldoApi {
+  ingredienteId: number;
+  nome: string;
+  sku: string;
+  unidadePadrao: string;
+  saldoAtual: number;
+  estoqueMinimo: number;
+  abaixoDoMinimo: boolean;
+}
+
+/** RF-021: fornecedor retornado pelo backend. */
+export interface FornecedorApi {
+  id: number;
+  razaoSocial: string;
+  cnpj: string;
+  telefone: string | null;
+  email: string | null;
+  categorias: string | null;
+  status: string;   // ATIVO | INATIVO
+}
+
+export interface FornecedorPayload {
+  razaoSocial: string;
+  cnpj: string;
+  telefone?: string;
+  email?: string;
+  categorias?: string;
+}
+
+/** RF-022: ingrediente vendido por um fornecedor (catálogo). */
+export interface FornecedorProdutoApi {
+  id: number;
+  fornecedorId: number;
+  fornecedorNome: string;
+  ingredienteId: number;
+  ingredienteNome: string;
+  preco: number;
+  unidadeVenda: string;
+}
+
+export interface FornecedorProdutoPayload {
+  ingredienteId: number;
+  preco: number;
+  unidadeVenda: string;   // G | ML | UN | KG | L
+}
+
+/** RF-023: cotação comparativa de um ingrediente. */
+export interface CotacaoApi {
+  ingredienteId: number;
+  ingredienteNome: string;
+  ofertas: { fornecedorId: number; fornecedorNome: string; preco: number; unidadeVenda: string }[];
+}
+
+/** RF-024: item de um pedido de compra. */
+export interface PedidoCompraItemApi {
+  id: number;
+  ingredienteId: number;
+  ingredienteNome: string;
+  quantidade: number;
+  precoUnitario: number;
+  subtotal: number;
+}
+
+/** RF-024/RF-025: pedido de compra a um fornecedor. */
+export interface PedidoCompraApi {
+  id: number;
+  fornecedorId: number;
+  fornecedorNome: string;
+  status: 'RASCUNHO' | 'ENVIADO' | 'RECEBIDO' | 'CANCELADO';
+  valorTotal: number;
+  itens: PedidoCompraItemApi[];
+  createdAt: string;
+}
+
+export interface PedidoCompraPayload {
+  fornecedorId: number;
+  itens: { ingredienteId: number; quantidade: number }[];
+}
+
+/** RF-034: KPIs do dia. */
+export interface DashboardResumoApi {
+  faturamentoDoDia: number;
+  totalPedidosDoDia: number;
+  ticketMedio: number;
+  foodCostMedio: number;
+}
+
+/** RF-035: prato no ranking dos mais vendidos. */
+export interface TopPratoApi {
+  pratoId: number;
+  nome: string;
+  totalVendido: number;
+}
+
+/** RF-037: faturamento de um dia (dia = AAAA-MM-DD). */
+export interface VendaPeriodoApi {
+  dia: string;
+  total: number;
+}
+
+
+// ── Usuários internos (RF-041) — /api/admin/usuarios ─────────────────────────
+export type PerfilApi = 'ADMIN' | 'GERENTE' | 'COZINHEIRO' | 'CLIENTE';
+
+export interface UsuarioApi {
+  id: number;
+  nome: string;
+  email: string;
+  perfil: PerfilApi;
+  telefone: string | null;
+  status: 'ATIVO' | 'INATIVO';
+}
+
+/** O backend só aceita criar/editar GERENTE ou COZINHEIRO; `senha` é opcional na edição. */
+export interface UsuarioPayload {
+  nome: string;
+  email: string;
+  senha?: string;
+  perfil: 'GERENTE' | 'COZINHEIRO';
+  telefone?: string | null;
+}

@@ -92,7 +92,7 @@
 
 .numero-valor {
   font-family: var(--font-title);
-  font-size: 28px;
+  font-size: clamp(22px, 7.4vw, 28px);
   font-weight: 600;
   color: var(--gold-2);
   margin: 0;
@@ -242,6 +242,45 @@
   font-weight: 600;
   color: var(--text-white);
   margin: 0;
+}
+
+.tempo-restante {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.tempo-detalhe {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tempo-detalhe-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.tempo-detalhe-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.tempo-detalhe-valor {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-white);
 }
 
 // ── Aviso ──

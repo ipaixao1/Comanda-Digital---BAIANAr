@@ -72,7 +72,7 @@
 // ── Content ──
 .enderecos-content {
   flex: 1;
-  padding: 0 16px calc(var(--bottom-nav-h) + 20px);
+  padding: 0 16px calc(var(--bottom-nav-h) + 20px + env(safe-area-inset-bottom, 0px));
 }
 
 // ── Botão adicionar ──
@@ -390,7 +390,7 @@
 // ── Bottom nav ──
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 28px);
@@ -427,3 +427,50 @@
     svg { stroke: var(--text-white); }
   }
 }
+
+// ── Busca de CEP ──
+.cep-spinner {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(242, 159, 5, 0.25);
+  border-top-color: var(--gold);
+  animation: cep-gira 0.7s linear infinite;
+}
+@keyframes cep-gira { to { transform: rotate(360deg); } }
+
+.cep-msg {
+  margin: 6px 0 0;
+  padding-left: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  &.ok   { color: #4cd48a; }
+  &.erro { color: #ff8a8a; }
+}
+
+
+// ── Carregamento / erro da lista ──
+.lista-aviso {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 28px 0;
+}
+.lista-erro {
+  text-align: center;
+  padding: 24px 12px;
+  p { color: #ff8a8a; font-size: 13px; margin: 0 0 12px; }
+  button {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 1px solid rgba(242, 135, 5, 0.5);
+    background: transparent;
+    color: var(--gold-2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+  }
+}
+.modal-btn-salvar:disabled { opacity: 0.6; cursor: default; }

@@ -146,14 +146,53 @@ $font-body:  'Poppins', sans-serif;
   }
 }
 
-// Colunas
-.col-imagem     { width: 72px; }
-.col-nome       { width: 160px; }
-.col-categoria  { width: 110px; }
-.col-preco      { width: 90px; }
-.col-descricao  { }
-.col-destaques  { width: 150px; }
-.col-acoes      { width: 80px; }
+// Colunas da tabela de pratos
+.col-imagem     { width: 8%; }
+.col-nome       { width: 20%; }
+.col-categoria  { width: 12%; }
+.col-preco      { width: 12%; }
+.col-descricao  { width: 36%; }
+.col-acoes      { width: 12%; }
+
+// Alinhamento da imagem, do nome e do preço
+.pratos-table {
+  th.col-imagem,
+  td.col-imagem,
+  th.col-nome,
+  td.col-nome,
+  th.col-preco,
+  td.col-preco {
+    text-align: center;
+  }
+
+  td.col-imagem .prato-img-wrap {
+  margin-left: auto;
+  margin-right: auto;
+  transform: translateX(8px);
+}
+
+  th.col-imagem {
+    padding-left: 30px;
+    padding-right: 14px;
+  }
+}
+
+// Alinhamento das colunas Descrição e Ações
+.pratos-table {
+  th.col-descricao,
+  td.col-descricao {
+    text-align: center;
+  }
+
+  th.col-acoes,
+  td.col-acoes {
+    text-align: center;
+  }
+
+  td.col-acoes .acoes-wrap {
+    justify-content: center;
+  }
+}
 
 // ── Imagem do prato ────────────────────────────────────────────
 .prato-img-wrap {
@@ -240,36 +279,6 @@ $font-body:  'Poppins', sans-serif;
   &.cat--drinks     { background: rgba($color-drinks,    0.18); color: $color-drinks;     border: 1px solid rgba($color-drinks, 0.4); }
 }
 
-// ── Badges de destaque ─────────────────────────────────────────
-.destaques-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.destaque-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: $font-body;
-  font-style: italic;
-  font-weight: 200;
-  font-size: 11px;
-  white-space: nowrap;
-
-  &.dest--casa {
-    background: rgba($color-brown, 0.7);
-    color: $color-accent;
-    border: 1px solid rgba($color-accent, 0.35);
-  }
-
-  &.dest--chef {
-    background: rgba($color-brown, 0.7);
-    color: $color-accent;
-    border: 1px solid rgba($color-accent, 0.35);
-  }
-}
-
 // ── Ações ──────────────────────────────────────────────────────
 .acoes-wrap {
   display: flex;
@@ -318,8 +327,12 @@ $font-body:  'Poppins', sans-serif;
   padding: 22px 26px 16px; border-bottom: 1px solid rgba(#F29F05,.12); flex-shrink: 0;
 }
 .modal-title {
-  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
-  font-size: 28px; color: #FFFFFF;
+  margin: 0;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 28px;
+  color: #FFFFFF;
 }
 .modal-close {
   background: none; border: none; cursor: pointer; padding: 4px;
@@ -388,15 +401,6 @@ $font-body:  'Poppins', sans-serif;
   .preview-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 }
 
-// Checkboxes
-.checkboxes { display: flex; flex-direction: column; gap: 12px; }
-.checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.checkbox-text  {
-  font-family: 'Poppins', sans-serif; font-style: italic; font-weight: 200;
-  font-size: 13px; color: rgba(#FFFFFF,.8);
-}
-input[type="checkbox"] { width: 17px; height: 17px; accent-color: #F29F05; cursor: pointer; flex-shrink: 0; }
-
 // Toggle
 .toggle-wrap  { display: flex; align-items: center; gap: 12px; }
 .toggle-btn {
@@ -444,26 +448,29 @@ input[type="checkbox"] { width: 17px; height: 17px; accent-color: #F29F05; curso
 }
 @keyframes dot-b { 0%,80%,100%{transform:scale(.7);opacity:.5} 40%{transform:scale(1);opacity:1} }
 
-// ── Modal Exclusão ─────────────────────────────────────────────
+// ── Modal de Desativação de Prato ──
 .modal-exclusao {
-  background: #3A3550; border-radius: 16px;
-  border: 1.5px solid rgba(#E74C3C, .35);
-  width: 100%; max-width: 500px;
-  display: flex; flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,.55);
-  animation: modal-in .22s cubic-bezier(.4,0,.2,1);
+  background: #3A3550;
+  border-radius: 16px;
+  border: 1.5px solid rgba(#F29F05, .35);
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+  animation: modal-in .22s cubic-bezier(.4, 0, .2, 1);
 }
 
 .exclusao-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 22px 24px 16px;
-  border-bottom: 1px solid rgba(#E74C3C,.15);
+  border-bottom: 1px solid rgba(#F29F05, .20);
 
   &__left { display: flex; align-items: center; gap: 10px; }
 }
 
 .exclusao-icon-warn {
-  width: 22px; height: 22px; stroke: #E74C3C; flex-shrink: 0;
+  width: 22px; height: 22px; stroke: #F29F05;; flex-shrink: 0;
 }
 
 .exclusao-titulo {
@@ -485,34 +492,45 @@ input[type="checkbox"] { width: 17px; height: 17px; accent-color: #F29F05; curso
 
 .exclusao-prato-card {
   display: flex; align-items: center; gap: 14px;
-  background: rgba(#E74C3C,.1); border: 1.5px solid rgba(#E74C3C,.25);
+  background: rgba(#F29F05, .08); border: 1.5px solid rgba(#F29F05, .30);
   border-radius: 10px; padding: 14px 18px; margin-top: 4px;
 
   &__icon {
     width: 36px; height: 36px; border-radius: 8px;
-    background: rgba(#E74C3C,.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    svg { width: 18px; height: 18px; stroke: #E74C3C; }
+    background: rgba(#F29F05, .15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    svg { width: 18px; height: 18px; stroke: #F29F05; }
   }
 }
 
 .exclusao-prato-label {
-  font-family: 'Poppins', sans-serif; font-style: italic; font-weight: 200;
-  font-size: 11.5px; color: #E74C3C; margin-bottom: 3px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  color: #F29F05;
+  margin-bottom: 3px;
 }
 
 .exclusao-prato-nome {
-  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
-  font-size: 18px; color: #FFFFFF;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 19px;
+  color: #ffffff;
 }
 
 .exclusao-prato-cat {
-  font-family: 'Poppins', sans-serif; font-style: italic; font-weight: 200;
-  font-size: 12px; color: rgba(#FFFFFF,.5); margin-top: 2px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  color: #e0dce8;
+  margin-top: 2px;
 }
 
 .exclusao-footer {
   display: flex; justify-content: flex-end; gap: 12px;
-  padding: 16px 24px 22px; border-top: 1px solid rgba(#E74C3C,.12);
+  padding: 16px 24px 22px; border-top: 1px solid rgba(#F29F05, .18);
 }
 
 .btn-excluir-confirm {
@@ -538,4 +556,770 @@ input[type="checkbox"] { width: 17px; height: 17px; accent-color: #F29F05; curso
   margin-left: 6px;
   vertical-align: middle;
   white-space: nowrap;
+}
+
+// Ficha técnica — identidade visual BAIANAr
+.ficha-overlay {
+  background: rgba(12, 10, 20, 0.82);
+  backdrop-filter: blur(6px);
+  z-index: 1100;
+}
+
+.ficha-modal {
+  background: #3a3550;
+  color: #ffffff;
+  border: 1.5px solid rgba(#f29f05, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.5;
+
+  // Mantém a rolagem dentro da janela
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #f29f05 #302c40;
+
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-style: italic;
+    font-weight: 400;
+    color: #ffffff;
+    line-height: 1.2;
+    margin: 0 0 8px;
+  }
+
+  h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 25px;
+    font-weight: 500;
+    color: #f29f05;
+  }
+
+  p {
+    color: rgba(#ffffff, 0.82);
+  }
+
+  .field-group {
+    margin-bottom: 12px;
+  }
+
+  .field-label {
+    color: rgba(#ffffff, 0.88);
+    font-weight: 400;
+  }
+
+  .field-input {
+    background: #302c40;
+    color: #ffffff;
+    border: 1px solid rgba(#ffffff, 0.16);
+
+    &:hover {
+      border-color: rgba(#f29f05, 0.5);
+    }
+
+    &:focus {
+      border-color: #f29f05;
+      box-shadow: 0 0 0 3px rgba(#f29f05, 0.12);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.6;
+  }
+
+  // Tabela de ingredientes
+  .pratos-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #302c40;
+    border-radius: 10px;
+    overflow: hidden;
+
+    th {
+      background: #272334;
+      color: #f29f05;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: left;
+      padding: 13px 12px;
+      white-space: nowrap;
+    }
+
+    td {
+      color: #ffffff;
+      font-size: 13px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(#ffffff, 0.1);
+    }
+
+    tbody tr:hover {
+      background: rgba(#f29f05, 0.07);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  // Cartões de custo
+  div:has(> .field-label + p) {
+    background: #302c40;
+    border: 1px solid rgba(#f29f05, 0.2);
+    border-radius: 10px;
+    padding: 16px;
+
+    > p {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 6px 0 0;
+      color: #ffffff;
+    }
+
+    > p[style] {
+      color: inherit;
+    }
+  }
+
+  .btn-cancelar {
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .btn-adicionar {
+    background: #f29f05;
+    color: #302c40;
+    font-weight: 600;
+    font-style: normal;
+
+    &:hover {
+      background: #ffb52e;
+    }
+  }
+
+  // Ajustes para telas menores
+  @media (max-width: 600px) {
+    padding: 16px !important;
+
+    h2 {
+      font-size: 26px;
+    }
+
+    h3 {
+      font-size: 22px;
+    }
+
+    .pratos-table {
+      min-width: 520px;
+    }
+  }
+}
+
+/* Abas principais do Cardápio */
+.cardapio-abas {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  border-bottom: 1px solid rgba(#f29f05, 0.25);
+}
+
+.cardapio-aba {
+  padding: 12px 24px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: rgba(#fff, 0.7);
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+
+  &:hover {
+    color: #f29f05;
+  }
+
+  &--ativa {
+    color: #f29f05;
+    border-bottom-color: #f29f05;
+    font-weight: 600;
+  }
+}
+
+/* Painel de gerenciamento de categorias */
+.categorias-painel {
+  padding: 24px;
+  background: #3a3550;
+  border: 1px solid rgba(#f29f05, 0.25);
+  border-radius: 14px;
+
+  h2 {
+    margin: 0 0 20px;
+    color: #f29f05;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 500;
+  }
+}
+
+.categorias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.categoria-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #302c40;
+  border: 1px solid rgba(#fff, 0.1);
+  border-radius: 10px;
+
+  &__info,
+  &__acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__nome {
+    color: #fff;
+    font-size: 14px;
+  }
+
+  &__status {
+    color: #7cddb0;
+    font-size: 11px;
+    font-weight: 600;
+
+    &--inativo {
+      color: #f29f05;
+    }
+  }
+
+  &__botao {
+    padding: 8px 14px;
+    background: transparent;
+    color: #f29f05;
+    border: 1px solid rgba(#f29f05, 0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+
+    &:hover {
+      background: rgba(#f29f05, 0.1);
+    }
+
+    &--perigo {
+      color: #ff8c8c;
+      border-color: rgba(#ff8c8c, 0.4);
+
+      &:hover {
+        background: rgba(#ff8c8c, 0.1);
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .cardapio-aba {
+    flex: 1;
+    padding: 12px;
+  }
+
+  .categorias-painel {
+    padding: 16px;
+  }
+}
+
+/* Abas internas do formulário de prato */
+.formulario-prato-abas {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(#f29f05, 0.25);
+}
+
+.formulario-prato-aba {
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: rgba(#fff, 0.7);
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+
+  &:hover {
+    color: #f29f05;
+  }
+
+  &--ativa {
+    color: #f29f05;
+    border-bottom-color: #f29f05;
+    font-weight: 600;
+  }
+}
+
+.formulario-prato-ficha {
+  padding: 20px 4px;
+
+  h3 {
+    margin: 0 0 12px;
+    color: #f29f05;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+  }
+
+  p {
+    color: rgba(#fff, 0.8);
+    font-size: 14px;
+  }
+}
+
+/* Tabela de ingredientes da ficha técnica */
+
+.ficha-tabela-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 16px;
+  border: 1px solid rgba(242, 159, 5, 0.35);
+  border-radius: 12px;
+}
+
+.ficha-ingredientes-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  table-layout: auto;
+
+  thead {
+    background: rgba(242, 159, 5, 0.12);
+  }
+
+  th,
+  td {
+    padding: 15px 12px;
+    text-align: left;
+    vertical-align: middle;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  th {
+    color: #f2a900;
+    font-weight: 600;
+  }
+
+  td {
+    color: #f5f0fa;
+  }
+
+  th:last-child,
+  td:last-child {
+    border-right: none;
+    text-align: center;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  td .btn-cancelar {
+    padding: 8px 12px;
+    min-width: 80px;
+    font-size: 12px;
+  }
+}
+
+/* Cards do resumo de custos */
+
+.ficha-resumo {
+  margin-top: 32px;
+}
+
+.ficha-resumo-titulo {
+  margin: 0 0 18px;
+  color: #f2a900;
+  font-size: 25px;
+}
+
+.ficha-custos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ficha-custo-card {
+  min-width: 0;
+  margin: 0;
+  padding: 20px 16px;
+  border: 1px solid rgba(242, 159, 5, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+
+  .field-label {
+    color: #d8cde4;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  p {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(18px, 2vw, 25px);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+}
+
+@media (max-width: 700px) {
+  .ficha-custos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ficha-custo-card {
+    padding: 16px;
+  }
+}
+
+/* Alinhamento dos campos iniciais da ficha técnica */
+
+.formulario-prato-ficha {
+  padding-top: 0;
+}
+
+.formulario-prato-ficha .ficha-campo-rendimento,
+.formulario-prato-ficha .ficha-campo-preparo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.formulario-prato-ficha .ficha-campo-preparo {
+  margin-top: 18px;
+}
+
+.formulario-prato-ficha .ficha-campo-rendimento .field-label,
+.formulario-prato-ficha .ficha-campo-preparo .field-label {
+  display: block;
+  margin: 0;
+}
+
+.formulario-prato-ficha .ficha-campo-rendimento .field-input,
+.formulario-prato-ficha .ficha-campo-preparo .field-input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* Organização do formulário de ingredientes */
+
+.ficha-ingredientes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.ficha-adicionar-acao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.ficha-acoes-ingrediente {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+
+  .btn-cancelar + .btn-cancelar {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: rgba(242, 159, 5, 0.5);
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .ficha-ingredientes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Títulos dos campos iniciais da ficha técnica */
+
+.formulario-prato-ficha .ficha-campo-rendimento .field-label,
+.formulario-prato-ficha .ficha-campo-preparo .field-label {
+  color: #f2a900;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.formulario-prato-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin: 0 26px 12px;
+  padding: 12px 16px;
+
+  background: rgba(242, 159, 5, 0.1);
+  border: 1px solid rgba(242, 159, 5, 0.45);
+  border-radius: 8px;
+
+  color: #f7c46b;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.formulario-prato-aviso-fechar {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Modal de cadastro e edição de categorias */
+.modal-categoria {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-sizing: border-box;
+
+  background: #3b3550;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 16px;
+
+  padding: 28px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.modal-categoria h2 {
+  margin: 0 0 24px;
+}
+
+.modal-categoria .field-group {
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.modal-categoria .field-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Cabeçalho do modal de categorias */
+.modal-categoria-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-categoria-cabecalho h2 {
+  margin: 0;
+}
+
+.modal-categoria-fechar {
+  background: transparent;
+  border: none;
+  color: #b9b4c6;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.modal-categoria-fechar:hover {
+  color: #ffffff;
+}
+
+/* Botões do modal de categorias */
+.modal-categoria-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-categoria-acoes .btn-cancelar,
+.modal-categoria-acoes .btn-adicionar {
+  margin: 0;
+}
+
+/* Modal de confirmação de desativação de categoria */
+.modal-confirmacao-categoria {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-sizing: border-box;
+
+  background: #3b3550;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 16px;
+  padding: 28px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.modal-confirmacao-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-confirmacao-cabecalho h2 {
+  margin: 0;
+}
+
+.modal-confirmacao-categoria p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Destaques em laranja no modal de desativação de categorias */
+.modal-confirmacao-categoria .modal-confirmacao-cabecalho h2 {
+  color: #F29F05;
+  font-weight: 600;
+}
+
+.modal-confirmacao-categoria p strong {
+  color: #F29F05;
+  font-weight: 600;
+}
+
+.modal-confirmacao-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.modal-confirmacao-acoes .btn-cancelar,
+.modal-confirmacao-acoes .btn-adicionar {
+  margin: 0;
+}
+
+.categoria-notificacao {
+  position: fixed;
+  top: 300px;
+  right: 24px;
+  bottom: auto;
+  z-index: 1100;
+
+  width: max-content;
+  max-width: min(420px, calc(100vw - 48px));
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  margin: 0;
+  padding: 14px 18px;
+
+  background: #302b40;
+  border: 1px solid #f29f05;
+  border-radius: 12px;
+  color: #ffffff;
+
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.titulo-confirmacao-padrao {
+  margin: 0;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 28px;
+  color: #ffffff;
+}
+
+/* Nome e avisos de status na tabela de pratos */
+
+.prato-identificacao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.prato-status-badge {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.prato-inativo-badge {
+  color: #ffd5d5;
+  background-color: #68343b;
+  border: 1px solid #e07b82;
+}
+
+.ficha-alerta-food-cost {
+  margin: 16px 0 0;
+  padding: 0;
+  color: #ff5252 !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
 }

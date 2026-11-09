@@ -1,37 +1,23 @@
-import {
-  Component, OnInit, OnDestroy, AfterViewInit,
-  signal, computed, inject, ElementRef, ViewChild, DestroyRef
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth.service';
-import { PedidoService, PedidoShared, StatusPedido as StatusPedidoShared } from '../../services/pedido.service';
-import { interval } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { PermissionService } from '../../services/permission.service';
+import {
+  PedidoAdminApiService, PROXIMO_STATUS, ROTULO_STATUS_PEDIDO
+} from '../../services/api/pedido-admin-api.service';
+import { PedidoApi, StatusPedidoApi } from '../../services/api/api-types';
+import { isoUtc } from '../../services/api/pedido-status.util';
+import { mensagemDeErro } from '../../services/api/api-error';
 
-declare const Chart: any;
+Chart.register(...registerables);
 
-export type StatusPreparo = 'Aguardando preparo' | 'Em preparo' | 'Pronto' | 'Finalizado' | 'Cancelado';
-export type StatusComanda = 'Aberta' | 'Fechada';
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export interface ItemPedido {
-  nome: string;
-  quantidade: number;
-  obs?: string;
-  status: 'Aguardando' | 'Em preparo' | 'Pronto' | 'Entregue';
-}
-
-export interface Pedido {
-  numero: number | string;
-  dataHora: Date;
-  qtdItens: number;
-  itens: ItemPedido[];
-  statusPreparo: StatusPreparo;
-  statusComanda: StatusComanda;
-  valorTotal: number;
-  isReal?: boolean;
-  pedidoId?: string;
-}
-
+/**
+ * Pedidos do painel admin, ligados à API (RF-015, RF-016, RF-018, RF-019, RF-020):
+ * lista paginada com filtro de status, detalhe, avanço de status e cancelamento com motivo.
+ */
 @Component({
   selector: 'app-pedidos',
   standalone: true,
@@ -39,272 +25,229 @@ export interface Pedido {
   templateUrl: './pedidos.component.html',
   styleUrls: ['./pedidos.component.scss']
 })
-export class PedidosComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('chartDia') chartDiaRef!: ElementRef<HTMLCanvasElement>;
+export class PedidosComponent implements OnInit, OnDestroy {
 
-  private authService  = inject(AuthService);
-  private pedidoSvc    = inject(PedidoService);
-  private destroyRef   = inject(DestroyRef);
-  private chart: any;
+  private authService = inject(AuthService);
+  private api         = inject(PedidoAdminApiService);
+  permission          = inject(PermissionService);
 
-  pedidoAberto = signal<number | string | null>(null);
-  private _extra = signal(0);
+  private chart?: Chart;
+  private timer?: ReturnType<typeof setInterval>;
 
-  // ── Mapa: StatusPedidoShared → StatusPreparo (admin) ────────
-  private toStatusPreparo(s: StatusPedidoShared): StatusPreparo {
-    const map: Record<StatusPedidoShared, StatusPreparo> = {
-      recebido:   'Aguardando preparo',
-      em_preparo: 'Em preparo',
-      pronto:     'Pronto',
-      enviado:    'Pronto',
-      a_caminho:  'Finalizado',
-      entregue:   'Finalizado',
-      cancelado:  'Cancelado',
-    };
-    return map[s];
-  }
+  /** Dono e Gerente movimentam e cancelam pedidos (o backend permite ADMIN e GERENTE). Supervisor só consulta. */
+  podeMovimentar = this.permission.isDono() || this.permission.isGerente();
 
-  private toStatusComanda(s: StatusPedidoShared): StatusComanda {
-    return ['entregue', 'cancelado', 'a_caminho'].includes(s) ? 'Fechada' : 'Aberta';
-  }
-
-  // Mapa: StatusPedidoShared → status do item individual
-  private toItemStatus(s: StatusPedidoShared): ItemPedido['status'] {
-    const map: Record<StatusPedidoShared, ItemPedido['status']> = {
-      recebido:   'Aguardando',
-      em_preparo: 'Em preparo',
-      pronto:     'Pronto',
-      enviado:    'Pronto',
-      a_caminho:  'Entregue',
-      entregue:   'Entregue',
-      cancelado:  'Aguardando',
-    };
-    return map[s];
-  }
-
-  // Converte PedidoShared → Pedido (admin)
-  private converterPedido(p: PedidoShared): Pedido {
-    return {
-      numero: p.numero as any,   // string "#8750"
-      dataHora: new Date(p.dataHora),
-      qtdItens: p.itens.reduce((s, i) => s + i.quantidade, 0),
-      statusPreparo: this.toStatusPreparo(p.status),
-      statusComanda: this.toStatusComanda(p.status),
-      valorTotal: p.total,
-      isReal: true,
-      pedidoId: p.id,
-      itens: p.itens.map(i => ({
-        nome: i.nome,
-        quantidade: i.quantidade,
-        obs: i.obs,
-        status: this.toItemStatus(p.status),
-      })),
-    };
-  }
-
-  // Pedidos mockados (demo) — mantidos exatamente como estavam
-  private pedidosMock: Pedido[] = [
-    {
-      numero: 2045, dataHora: new Date('2026-03-05T19:45'), qtdItens: 4,
-      statusPreparo: 'Em preparo', statusComanda: 'Aberta', valorTotal: 128.50,
-      itens: [
-        { nome: 'Moqueca de Peixe',      quantidade: 2, obs: 'Menos pimenta', status: 'Em preparo' },
-        { nome: 'Acarajé com Vatapá',    quantidade: 1,                        status: 'Pronto' },
-        { nome: 'Caipirinha de Cachaça', quantidade: 2,                        status: 'Entregue' },
-      ]
-    },
-    {
-      numero: 2044, dataHora: new Date('2026-03-05T19:30'), qtdItens: 3,
-      statusPreparo: 'Pronto', statusComanda: 'Aberta', valorTotal: 95.70,
-      itens: [
-        { nome: 'Bobó de Camarão',  quantidade: 1, status: 'Pronto' },
-        { nome: 'Água com Gás',     quantidade: 2, status: 'Entregue' },
-        { nome: 'Pudim de Tapioca', quantidade: 1, status: 'Pronto' },
-      ]
-    },
-    {
-      numero: 2043, dataHora: new Date('2026-03-05T19:15'), qtdItens: 5,
-      statusPreparo: 'Finalizado', statusComanda: 'Fechada', valorTotal: 213.40,
-      itens: [
-        { nome: 'Carne do Sol',     quantidade: 2, status: 'Entregue' },
-        { nome: 'Baião de Dois',    quantidade: 1, status: 'Entregue' },
-        { nome: 'Drinks Tropicais', quantidade: 2, status: 'Entregue' },
-      ]
-    },
-    {
-      numero: 2042, dataHora: new Date('2026-03-05T19:00'), qtdItens: 2,
-      statusPreparo: 'Aguardando preparo', statusComanda: 'Aberta', valorTotal: 67.80,
-      itens: [
-        { nome: 'Mini Acarajés', quantidade: 2, status: 'Aguardando' },
-        { nome: 'Refrigerante',  quantidade: 2, status: 'Aguardando' },
-      ]
-    },
-    {
-      numero: 2041, dataHora: new Date('2026-03-05T18:45'), qtdItens: 6,
-      statusPreparo: 'Em preparo', statusComanda: 'Aberta', valorTotal: 189.90,
-      itens: [
-        { nome: 'Arroz de Polvo',    quantidade: 2, status: 'Em preparo' },
-        { nome: 'Casquinhas de Siri',quantidade: 1, status: 'Pronto' },
-        { nome: 'Gin Tônica',        quantidade: 2, status: 'Entregue' },
-        { nome: 'Torta de Cocada',   quantidade: 1, status: 'Aguardando' },
-      ]
-    },
-    {
-      numero: 2040, dataHora: new Date('2026-03-05T18:30'), qtdItens: 3,
-      statusPreparo: 'Finalizado', statusComanda: 'Fechada', valorTotal: 142.60,
-      itens: [
-        { nome: 'Camarão à Baiana', quantidade: 1, status: 'Entregue' },
-        { nome: 'Cravinho',         quantidade: 2, status: 'Entregue' },
-      ]
-    },
-    {
-      numero: 2039, dataHora: new Date('2026-03-05T18:15'), qtdItens: 4,
-      statusPreparo: 'Pronto', statusComanda: 'Aberta', valorTotal: 76.50,
-      itens: [
-        { nome: 'Caldo de Sururu', quantidade: 2, status: 'Entregue' },
-        { nome: 'Baião de Dois',   quantidade: 1, status: 'Pronto' },
-        { nome: 'Sucos Naturais',  quantidade: 1, status: 'Entregue' },
-      ]
-    },
-    {
-      numero: 2038, dataHora: new Date('2026-03-05T18:00'), qtdItens: 2,
-      statusPreparo: 'Finalizado', statusComanda: 'Fechada', valorTotal: 58.90,
-      itens: [
-        { nome: 'Bobó de Camarão', quantidade: 1, status: 'Entregue' },
-        { nome: 'Água com Gás',    quantidade: 2, status: 'Entregue' },
-      ]
-    },
+  readonly filtros: { valor: StatusPedidoApi | ''; rotulo: string }[] = [
+    { valor: '', rotulo: 'Todos' },
+    { valor: 'RECEBIDO', rotulo: 'Recebido' },
+    { valor: 'CONFIRMADO', rotulo: 'Confirmado' },
+    { valor: 'EM_PREPARO', rotulo: 'Em preparo' },
+    { valor: 'PRONTO', rotulo: 'Pronto' },
+    { valor: 'SAIU_ENTREGA', rotulo: 'Saiu p/ entrega' },
+    { valor: 'FINALIZADO', rotulo: 'Finalizado' },
+    { valor: 'CANCELADO', rotulo: 'Cancelado' },
   ];
 
-  // Signal de pedidos (reais do Firestore + mockados)
-  pedidos = computed<Pedido[]>(() => {
-    const reais = this.pedidoSvc.pedidos().map(p => this.converterPedido(p));
-    return [...reais, ...this.pedidosMock];
-  });
+  pedidos      = signal<PedidoApi[]>([]);
+  filtro       = signal<StatusPedidoApi | ''>('');
+  pagina       = signal(0);
+  totalPaginas = signal(0);
+  carregando   = signal(true);
+  erro         = signal('');
+  pedidoAberto = signal<number | null>(null);
 
-  // Sincroniza pedidos reais do PedidoService — mantido por compatibilidade mas não faz nada agora
-  private sincronizarPedidos(): void {}
+  totalSemana = signal(0);
+  emPreparo   = signal(0);
+  finalizados = signal(0);
+  cancelados  = signal(0);
 
-  // KPIs
-  totalSemana = computed(() => 446 + this._extra() + this.pedidoSvc.pedidos().length);
-  emPreparo   = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Em preparo').length);
-  finalizados = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Finalizado').length);
-  cancelados  = computed(() => this.pedidos().filter(p => p.statusPreparo === 'Cancelado').length);
-
-  diasSemana    = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  pedidosPorDia = [45, 37, 52, 63, 74, 95, 80];
+  // Cancelamento
+  pedidoCancelar = signal<PedidoApi | null>(null);
+  motivo         = signal('');
+  erroAcao       = signal('');
+  salvando       = signal(false);
 
   ngOnInit(): void {
-    // Pequena oscilação aleatória no KPI para simular movimento (apenas visual)
-    interval(8000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this._extra.update(v => v + Math.floor(Math.random() * 2));
-    });
+    this.carregar();
+    this.carregarResumo();
+    this.timer = setInterval(() => { this.carregar(false); this.carregarResumo(); }, 15000);
   }
 
-  ngAfterViewInit(): void {
-    this.waitChart().then(() => this.initChart());
+  ngOnDestroy(): void {
+    if (this.timer) clearInterval(this.timer);
+    this.chart?.destroy();
   }
 
-  private waitChart(): Promise<void> {
-    return new Promise(resolve => {
-      if (typeof Chart !== 'undefined') { resolve(); return; }
-      const t = setInterval(() => { if (typeof Chart !== 'undefined') { clearInterval(t); resolve(); } }, 100);
-    });
-  }
-
-  private initChart(): void {
-    const accent = '#F29F05';
-    const grid   = 'rgba(255,255,255,0.06)';
-    const tick   = 'rgba(255,255,255,0.45)';
-    const card   = '#3A3550';
-    const poppinsItalic = { family: "'Poppins', sans-serif", style: 'italic' as const, weight: '200' as const };
-
-    this.chart = new Chart(this.chartDiaRef.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: this.diasSemana,
-        datasets: [{
-          data: [...this.pedidosPorDia],
-          backgroundColor: accent,
-          hoverBackgroundColor: 'rgba(242,159,5,0.5)',
-          borderRadius: 5,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: card,
-            borderColor: accent,
-            borderWidth: 1.5,
-            cornerRadius: 8,
-            padding: 12,
-            titleColor: 'rgba(255,255,255,0.7)',
-            bodyColor: accent,
-            displayColors: false,
-            titleFont: { ...poppinsItalic, size: 12 },
-            bodyFont:  { ...poppinsItalic, size: 14 },
-            callbacks: {
-              title: (i: any[]) => i[0]?.label ?? '',
-              label: (i: any)   => `pedidos : ${i.raw}`
-            }
-          }
-        },
-        scales: {
-          x: { grid: { color: grid }, ticks: { color: tick, font: { ...poppinsItalic, size: 11 } } },
-          y: { grid: { color: grid }, ticks: { color: tick, font: { ...poppinsItalic, size: 11 } } }
-        }
-      }
-    });
-  }
-
-  // Helpers
   getPrimeiroNome(): string {
     const u = this.authService.getCurrentUser();
     return u?.nomeCompleto?.split(' ')[0] || u?.matricula || '';
   }
 
-  formatDataHora(d: Date): string {
-    return d.toLocaleDateString('pt-BR') + ' ' +
-           d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  // ── Lista ────────────────────────────────────────────────────
+  async carregar(mostrarLoading = true): Promise<void> {
+    if (mostrarLoading) this.carregando.set(true);
+    try {
+      const r = await this.api.listar({ status: this.filtro(), page: this.pagina(), size: 10 });
+      this.pedidos.set(r.content);
+      this.totalPaginas.set(r.totalPages);
+      this.erro.set('');
+    } catch (err) {
+      this.erro.set(mensagemDeErro(err, 'Não foi possível carregar os pedidos.'));
+    } finally {
+      this.carregando.set(false);
+    }
+  }
+
+  onFiltro(valor: StatusPedidoApi | ''): void {
+    this.filtro.set(valor);
+    this.pagina.set(0);
+    this.carregar();
+  }
+
+  mudarPagina(delta: number): void {
+    const nova = this.pagina() + delta;
+    if (nova < 0 || nova >= this.totalPaginas()) return;
+    this.pagina.set(nova);
+    this.carregar();
+  }
+
+  // ── KPIs e gráfico (dados reais) ─────────────────────────────
+  private async carregarResumo(): Promise<void> {
+    try {
+      const inicio = new Date();
+      inicio.setDate(inicio.getDate() - 6);
+      inicio.setHours(0, 0, 0, 0);
+      const [semana, prep, fin, canc] = await Promise.all([
+        this.api.listar({ inicio, size: 200 }),
+        this.api.listar({ status: 'EM_PREPARO', size: 1 }),
+        this.api.listar({ status: 'FINALIZADO', size: 1 }),
+        this.api.listar({ status: 'CANCELADO', size: 1 }),
+      ]);
+      this.totalSemana.set(semana.totalElements);
+      this.emPreparo.set(prep.totalElements);
+      this.finalizados.set(fin.totalElements);
+      this.cancelados.set(canc.totalElements);
+      this.desenharGrafico(semana.content);
+    } catch {
+      // KPIs são complementares: se falharem, a lista continua funcionando.
+    }
+  }
+
+  /** Quantidade de pedidos por dia, nos últimos 7 dias (horário local). */
+  private desenharGrafico(pedidos: PedidoApi[]): void {
+    const canvas = document.getElementById('chartDia') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const dias: Date[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      dias.push(d);
+    }
+    const contagem = dias.map(d => pedidos.filter(p => {
+      const c = new Date(isoUtc(p.createdAt));
+      return c.getFullYear() === d.getFullYear() && c.getMonth() === d.getMonth() && c.getDate() === d.getDate();
+    }).length);
+
+    this.chart?.destroy();
+    this.chart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: dias.map(d => DIAS[d.getDay()]),
+        datasets: [{ label: 'Pedidos', data: contagem, backgroundColor: '#F29F05', borderRadius: 5 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.55)' } },
+          y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.55)', precision: 0 }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  // ── Ações ────────────────────────────────────────────────────
+  proximo(p: PedidoApi) { return PROXIMO_STATUS[p.status]; }
+
+  podeCancelar(p: PedidoApi): boolean {
+    return this.podeMovimentar && p.status !== 'FINALIZADO' && p.status !== 'CANCELADO';
+  }
+
+  async avancar(p: PedidoApi, e: Event): Promise<void> {
+    e.stopPropagation();
+    const prox = PROXIMO_STATUS[p.status];
+    if (!prox || !this.podeMovimentar) return;
+    this.erro.set('');
+    try {
+      await this.api.mudarStatus(p.id, prox.proximo);
+      await this.carregar(false);
+      this.carregarResumo();
+    } catch (err) {
+      this.erro.set(mensagemDeErro(err, 'Não foi possível atualizar o status do pedido.'));
+    }
+  }
+
+  abrirCancelar(p: PedidoApi, e: Event): void {
+    e.stopPropagation();
+    this.motivo.set('');
+    this.erroAcao.set('');
+    this.pedidoCancelar.set(p);
+  }
+
+  fecharCancelar(): void { if (!this.salvando()) this.pedidoCancelar.set(null); }
+
+  onMotivo(e: Event): void { this.motivo.set((e.target as HTMLTextAreaElement).value); }
+
+  async confirmarCancelar(): Promise<void> {
+    const p = this.pedidoCancelar();
+    if (!p) return;
+    if (!this.motivo().trim()) { this.erroAcao.set('Informe o motivo do cancelamento.'); return; }
+    this.salvando.set(true);
+    this.erroAcao.set('');
+    try {
+      await this.api.cancelar(p.id, this.motivo().trim());
+      this.pedidoCancelar.set(null);
+      await this.carregar(false);
+      this.carregarResumo();
+    } catch (err) {
+      this.erroAcao.set(mensagemDeErro(err, 'Não foi possível cancelar o pedido.'));
+    } finally {
+      this.salvando.set(false);
+    }
+  }
+
+  // ── Helpers de exibição ──────────────────────────────────────
+  togglePedido(id: number): void {
+    this.pedidoAberto.set(this.pedidoAberto() === id ? null : id);
+  }
+
+  rotulo(s: StatusPedidoApi): string { return ROTULO_STATUS_PEDIDO[s]; }
+
+  qtdItens(p: PedidoApi): number { return p.itens.reduce((s, i) => s + i.quantidade, 0); }
+
+  comanda(p: PedidoApi): 'Aberta' | 'Fechada' {
+    return p.status === 'FINALIZADO' || p.status === 'CANCELADO' ? 'Fechada' : 'Aberta';
+  }
+
+  formatDataHora(utc: string): string {
+    const d = new Date(isoUtc(utc));
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
   formatValor(v: number): string {
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   }
 
-  togglePedido(num: number | string): void {
-    this.pedidoAberto.set(this.pedidoAberto() === num ? null : num);
-  }
-
-  getPreparoClass(s: StatusPreparo): string {
-    const m: Record<StatusPreparo, string> = {
-      'Aguardando preparo': 'badge--aguardando',
-      'Em preparo':         'badge--preparo',
-      'Pronto':             'badge--pronto',
-      'Finalizado':         'badge--finalizado',
-      'Cancelado':          'badge--cancelado',
+  getPreparoClass(s: StatusPedidoApi): string {
+    const m: Record<StatusPedidoApi, string> = {
+      RECEBIDO: 'badge--aguardando', CONFIRMADO: 'badge--aguardando', EM_PREPARO: 'badge--preparo',
+      PRONTO: 'badge--pronto', SAIU_ENTREGA: 'badge--pronto', FINALIZADO: 'badge--finalizado', CANCELADO: 'badge--cancelado',
     };
-    return m[s] ?? '';
+    return m[s];
   }
 
-  getComandaClass(s: StatusComanda): string {
+  getComandaClass(s: 'Aberta' | 'Fechada'): string {
     return s === 'Aberta' ? 'badge--aberta' : 'badge--fechada';
   }
-
-  getItemClass(s: string): string {
-    const m: Record<string, string> = {
-      'Aguardando': 'item-badge--aguardando',
-      'Em preparo': 'item-badge--preparo',
-      'Pronto':     'item-badge--pronto',
-      'Entregue':   'item-badge--entregue',
-    };
-    return m[s] ?? '';
-  }
-
-  ngOnDestroy(): void { this.chart?.destroy(); }
 }

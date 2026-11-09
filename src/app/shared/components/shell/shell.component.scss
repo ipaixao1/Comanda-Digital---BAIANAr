@@ -408,3 +408,5 @@ $font-body:  'Poppins', sans-serif;
   transition: background .18s, transform .15s;
   &:hover { background: #F28705; transform: translateY(-1px); }
 }
+
+.nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #E74C3C; color: #fff; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }

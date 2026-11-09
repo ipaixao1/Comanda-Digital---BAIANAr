@@ -1,22 +1,75 @@
 <div class="cardapio-page">
 
   <!-- Header -->
-  <div class="page-header">
-    <div class="page-header__text">
-      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
-      <h1 class="page-title">Gerenciamento de Cardápio</h1>
-      <p class="page-subtitle">Gerencie os pratos e bebidas do restaurante</p>
-    </div>
-    <button class="btn-adicionar" (click)="abrirModalNovo()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-      Adicionar Prato
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+    <h1 class="page-title">Gerenciamento de Cardápio</h1>
+    <p class="page-subtitle">
+      Gerencie os pratos, bebidas e categorias do restaurante
+    </p>
+  </div>
+
+  <button
+    *ngIf="abaCardapio() === 'pratos'"
+    type="button"
+    class="btn-adicionar"
+    (click)="abrirModalNovo()"
+  >
+    Adicionar Prato
+  </button>
+
+  <button
+    *ngIf="abaCardapio() === 'categorias'"
+    type="button"
+    class="btn-adicionar"
+    (click)="abrirModalNovaCategoria()"
+  >
+    Nova Categoria
+  </button>
+</div>
+
+<!-- Abas do Cardápio -->
+<div class="cardapio-abas">
+  <button
+    type="button"
+    class="cardapio-aba"
+    [class.cardapio-aba--ativa]="abaCardapio() === 'pratos'"
+    (click)="abaCardapio.set('pratos')"
+  >
+    Pratos
+  </button>
+
+  <button
+    type="button"
+    class="cardapio-aba"
+    [class.cardapio-aba--ativa]="abaCardapio() === 'categorias'"
+    (click)="abaCardapio.set('categorias')"
+  >
+    Categorias
+  </button>
+</div>
+
+    <!-- Notificação flutuante dos pratos -->
+  <div
+    *ngIf="mensagemResultadoPrato() as mensagem"
+    class="formulario-prato-aviso categoria-notificacao"
+    role="status"
+  >
+    <span>{{ mensagem }}</span>
+
+    <button
+      type="button"
+      class="formulario-prato-aviso-fechar"
+      (click)="mensagemResultadoPrato.set(null)"
+      aria-label="Fechar aviso"
+    >
+      ×
     </button>
   </div>
 
   <!-- Tabela -->
-  <div class="table-card">
+  <div class="table-card" *ngIf="abaCardapio() === 'pratos'">
     <table class="pratos-table">
       <thead>
         <tr>
@@ -25,12 +78,11 @@
           <th class="col-categoria">Categoria</th>
           <th class="col-preco">Preço</th>
           <th class="col-descricao">Descrição</th>
-          <th class="col-destaques">Destaques</th>
           <th class="col-acoes">Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let prato of pratos()" class="prato-row">
+        <tr *ngFor="let prato of pratosConvertidos()" class="prato-row">
           <td class="col-imagem">
             <div class="prato-img-wrap">
               <img *ngIf="prato.imagem" [src]="prato.imagem" [alt]="prato.nome" class="prato-img" />
@@ -44,21 +96,34 @@
             </div>
           </td>
           <td class="col-nome">
-            <span class="prato-nome">{{ prato.nome }}</span>
-            <span class="indisp-badge" *ngIf="isPratoIndisponivel(prato)">Indisponível hoje</span>
-          </td>
+  <div class="prato-identificacao">
+    <span class="prato-nome">{{ prato.nome }}</span>
+
+    <span
+      class="prato-status-badge prato-inativo-badge"
+      *ngIf="isPratoInativo(prato)">
+      Prato inativo
+    </span>
+
+    <span
+      class="prato-status-badge indisp-badge"
+      *ngIf="isPratoIndisponivel(prato)">
+      Indisponível hoje
+    </span>
+  </div>
+</td>
           <td class="col-categoria">
             <span class="categoria-badge" [ngClass]="getCategoriaClass(prato.categoria)">{{ prato.categoria }}</span>
           </td>
-          <td class="col-preco"><span class="prato-preco">R$<br>{{ formatPreco(prato.preco) }}</span></td>
-          <td class="col-descricao"><span class="prato-descricao">{{ prato.descricao }}</span></td>
-          <td class="col-destaques">
-            <div class="destaques-wrap">
-              <span *ngFor="let d of prato.destaques" class="destaque-badge" [ngClass]="getDestaqueClass(d.label)">
-                {{ d.label }}
-              </span>
-            </div>
+          <td class="col-preco">
+  <span class="prato-preco" style="white-space: nowrap;">
+    R$ {{ formatPreco(prato.preco) }}
+  </span>
+</td>
+          <td class="col-descricao">
+            <span class="prato-descricao">{{ prato.descricao }}</span>
           </td>
+
           <td class="col-acoes">
             <div class="acoes-wrap">
               <button class="btn-acao btn-editar" (click)="abrirModalEditar(prato)" title="Editar">
@@ -67,19 +132,114 @@
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
               </button>
-              <button class="btn-acao btn-excluir" (click)="confirmarExclusao(prato)" title="Excluir">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                  <path d="M10 11v6M14 11v6"/>
-                  <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-                </svg>
-              </button>
+              <!-- Desativar pratos ativos ou pausados -->
+<button
+  *ngIf="!isPratoInativo(prato)"
+  class="btn-acao btn-excluir"
+  (click)="confirmarExclusao(prato)"
+  title="Desativar prato"
+  aria-label="Desativar prato"
+>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M5.6 5.6 18.4 18.4"/>
+  </svg>
+</button>
+
+<!-- Reativar pratos inativos -->
+<button
+  *ngIf="isPratoInativo(prato)"
+  class="btn-acao btn-editar"
+  (click)="reativarPrato(prato)"
+  title="Reativar prato"
+  aria-label="Reativar prato"
+>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M20 7v5h-5"/>
+    <path d="M4.9 16a8 8 0 1 0 2-9"/>
+    <path d="M4 4v5h5"/>
+  </svg>
+</button>
             </div>
           </td>
         </tr>
       </tbody>
-    </table>
+        </table>
+  </div>
+
+  <!-- Gerenciamento de categorias -->
+  <div
+    class="categorias-painel"
+    *ngIf="abaCardapio() === 'categorias'"
+  >
+    <h2>Categorias cadastradas</h2>
+
+<div
+  *ngIf="mensagemResultadoCategoria() as mensagem"
+  class="formulario-prato-aviso categoria-notificacao"
+  role="status"
+>
+  <span>{{ mensagem }}</span>
+  <button
+    type="button"
+    class="formulario-prato-aviso-fechar"
+    (click)="mensagemResultadoCategoria.set(null)"
+    aria-label="Fechar aviso"
+  >×</button>
+</div>
+
+<div class="categorias-lista">
+      <div
+        class="categoria-item"
+        *ngFor="let categoria of categoriasOrdenadas()"
+      >
+        <div class="categoria-item__info">
+          <span class="categoria-item__nome">
+            {{ categoria.nome }}
+          </span>
+
+          <span
+            class="categoria-item__status"
+            [class.categoria-item__status--inativo]="categoria.status !== 'ATIVO'"
+          >
+            {{ categoria.status }}
+          </span>
+        </div>
+
+        <div class="categoria-item__acoes">
+          <button
+            type="button"
+            class="categoria-item__botao"
+            (click)="abrirModalEditarCategoria(categoria)"
+          >
+            Editar
+          </button>
+
+          <button
+            *ngIf="categoria.status === 'ATIVO'"
+            type="button"
+            class="categoria-item__botao categoria-item__botao--perigo"
+            (click)="solicitarDesativacaoCategoria(categoria)"
+          >
+            Desativar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -88,22 +248,51 @@
 <input type="file" #fileInput accept="image/*" style="display:none" (change)="onImagemSelecionada($event)" />
 
 <!-- Modal -->
-<div class="modal-overlay" *ngIf="showModal()" (click)="fecharModal()">
-  <div class="modal-card" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showModal()">
+  <div class="modal-card">
 
     <!-- Cabeçalho -->
     <div class="modal-header">
-      <h2 class="modal-title">{{ editingPrato() ? 'Editar Prato' : 'Adicionar Novo Prato' }}</h2>
-      <button class="modal-close" (click)="fecharModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
+  <h2 class="modal-title">
+    {{ editingPrato() ? 'Editar Prato' : 'Adicionar Novo Prato' }}
+  </h2>
 
-    <div class="modal-body">
-      <!-- Grid 2 colunas -->
-      <div class="modal-cols">
+  <button
+    type="button"
+    class="modal-categoria-fechar"
+    (click)="fecharModal()"
+    aria-label="Fechar formulário de prato"
+    title="Fechar"
+  >
+    ×
+  </button>
+</div>
+
+        <div class="modal-body">
+
+      <!-- Abas do formulário de prato -->
+      <div class="formulario-prato-abas">
+        <button
+          type="button"
+          class="formulario-prato-aba"
+          [class.formulario-prato-aba--ativa]="abaFormularioPrato() === 'dados'"
+          (click)="abaFormularioPrato.set('dados')"
+        >
+          Dados do Prato
+        </button>
+
+        <button
+          type="button"
+          class="formulario-prato-aba"
+          [class.formulario-prato-aba--ativa]="abaFormularioPrato() === 'ficha'"
+          (click)="abaFormularioPrato.set('ficha')"
+        >
+          Ficha Técnica
+        </button>
+      </div>
+
+      <!-- Campos gerais do prato -->
+      <div class="modal-cols" *ngIf="abaFormularioPrato() === 'dados'">
 
         <!-- Coluna esquerda -->
         <div class="modal-col">
@@ -116,23 +305,65 @@
           </div>
 
           <!-- Categoria -->
-          <div class="field-group">
-            <label class="field-label">Categoria <span class="required">*</span></label>
-            <select class="field-input field-select" (change)="onSelectCategoria($event)">
-              <option value="" disabled [selected]="!modalCategoria()">Selecione uma categoria</option>
-              <option *ngFor="let cat of categorias" [value]="cat" [selected]="modalCategoria() === cat">{{ cat }}</option>
-            </select>
-          </div>
+<div class="field-group">
+  <label class="field-label">
+    Categoria <span class="required">*</span>
+  </label>
+
+  <select
+    class="field-input field-select"
+    (change)="onSelectCategoria($event)"
+  >
+    <option
+      value=""
+      disabled
+      [selected]="!modalCategoria()"
+    >
+      Selecione uma categoria
+    </option>
+
+    <option
+      *ngFor="let cat of categoriasOrdenadas()"
+      [value]="converterCategoria(cat.nome)"
+      [selected]="modalCategoria() === converterCategoria(cat.nome)"
+      [disabled]="cat.status !== 'ATIVO'"
+    >
+      {{ cat.nome }}
+    </option>
+  </select>
+</div>
 
           <!-- Preço -->
-          <div class="field-group">
-            <label class="field-label">Preço <span class="required">*</span></label>
-            <div class="preco-wrap">
-              <span class="preco-prefix">R$</span>
-              <input type="number" class="field-input field-preco" [value]="modalPreco()"
-                (input)="onInput('preco', $event)" placeholder="0,00" step="0.01" min="0" />
-            </div>
-          </div>
+<div class="field-group">
+  <label class="field-label">Preço <span class="required">*</span></label>
+  <div class="preco-wrap">
+    <span class="preco-prefix">R$</span>
+    <input
+      type="text"
+      inputmode="numeric"
+      class="field-input field-preco"
+      [value]="modalPreco()"
+      (input)="onInput('preco', $event)"
+      placeholder="0,00"
+    />
+  </div>
+</div>
+
+          <!-- Tempo de preparo -->
+<div class="field-group">
+  <label class="field-label">
+    Tempo de preparo (minutos) <span class="required">*</span>
+  </label>
+  <input
+    type="number"
+    class="field-input"
+    [value]="modalTempoPreparo()"
+    (input)="modalTempoPreparo.set(+$any($event.target).value)"
+    placeholder="Ex.: 40"
+    min="1"
+    step="1"
+  />
+</div>
 
           <!-- Imagem -->
           <div class="field-group">
@@ -172,38 +403,68 @@
             <span class="char-count">{{ descCount() }}/300</span>
           </div>
 
-          <!-- Destaques -->
-          <div class="field-group">
-            <label class="field-label">Destaques</label>
-            <div class="checkboxes">
-              <label class="checkbox-label">
-                <input type="checkbox" [checked]="modalSugestaoChef()" (change)="modalSugestaoChef.set(!modalSugestaoChef())" />
-                <span class="checkbox-text">Sugestão do Chef</span>
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" [checked]="modalPratoDaCasa()" (change)="modalPratoDaCasa.set(!modalPratoDaCasa())" />
-                <span class="checkbox-text">Prato da Casa</span>
-              </label>
-            </div>
-          </div>
+          <!-- Status do prato -->
+<div class="field-group">
+  <label class="field-label">Status do prato</label>
 
-          <!-- Status toggle -->
-          <div class="field-group">
-            <label class="field-label">Status</label>
-            <div class="toggle-wrap">
-              <button class="toggle-btn" [class.toggle-btn--on]="modalDisponivel()"
-                (click)="modalDisponivel.set(!modalDisponivel())">
-                <span class="toggle-thumb"></span>
-              </button>
-              <span class="toggle-label" [class.toggle-label--on]="modalDisponivel()">
-                {{ modalDisponivel() ? 'Disponível' : 'Indisponível' }}
-              </span>
-            </div>
-          </div>
+  <div class="toggle-wrap">
+    <ng-container *ngIf="editingPratoApi()?.status !== 'INATIVO'; else statusInativo">
+      <button
+        type="button"
+        class="toggle-btn"
+        [class.toggle-btn--on]="modalDisponivel()"
+        [attr.aria-pressed]="modalDisponivel()"
+        (click)="modalDisponivel.set(!modalDisponivel())"
+      >
+        <span class="toggle-thumb"></span>
+      </button>
 
-        </div>
+      <span
+        class="toggle-label"
+        [class.toggle-label--on]="modalDisponivel()"
+      >
+        {{ modalDisponivel() ? 'Ativo' : 'Pausado' }}
+      </span>
+    </ng-container>
+
+    <ng-template #statusInativo>
+      <span class="toggle-label" style="color: #D97706; font-weight: 600;">
+        Inativo - Utilize o botão "Reativar prato" na tabela.
+      </span>
+    </ng-template>
+  </div>
+</div>
+                </div>
       </div>
+
+      <!-- Aba Ficha Técnica -->
+<div
+  class="formulario-prato-ficha"
+  *ngIf="abaFormularioPrato() === 'ficha'"
+>
+  <ng-container
+    *ngTemplateOutlet="conteudoFichaTecnica"
+  ></ng-container>
+</div>
+
     </div>
+
+    <div
+  *ngIf="mensagemValidacaoPrato() as mensagem"
+  class="formulario-prato-aviso"
+  role="alert"
+>
+  <span>{{ mensagem }}</span>
+
+  <button
+    type="button"
+    class="formulario-prato-aviso-fechar"
+    (click)="mensagemValidacaoPrato.set(null)"
+    aria-label="Fechar aviso"
+  >
+    ×
+  </button>
+</div>
 
     <!-- Footer -->
     <div class="modal-footer">
@@ -218,8 +479,8 @@
 </div>
 
 <!-- Modal Confirmar Exclusão -->
-<div class="modal-overlay" *ngIf="showModalExclusao()" (click)="cancelarExclusao()">
-  <div class="modal-exclusao" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showModalExclusao()">
+  <div class="modal-exclusao">
 
     <div class="exclusao-header">
       <div class="exclusao-header__left">
@@ -227,30 +488,40 @@
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        <h2 class="exclusao-titulo">Confirmar Exclusão</h2>
+        <h2 class="exclusao-titulo titulo-confirmacao-padrao">Desativar Prato</h2>
       </div>
-      <button class="modal-close" (click)="cancelarExclusao()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
+      <button
+  type="button"
+  class="modal-categoria-fechar"
+  (click)="cancelarExclusao()"
+  [disabled]="desativandoPrato()"
+  aria-label="Fechar confirmação de desativação"
+  title="Fechar"
+>
+  ×
+</button>
     </div>
 
     <div class="exclusao-body">
-      <p class="exclusao-pergunta">Tem certeza de que deseja excluir este prato?</p>
-      <p class="exclusao-aviso">Esta ação removerá o item permanentemente do cardápio e não poderá ser desfeita.</p>
+      <p class="exclusao-pergunta">Tem certeza de que deseja desativar este prato?</p>
+      <p class="exclusao-aviso">O prato ficará inativo e não aparecerá no cardápio dos clientes. Você poderá reativá-lo posteriormente.</p>
 
       <div class="exclusao-prato-card" *ngIf="pratoParaExcluir()">
         <div class="exclusao-prato-card__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-            <path d="M10 11v6M14 11v6"/>
-            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-          </svg>
+          <svg
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M5.6 5.6 18.4 18.4"/>
+</svg>
         </div>
         <div>
-          <p class="exclusao-prato-label">Prato a ser excluído:</p>
+          <p class="exclusao-prato-label">Prato a ser desativado:</p>
           <p class="exclusao-prato-nome">{{ pratoParaExcluir()!.nome }}</p>
           <p class="exclusao-prato-cat">Categoria: {{ pratoParaExcluir()!.categoria }}</p>
         </div>
@@ -258,15 +529,494 @@
     </div>
 
     <div class="exclusao-footer">
-      <button class="btn-cancelar" (click)="cancelarExclusao()">Cancelar</button>
-      <button class="btn-excluir-confirm" (click)="confirmarExclusaoFinal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-          <path d="M10 11v6M14 11v6"/>
-          <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+      <button
+  class="btn-cancelar"
+  (click)="cancelarExclusao()"
+  [disabled]="desativandoPrato()"
+>
+  Cancelar
+</button>
+      <button
+  type="button"
+  class="btn-excluir-confirm"
+  (click)="confirmarExclusaoFinal()"
+  [disabled]="desativandoPrato()"
+>
+  <ng-container *ngIf="!desativandoPrato()">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M5.6 5.6 18.4 18.4"/>
+    </svg>
+    Desativar Prato
+  </ng-container>
+
+  <span *ngIf="desativandoPrato()" class="saving-dots">
+    <span></span><span></span><span></span>
+  </span>
+</button>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #conteudoFichaTecnica>
+<!-- Informações da receita -->
+    <div class="field-group ficha-campo-rendimento">
+  <label class="field-label">
+    Rendimento (porções) <span class="required">*</span>
+  </label>
+
+  <input
+    type="number"
+    class="field-input"
+    [value]="fichaRendimento()"
+    (input)="fichaRendimento.set(+$any($event.target).value); recalcularCustoFicha()"
+    min="1"
+    step="1"
+    [attr.aria-invalid]="fichaRendimento() < 1 || fichaRendimento() % 1 !== 0"
+  />
+
+  <small
+    *ngIf="fichaRendimento() < 1 || fichaRendimento() % 1 !== 0"
+    style="color: #ff5252; font-size: 12px; margin-top: 4px;"
+  >
+    O rendimento deve ser um número inteiro de pelo menos 1 porção.
+  </small>
+</div>
+
+    <div class="field-group ficha-campo-preparo">
+      <label class="field-label">Modo de preparo <span class="required">*</span></label>
+      <textarea
+        class="field-input"
+        rows="5"
+        [value]="fichaModoPreparo()"
+        (input)="fichaModoPreparo.set($any($event.target).value)"
+        placeholder="Descreva as etapas de preparo do prato..."
+      ></textarea>
+    </div>
+
+    <!-- Adicionar ingrediente -->
+    <h3 id="ficha-formulario-ingrediente" style="margin: 24px 0 16px;">{{ fichaIngredienteEditando() !== null ? 'Editar ingrediente' : 'Adicionar ingrediente' }}</h3>
+
+    <div class="ficha-ingredientes-grid">
+      <div class="field-group">
+        <label class="field-label">Ingrediente <span class="required">*</span></label>
+        <select
+          class="field-input field-select"
+          [value]="fichaIngredienteSelecionado() ?? ''"
+          (change)="selecionarIngredienteFicha(+$any($event.target).value || null)"
+        >
+          <option value="">Selecione um ingrediente</option>
+          <option
+            *ngFor="let ingrediente of ingredientesAtivos()"
+            [value]="ingrediente.id"
+          >
+            {{ ingrediente.nome }} ({{ ingrediente.unidadePadrao }})
+          </option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Quantidade <span class="required">*</span></label>
+        <input
+          type="number"
+          class="field-input"
+          [value]="fichaQuantidade()"
+          (input)="fichaQuantidade.set(+$any($event.target).value)"
+          min="0.001"
+          step="0.001"
+          placeholder="Ex.: 180"
+        />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Unidade <span class="required">*</span></label>
+        <select
+          class="field-input field-select"
+          [value]="fichaUnidade()"
+          (change)="fichaUnidade.set($any($event.target).value)"
+        >
+          <option value="g">Gramas (g)</option>
+          <option value="ml">Mililitros (ml)</option>
+          <option value="un">Unidades (un)</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Fator de correção (FC) <span class="required">*</span></label>
+        <input
+          type="number"
+          class="field-input"
+          [value]="fichaFatorCorrecao()"
+          (input)="fichaFatorCorrecao.set(+$any($event.target).value)"
+          min="1"
+          step="0.01"
+          placeholder="Ex.: 1.25"
+        />
+      </div>
+    </div>
+
+    <div class="ficha-adicionar-acao">
+  <button
+    type="button"
+    class="btn-cancelar"
+    (click)="adicionarIngredienteFicha()"
+  >
+    {{ fichaIngredienteEditando() !== null ? 'Salvar alteração' : 'Adicionar ingrediente' }}
+  </button>
+
+  <button
+    *ngIf="fichaIngredienteEditando() !== null"
+    type="button"
+    class="btn-cancelar"
+    (click)="cancelarEdicaoIngredienteFicha()"
+  >
+    Cancelar edição
+  </button>
+</div>
+
+    <!-- Lista de ingredientes -->
+    <h3 style="margin: 28px 0 16px;">Ingredientes da receita</h3>
+
+    <p *ngIf="fichaItens().length === 0">
+      Nenhum ingrediente adicionado.
+    </p>
+
+    <div class="ficha-tabela-container">
+  <table
+    *ngIf="fichaItens().length > 0"
+    class="pratos-table ficha-ingredientes-table"
+  >
+        <thead>
+  <tr>
+    <th>Ingrediente</th>
+    <th>Quantidade</th>
+    <th>Unidade</th>
+    <th>FC</th>
+    <th>Custo un.</th>
+    <th>Custo</th>
+    <th>Ação</th>
+  </tr>
+</thead>
+
+        <tbody>
+  <tr *ngFor="let item of fichaItens(); let i = index">
+    <td>{{ obterNomeIngrediente(item.ingredienteId) }}</td>
+    <td>{{ item.quantidade }}</td>
+    <td>{{ item.unidade }}</td>
+    <td>{{ item.fatorCorrecao }}</td>
+
+    <ng-container *ngIf="obterCustoIngrediente(item.ingredienteId) as custoItem; else custoPendente">
+      <td>
+        {{ custoItem.custoUnitario | currency:'BRL':'symbol':'1.2-2' }}
+      </td>
+      <td>
+        {{ custoItem.custoItem | currency:'BRL':'symbol':'1.2-2' }}
+      </td>
+    </ng-container>
+
+    <ng-template #custoPendente>
+      <td>—</td>
+      <td>—</td>
+    </ng-template>
+
+    <td>
+  <div class="ficha-acoes-ingrediente">
+    <button
+      type="button"
+      class="btn-cancelar"
+      (click)="editarIngredienteFicha(i)"
+    >
+      Editar
+    </button>
+
+    <button
+      type="button"
+      class="btn-cancelar"
+      (click)="removerIngredienteFicha(i)"
+    >
+      Remover
+    </button>
+  </div>
+</td>
+  </tr>
+</tbody>
+      </table>
+    </div>
+
+    <!-- Resumo de custos: aparece apenas uma vez -->
+    <div *ngIf="fichaCusto() as custo" class="ficha-resumo">
+      <h3 class="ficha-resumo-titulo">Resumo de custos</h3>
+
+      <div class="ficha-custos-grid">
+        <div class="field-group ficha-custo-card">
+          <label class="field-label">Custo total da receita</label>
+          <p>
+            {{ custo.custoTotal | currency:'BRL':'symbol':'1.2-2' }}
+          </p>
+        </div>
+
+        <div class="field-group ficha-custo-card">
+          <label class="field-label">Custo por porção</label>
+          <p>
+            {{ custo.custoPorPorcao | currency:'BRL':'symbol':'1.2-2' }}
+          </p>
+        </div>
+
+        <div class="field-group ficha-custo-card">
+  <label class="field-label">Food Cost (%)</label>
+  <p
+  [style.color]="
+    !(+modalPreco().replace(',', '.') > 0)
+      ? '#a1a1aa'
+      : custo.cor === 'VERDE'
+        ? '#16a34a'
+        : custo.cor === 'AMARELO'
+          ? '#ffd166'
+          : '#ff5252'
+  "
+>
+  <ng-container
+    *ngIf="+modalPreco().replace(',', '.') > 0; else semPrecoVenda"
+  >
+    {{ custo.foodCostPercent | number:'1.2-2' }}%
+  </ng-container>
+
+  <ng-template #semPrecoVenda>
+    —
+  </ng-template>
+</p>
+</div>
+      </div>
+
+      <p
+  *ngIf="custo.alertaFoodCostAlto"
+  class="ficha-alerta-food-cost"
+>
+  Atenção: o Food Cost deste prato está acima de 35%.
+</p>
+    </div>
+
+    </ng-template>
+
+<!-- Modal de Cadastro e Edição de Categorias -->
+<div class="modal-overlay" *ngIf="showModalCategoria()">
+  <div class="modal-content modal-categoria">
+  <div class="modal-categoria-cabecalho">
+    <h2>{{ categoriaEmEdicao() ? 'Editar Categoria' : 'Nova Categoria' }}</h2>
+
+    <button
+      type="button"
+      class="modal-categoria-fechar"
+      (click)="fecharModalCategoria()"
+      aria-label="Fechar formulário de categoria"
+      title="Fechar"
+    >
+      ×
+    </button>
+  </div>
+
+    <div class="field-group">
+  <label class="field-label">Nome da Categoria <span class="required">*</span></label>
+  <input
+    type="text"
+    class="field-input"
+    [value]="categoriaNome()"
+    (input)="categoriaNome.set($any($event.target).value)"
+    placeholder="Ex.: Entradas"
+  />
+</div>
+
+<div class="field-group">
+  <label class="field-label">Descrição da Categoria <span class="required">*</span></label>
+  <textarea
+    class="field-input"
+    rows="3"
+    [value]="categoriaDescricao()"
+    (input)="categoriaDescricao.set($any($event.target).value)"
+    placeholder="Ex.: Petiscos e entradas da culinária baiana"
+  ></textarea>
+</div>
+
+<div class="field-group">
+  <label class="field-label">Ordem da Categoria <span class="required">*</span></label>
+  <input
+    type="number"
+    class="field-input"
+    [value]="categoriaOrdem()"
+    (input)="categoriaOrdem.set(+$any($event.target).value)"
+    min="1"
+    step="1"
+  />
+</div>
+
+<div class="field-group">
+  <label class="field-label">Status da Categoria</label>
+  <select
+    class="field-input field-select"
+    [value]="categoriaStatus()"
+    (change)="categoriaStatus.set($any($event.target).value)"
+  >
+    <option value="ATIVO">Ativo</option>
+    <option value="INATIVO">Inativo</option>
+  </select>
+</div>
+
+<div
+  *ngIf="mensagemValidacaoCategoria() as mensagem"
+  class="formulario-prato-aviso"
+  role="alert"
+>
+  <span>{{ mensagem }}</span>
+  <button
+    type="button"
+    class="formulario-prato-aviso-fechar"
+    (click)="mensagemValidacaoCategoria.set(null)"
+    aria-label="Fechar aviso"
+  >×</button>
+</div>
+
+<div class="modal-categoria-acoes">
+  <button
+    type="button"
+    class="btn-cancelar"
+    (click)="fecharModalCategoria()"
+  >
+    Cancelar
+  </button>
+
+  <button
+  type="button"
+  class="btn-salvar"
+  (click)="salvarCategoria()"
+  [disabled]="categoriaSalvando()"
+>
+  <span *ngIf="!categoriaSalvando()">
+    {{ categoriaEmEdicao() ? 'Salvar Alterações' : 'Cadastrar Categoria' }}
+  </span>
+
+  <span *ngIf="categoriaSalvando()" class="saving-dots">
+    <span></span>
+    <span></span>
+    <span></span>
+  </span>
+</button>
+</div>
+
+  </div> <!-- Fecha o cartão de cadastro de categoria -->
+</div>   <!-- Fecha o fundo do modal de cadastro -->
+
+<!-- Confirmação de desativação de categoria -->
+<div
+  class="modal-overlay"
+  *ngIf="categoriaAguardandoDesativacao() as categoria"
+>
+  <div class="modal-exclusao">
+
+    <!-- Cabeçalho -->
+    <div class="exclusao-header">
+      <div class="exclusao-header__left">
+        <svg
+          class="exclusao-icon-warn"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        Excluir Permanentemente
+
+        <h2 class="exclusao-titulo titulo-confirmacao-padrao">
+          Desativar Categoria
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        class="modal-categoria-fechar"
+        (click)="cancelarDesativacaoCategoria()"
+        aria-label="Fechar confirmação de desativação"
+        title="Fechar"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="exclusao-body">
+      <p class="exclusao-pergunta">
+        Tem certeza de que deseja desativar esta categoria?
+      </p>
+
+      <p class="exclusao-aviso">
+        A categoria ficará inativa e não estará disponível para
+        novos cadastros de pratos.
+      </p>
+
+      <div class="exclusao-prato-card">
+        <div class="exclusao-prato-card__icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M5.6 5.6 18.4 18.4"/>
+          </svg>
+        </div>
+
+        <div>
+          <p class="exclusao-prato-label">
+            Categoria a ser desativada:
+          </p>
+
+          <p class="exclusao-prato-nome">
+            {{ categoria.nome }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="exclusao-footer">
+      <button
+        type="button"
+        class="btn-cancelar"
+        (click)="cancelarDesativacaoCategoria()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="btn-excluir-confirm"
+        (click)="desativarCategoria(categoria)"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M5.6 5.6 18.4 18.4"/>
+        </svg>
+
+        Desativar Categoria
       </button>
     </div>
 

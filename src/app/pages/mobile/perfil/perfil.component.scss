@@ -33,7 +33,7 @@
 
 .perfil-content {
   flex: 1;
-  padding: 0 24px calc(var(--bottom-nav-h) + 20px);
+  padding: 0 24px calc(var(--bottom-nav-h) + 20px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -72,7 +72,7 @@
 
 .boas-vindas {
   font-family: var(--font-title);
-  font-size: 28px;
+  font-size: clamp(22px, 7.4vw, 28px);
   font-weight: 600;
   color: #F28705;
   margin: 0 0 12px;
@@ -171,7 +171,7 @@
 
 .perfil-titulo {
   font-family: var(--font-title);
-  font-size: 28px;
+  font-size: clamp(22px, 7.4vw, 28px);
   font-weight: 600;
   font-style: normal;
   color: var(--gold);
@@ -478,7 +478,7 @@ a.menu-item {
 // ── Bottom nav ──
 .bottom-nav {
   position: fixed;
-  bottom: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   border: 1px solid rgba(255, 255, 255, 0.15);
   transform: translateX(-50%);

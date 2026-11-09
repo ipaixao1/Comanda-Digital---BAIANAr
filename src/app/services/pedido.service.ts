@@ -1,17 +1,5 @@
-import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
-import {
-  Firestore,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  Unsubscribe,
-  serverTimestamp,
-  Timestamp,
-} from '@angular/fire/firestore';
+import { Injectable, signal, computed } from '@angular/core';
+import { loadCollection, saveCollection, nextLocalId } from './local-store.util';
 
 // ─── Tipos compartilhados por todas as telas ──────────────────────────────
 
@@ -64,6 +52,8 @@ export interface PedidoShared {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
+const STORAGE_KEY = 'baianar_pedidos';
+
 function gerarNumeroPedido(pedidos: PedidoShared[]): string {
   if (pedidos.length === 0) return '#8750';
   const nums = pedidos
@@ -73,30 +63,23 @@ function gerarNumeroPedido(pedidos: PedidoShared[]): string {
   return `#${max + 1}`;
 }
 
-// Converte documento Firestore → PedidoShared (trata Timestamp)
-function docToPedido(id: string, data: any): PedidoShared {
-  let dataHora: string;
-  if (data.dataHora instanceof Timestamp) {
-    dataHora = data.dataHora.toDate().toISOString();
-  } else if (typeof data.dataHora === 'string') {
-    dataHora = data.dataHora;
-  } else {
-    dataHora = new Date().toISOString();
-  }
-  return { ...data, id, dataHora } as PedidoShared;
+function ordenarPorDataDesc(pedidos: PedidoShared[]): PedidoShared[] {
+  return [...pedidos].sort((a, b) => b.dataHora.localeCompare(a.dataHora));
 }
 
 // ─── Serviço ─────────────────────────────────────────────────────────────
+//
+// Esta tela (jornada do cliente / pedidos) é o principal candidato a ser
+// religada à API real do backend Spring Boot (ver `environment.apiUrl` e
+// `services/api/`) — ver README. Por ora, mantém o mesmo contrato
+// (signals + métodos assíncronos) só trocando Firestore por localStorage,
+// para nenhum componente consumidor precisar mudar.
 
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
 
-  private firestore = inject(Firestore);
-  private colRef    = collection(this.firestore, 'pedidos');
-
-  private _pedidos      = signal<PedidoShared[]>([]);
-  private _carregando   = signal(true);
-  private _unsub: Unsubscribe | null = null;
+  private _pedidos    = signal<PedidoShared[]>(ordenarPorDataDesc(loadCollection<PedidoShared>(STORAGE_KEY, [])));
+  private _carregando = signal(false);
 
   readonly pedidos    = this._pedidos.asReadonly();
   readonly carregando = this._carregando.asReadonly();
@@ -113,32 +96,6 @@ export class PedidoService {
       ['enviado', 'a_caminho', 'entregue'].includes(p.status)
     )
   );
-
-  constructor() {
-    this.iniciarListener();
-  }
-
-  // ── Listener em tempo real (onSnapshot) ──────────────────────
-  private iniciarListener(): void {
-    const q = query(this.colRef, orderBy('dataHora', 'desc'));
-    this._unsub = onSnapshot(
-      q,
-      snapshot => {
-        const lista = snapshot.docs.map(d => docToPedido(d.id, d.data()));
-        this._pedidos.set(lista);
-        this._carregando.set(false);
-      },
-      err => {
-        console.error('[PedidoService] onSnapshot erro:', err);
-        this._carregando.set(false);
-      }
-    );
-  }
-
-  // Destrói o listener quando o serviço for destruído
-  ngOnDestroy(): void {
-    this._unsub?.();
-  }
 
   // ── Criar pedido ─────────────────────────────────────────────
   async criarPedido(dados: {
@@ -157,17 +114,19 @@ export class PedidoService {
     const numero = gerarNumeroPedido(this._pedidos());
     const dataHora = new Date().toISOString();
 
-    // Remove campos undefined — Firestore não aceita undefined
-    const payload = this.limparUndefined({
+    const novo: PedidoShared = {
       ...dados,
+      id: nextLocalId('pedido'),
       numero,
-      status: 'recebido' as StatusPedido,
+      status: 'recebido',
       dataHora,
-    });
+    };
 
-    const ref  = await addDoc(this.colRef, payload);
-    // Retorna imediatamente com o id local (onSnapshot vai sincronizar)
-    return { ...payload, id: ref.id } as PedidoShared;
+    const lista = ordenarPorDataDesc([novo, ...this._pedidos()]);
+    this._pedidos.set(lista);
+    saveCollection(STORAGE_KEY, lista);
+
+    return novo;
   }
 
   // ── Atualizar status ─────────────────────────────────────────
@@ -176,9 +135,11 @@ export class PedidoService {
     status: StatusPedido,
     extra?: Partial<PedidoShared>,
   ): Promise<void> {
-    const ref     = doc(this.firestore, 'pedidos', id);
-    const updates = this.limparUndefined({ status, ...(extra ?? {}) });
-    await updateDoc(ref, updates);
+    const lista = this._pedidos().map(p =>
+      p.id === id ? { ...p, ...(extra ?? {}), status } : p
+    );
+    this._pedidos.set(lista);
+    saveCollection(STORAGE_KEY, lista);
   }
 
   // ── Consultas locais (signal já tem os dados) ────────────────
@@ -213,10 +174,5 @@ export class PedidoService {
       cancelado:  'Cancelado',
     };
     return map[status] ?? status;
-  }
-
-  // Remove campos undefined recursivamente (Firestore rejeita undefined)
-  private limparUndefined(obj: any): any {
-    return JSON.parse(JSON.stringify(obj, (_, v) => v === undefined ? null : v));
   }
 }

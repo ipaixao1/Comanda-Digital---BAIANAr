@@ -1,16 +1,26 @@
 <div class="dashboard">
 
   <!-- Saudação + título -->
-  <div class="dash-header">
-    <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">Visão geral do restaurante - Ano atual</p>
+  <div class="dash-header dash-header--linha">
+    <div>
+      <p class="greeting">Olá, {{ getPrimeiroNome() }}!</p>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">KPIs de hoje · ranking e vendas dos últimos {{ periodo() }} dias</p>
+    </div>
+    <div class="periodo">
+      <label class="periodo-label">Período</label>
+      <select class="periodo-select" (change)="onPeriodo($event)">
+        <option *ngFor="let p of periodos" [value]="p" [selected]="p === periodo()">Últimos {{ p }} dias</option>
+      </select>
+    </div>
   </div>
 
-  <!-- ── KPI Cards ─────────────────────────────────────────── -->
-  <div class="kpi-grid">
+  <p class="msg-erro" *ngIf="erro()">{{ erro() }}</p>
+  <p class="vazio" *ngIf="carregando() && !resumo()">Carregando dashboard...</p>
 
-    <!-- Faturamento -->
+  <!-- ── KPIs do dia (RF-034) ──────────────────────────────── -->
+  <div class="kpi-grid" *ngIf="resumo() as r">
+
     <div class="kpi-card">
       <div class="kpi-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -18,12 +28,11 @@
           <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
         </svg>
       </div>
-      <p class="kpi-label">Faturamento do Ano</p>
-      <p class="kpi-value">R$ {{ formatCurrency(kpi().faturamentoAno) }}</p>
-      <p class="kpi-sub">+{{ kpi().faturamentoVariacao }}% em relação ao ano anterior</p>
+      <p class="kpi-label">Faturamento do dia</p>
+      <p class="kpi-value">{{ formatMoeda(r.faturamentoDoDia) }}</p>
+      <p class="kpi-sub">Pedidos não cancelados</p>
     </div>
 
-    <!-- Total Pedidos -->
     <div class="kpi-card">
       <div class="kpi-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -31,130 +40,80 @@
           <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.96-1.62L23 6H6"/>
         </svg>
       </div>
-      <p class="kpi-label">Total de Pedidos no Ano</p>
-      <p class="kpi-value">{{ formatCurrency(kpi().totalPedidosAno) }}</p>
-      <p class="kpi-sub">{{ formatCurrency(kpi().pedidosMesMedia) }} pedidos/mês em média</p>
+      <p class="kpi-label">Total de pedidos</p>
+      <p class="kpi-value">{{ r.totalPedidosDoDia }}</p>
+      <p class="kpi-sub">Hoje</p>
     </div>
 
-    <!-- Média Avaliações -->
     <div class="kpi-card">
       <div class="kpi-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
         </svg>
       </div>
-      <p class="kpi-label">Média de Avaliações</p>
-      <p class="kpi-value">{{ kpi().mediaAvaliacoes }}</p>
-      <p class="kpi-sub">De 5 estrelas</p>
+      <p class="kpi-label">Ticket médio</p>
+      <p class="kpi-value">{{ formatMoeda(r.ticketMedio) }}</p>
+      <p class="kpi-sub">Faturamento ÷ pedidos</p>
     </div>
 
-    <!-- Total Avaliações -->
     <div class="kpi-card">
       <div class="kpi-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
         </svg>
       </div>
-      <p class="kpi-label">Total de Avaliações no Ano</p>
-      <p class="kpi-value">{{ formatCurrency(kpi().totalAvaliacoes) }}</p>
-      <p class="kpi-sub">Recebidas este ano</p>
+      <p class="kpi-label">Food cost médio</p>
+      <p class="kpi-value" [ngClass]="corFoodCost()">{{ r.foodCostMedio | number:'1.1-1' }}%</p>
+      <p class="kpi-sub">Pratos ativos com ficha técnica</p>
     </div>
 
   </div>
 
-  <!-- ── Gráficos principais ───────────────────────────────── -->
+  <!-- ── Top 5 pratos (RF-035) + Alertas (RF-036) ──────────── -->
   <div class="charts-row">
 
     <div class="chart-card chart-card--wide">
-      <h2 class="chart-title">Faturamento Anual</h2>
-      <div class="chart-wrapper">
-        <canvas #chartFaturamento></canvas>
+      <h2 class="chart-title">Top 5 pratos mais vendidos</h2>
+      <p class="msg-erro" *ngIf="erroTop()">{{ erroTop() }}</p>
+      <p class="vazio" *ngIf="!erroTop() && !carregando() && !top().length">Nenhuma venda no período.</p>
+      <div class="chart-wrapper" [hidden]="!top().length">
+        <canvas #chartTop></canvas>
       </div>
     </div>
 
     <div class="chart-card chart-card--wide">
-      <h2 class="chart-title">Pedidos por Mês</h2>
-      <div class="chart-wrapper">
-        <canvas #chartPedidos></canvas>
-      </div>
+      <h2 class="chart-title">Alertas de estoque</h2>
+      <p class="msg-erro" *ngIf="erroAlertas()">{{ erroAlertas() }}</p>
+      <p class="vazio" *ngIf="!erroAlertas() && !carregando() && !alertas().length">Nenhum ingrediente abaixo do mínimo.</p>
+      <ul class="alertas" *ngIf="alertas().length">
+        <li *ngFor="let a of alertas()" class="alerta-item">
+          <span class="alerta-nome">{{ a.nome }}</span>
+          <span class="alerta-saldo">{{ a.saldoAtual | number:'1.0-2' }} / mín. {{ a.estoqueMinimo | number:'1.0-2' }} {{ a.unidadePadrao }}</span>
+        </li>
+      </ul>
+      <a routerLink="/estoque" class="link-estoque" *ngIf="alertas().length">Ver estoque →</a>
     </div>
 
   </div>
 
-  <!-- ── Avaliações + Status ───────────────────────────────── -->
+  <!-- ── Vendas por período (RF-037) ───────────────────────── -->
   <div class="charts-row charts-row--single">
-
     <div class="chart-card chart-card--full">
-      <h2 class="chart-title">Média de Avaliações Mensais</h2>
-      <div class="chart-wrapper chart-wrapper--tall">
-        <canvas #chartAvaliacoes></canvas>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ── Status Operacional ─────────────────────────────────── -->
-  <div class="status-section">
-    <h2 class="section-title">Status Operacional</h2>
-
-    <div class="status-grid">
-
-      <div class="status-card">
-        <div class="status-icon status-icon--orange">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <p class="status-value">{{ status().aguardandoPreparo }}</p>
-        <p class="status-label">Aguardando preparo</p>
+      <h2 class="chart-title">Faturamento diário</h2>
+      <p class="msg-erro" *ngIf="erroVendas()">{{ erroVendas() }}</p>
+      <p class="vazio" *ngIf="!erroVendas() && !carregando() && !vendas().length">Nenhuma venda no período.</p>
+      <div class="chart-wrapper chart-wrapper--tall" [hidden]="!vendas().length">
+        <canvas #chartVendas></canvas>
       </div>
 
-      <div class="status-card">
-        <div class="status-icon status-icon--yellow">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-            <polyline points="17 6 23 6 23 12"/>
-          </svg>
-        </div>
-        <p class="status-value">{{ status().emPreparo }}</p>
-        <p class="status-label">Em preparo</p>
-      </div>
-
-      <div class="status-card">
-        <div class="status-icon status-icon--green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <p class="status-value">{{ status().prontoEntrega }}</p>
-        <p class="status-label">Pronto para entrega</p>
-      </div>
-
-      <div class="status-card">
-        <div class="status-icon status-icon--blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <p class="status-value">{{ status().finalizadosHoje }}</p>
-        <p class="status-label">Finalizados hoje</p>
-      </div>
-
-      <div class="status-card">
-        <div class="status-icon status-icon--red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-        </div>
-        <p class="status-value">{{ status().canceladosHoje }}</p>
-        <p class="status-label">Cancelados hoje</p>
-      </div>
-
+      <table class="resumo" *ngIf="vendas().length">
+        <thead><tr><th>Dia</th><th>Faturamento</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let v of vendas()"><td>{{ formatDia(v.dia) }}</td><td>{{ formatMoeda(v.total) }}</td></tr>
+        </tbody>
+        <tfoot><tr><td>Total do período</td><td>{{ formatMoeda(totalVendas()) }}</td></tr></tfoot>
+      </table>
     </div>
   </div>
 
