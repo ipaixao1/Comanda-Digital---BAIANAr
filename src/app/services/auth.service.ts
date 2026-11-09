@@ -21,15 +21,8 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
 
-  // Lista de admins sincronizada com a tela de Administradores
-  private admins = new BehaviorSubject<User[]>([
-    { matricula:'ADM001', nomeCompleto:'Eliacira Santos', cargo:'Dono',       role:'admin', email:'santos.eli@baianar.com',   telefone:'11979745714', senha:'123456', status:'Ativo'  },
-    { matricula:'ADM002', nomeCompleto:'Isabel Paixão',   cargo:'Gerente',    role:'admin', email:'paixao.bel@baianar.com',   telefone:'11979907856', senha:'12345',  status:'Ativo'  },
-    { matricula:'ADM003', nomeCompleto:'Eliza Moreira',   cargo:'Gerente',    role:'admin', email:'moreira.liz@baianar.com',  telefone:'11979896257', senha:'1234',   status:'Ativo'  },
-    { matricula:'ADM004', nomeCompleto:'Evellyn Reis',    cargo:'Gerente',    role:'admin', email:'reis.eve@baianar.com',     telefone:'11966714161', senha:'123',    status:'Ativo'  },
-    { matricula:'ADM005', nomeCompleto:'Lucas Oliveira',  cargo:'Supervisor', role:'admin', email:'oliveira.luc@baianar.com', telefone:'11987654321', senha:'12',     status:'Ativo'  },
-    { matricula:'KDS001', nomeCompleto:'Cozinha',         cargo:'Cozinheiro', role:'cozinha', email:'',                      telefone:'',            senha:'123456', status:'Ativo'  },
-  ]);
+  // Sem credenciais locais: o login é feito no backend (Spring Boot + BCrypt). Lista mantida vazia só por compatibilidade.
+  private admins = new BehaviorSubject<User[]>([]);
 
   public admins$ = this.admins.asObservable();
 

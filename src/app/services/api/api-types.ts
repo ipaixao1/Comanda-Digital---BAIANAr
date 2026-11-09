@@ -352,3 +352,25 @@ export interface VendaPeriodoApi {
   dia: string;
   total: number;
 }
+
+
+// ── Usuários internos (RF-041) — /api/admin/usuarios ─────────────────────────
+export type PerfilApi = 'ADMIN' | 'GERENTE' | 'COZINHEIRO' | 'CLIENTE';
+
+export interface UsuarioApi {
+  id: number;
+  nome: string;
+  email: string;
+  perfil: PerfilApi;
+  telefone: string | null;
+  status: 'ATIVO' | 'INATIVO';
+}
+
+/** O backend só aceita criar/editar GERENTE ou COZINHEIRO; `senha` é opcional na edição. */
+export interface UsuarioPayload {
+  nome: string;
+  email: string;
+  senha?: string;
+  perfil: 'GERENTE' | 'COZINHEIRO';
+  telefone?: string | null;
+}

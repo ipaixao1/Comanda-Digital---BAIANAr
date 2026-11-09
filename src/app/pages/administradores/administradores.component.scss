@@ -37,7 +37,7 @@ $font-body:     'Poppins', sans-serif;
   &:hover { @include gold-hover; }
 }
 
-$cols: 72px 1.3fr 0.9fr 160px 120px 1fr 1.4fr 100px 100px;
+$cols: 72px 1.3fr 120px 150px 1.6fr 100px 100px;
 
 .table-head {
   display: grid; grid-template-columns: $cols; gap: 8px;
@@ -203,4 +203,13 @@ $cols: 72px 1.3fr 0.9fr 160px 120px 1fr 1.4fr 100px 100px;
   @include poppins(16px); color: $color-white; cursor: pointer;
   transition: filter .18s, transform .15s;
   &:hover { filter: brightness(1.15); transform: translateY(-1px); }
+}
+
+
+// ── Avisos (erro / carregando / vazio) ─────────────────────────
+.aviso {
+  margin: 12px 20px; padding: 10px 14px; border-radius: 10px;
+  background: rgba(#E74C3C, .12); border: 1px solid rgba(#E74C3C, .5);
+  color: #ff9d94; font-size: 13.5px;
+  &--info { background: rgba($color-accent, .08); border-color: rgba($color-accent, .3); color: rgba($color-white, .75); }
 }
