@@ -43,7 +43,7 @@ O BAIANAr foi desenvolvido com:
 
 **Variáveis de ambiente do backend (Render):** `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS` (URL do front, sem barra final). Nenhum segredo fica no repositório.
 
-**Status da integração com a API:** Dashboard, Pedidos (admin), KDS, Estoque, Fornecedores e Compras já consomem o backend. Ainda locais (`localStorage`): Motoboy, Funcionários/Administradores e as listas de disponibilidade do KDS.
+**Status da integração com a API:** Dashboard, Pedidos (admin), KDS (pedidos, estoque e pausa de pratos), Estoque, Fornecedores, Compras e Administradores já consomem o backend. Ainda locais (`localStorage`): Motoboy, Funcionários e Avaliações.
 
 **Build de produção do front:** `environment.prod.ts` aponta para `https://baianar-api.onrender.com/api`; a Vercel usa o `vercel.json` (`dist/baianar/browser` + rewrite SPA).
 
