@@ -1,12 +1,12 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { PedidoAdminApiService } from '../../services/api/pedido-admin-api.service';
-import { PedidoApi, StatusPedidoApi } from '../../services/api/api-types';
+import { EstoqueSaldoApi, PedidoApi, PratoAdminApi, StatusPedidoApi } from '../../services/api/api-types';
 import { isoUtc } from '../../services/api/pedido-status.util';
 import { mensagemDeErro } from '../../services/api/api-error';
-import { EstoqueService } from '../../services/estoque.service';
-import { CardapioStatusService } from '../../services/cardapio-status.service';
+import { CozinhaApiService } from '../../services/api/cozinha-api.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 export type OrderStatus = 'received' | 'preparing' | 'ready' | 'out_for_delivery';
 
@@ -29,29 +29,12 @@ export interface Order {
   apiStatus?: StatusPedidoApi; // status real no backend
 }
 
-export interface StockItem {
-  id: string;
-  name: string;
-  status: 'available' | 'em_falta';
-}
+export type NivelEstoque = 'Normal' | 'Baixo' | 'Crítico';
 
-export interface StockCategory {
+export interface GrupoPratos {
   id: string;
   name: string;
-  items: StockItem[];
-}
-
-export interface Dish {
-  id: string;
-  name: string;
-  manuallyUnavailable: boolean;
-  requiredStock: string[];
-}
-
-export interface DishCategory {
-  id: string;
-  name: string;
-  dishes: Dish[];
+  dishes: PratoAdminApi[];
 }
 
 @Component({
@@ -71,7 +54,7 @@ export class KdsComponent implements OnInit, OnDestroy {
 
   // ─── Dropdown ───────────────────────────────────────────────
   isDropdownOpen = false;
-  expandedStockCategories = new Set<string>();
+  expandedStockCategories = new Set<string>(['ingredientes']);
   expandedDishCategories  = new Set<string>();
 
   // ─── Pedidos ────────────────────────────────────────────────
@@ -79,163 +62,29 @@ export class KdsComponent implements OnInit, OnDestroy {
   orders = signal<Order[]>([]);
   erroPedidos = '';
 
-  // ─── Estoque (toggle simples: available | em_falta) ──────────
-  stockCategories: StockCategory[] = [
-    {
-      id: 'proteinas', name: 'Proteínas e frutos do mar',
-      items: [
-        { id: 'peixe',        name: 'Peixe branco',          status: 'available' },
-        { id: 'camarao',      name: 'Camarão',               status: 'available' },
-        { id: 'polvo',        name: 'Polvo',                 status: 'available' },
-        { id: 'siri',         name: 'Carne de siri',         status: 'available' },
-        { id: 'sururu',       name: 'Sururu',                status: 'available' },
-        { id: 'pititinga',    name: 'Manjubinha (pititinga)', status: 'available' },
-        { id: 'camaraoseco',  name: 'Camarão seco',          status: 'available' },
-        { id: 'carnesol',     name: 'Carne do sol',          status: 'available' }
-      ]
-    },
-    {
-      id: 'graos', name: 'Grãos e bases',
-      items: [
-        { id: 'feijaofradinho', name: 'Feijão fradinho',     status: 'available' },
-        { id: 'feijaoverde',    name: 'Feijão verde',        status: 'available' },
-        { id: 'arroz',          name: 'Arroz branco',        status: 'available' },
-        { id: 'mandioca',       name: 'Mandioca',            status: 'available' },
-        { id: 'tapioca',        name: 'Tapioca granulada',   status: 'available' },
-        { id: 'farinhaman',     name: 'Farinha de mandioca', status: 'available' },
-        { id: 'farinhatrigo',   name: 'Farinha de trigo',    status: 'available' }
-      ]
-    },
-    {
-      id: 'laticinios', name: 'Laticínios',
-      items: [
-        { id: 'leite',     name: 'Leite',            status: 'available' },
-        { id: 'leitecond', name: 'Leite condensado', status: 'available' },
-        { id: 'queijo',    name: 'Queijo coalho',    status: 'available' }
-      ]
-    },
-    {
-      id: 'frutas', name: 'Frutas',
-      items: [
-        { id: 'limao',    name: 'Limão',    status: 'available' },
-        { id: 'laranja',  name: 'Laranja',  status: 'available' },
-        { id: 'abacaxi',  name: 'Abacaxi',  status: 'available' },
-        { id: 'maracuja', name: 'Maracujá', status: 'available' },
-        { id: 'morango',  name: 'Morango',  status: 'available' },
-        { id: 'manga',    name: 'Manga',    status: 'available' },
-        { id: 'acerola',  name: 'Acerola',  status: 'available' },
-        { id: 'caja',     name: 'Cajá',     status: 'available' },
-        { id: 'caju',     name: 'Caju',     status: 'available' }
-      ]
-    },
-    {
-      id: 'hortalicas', name: 'Hortaliças e temperos',
-      items: [
-        { id: 'cebola',       name: 'Cebola',            status: 'available' },
-        { id: 'alho',         name: 'Alho',              status: 'available' },
-        { id: 'tomate',       name: 'Tomate',            status: 'available' },
-        { id: 'pimentaoverm', name: 'Pimentão vermelho', status: 'available' },
-        { id: 'pimentaoamar', name: 'Pimentão amarelo',  status: 'available' },
-        { id: 'pimentaoverd', name: 'Pimentão verde',    status: 'available' },
-        { id: 'coentro',      name: 'Coentro',           status: 'available' },
-        { id: 'cebolinha',    name: 'Cebolinha',         status: 'available' },
-        { id: 'gengibre',     name: 'Gengibre',          status: 'available' }
-      ]
-    },
-    {
-      id: 'gerais', name: 'Ingredientes gerais',
-      items: [
-        { id: 'leitecoco',   name: 'Leite de coco',        status: 'available' },
-        { id: 'cocoral',     name: 'Coco ralado',           status: 'available' },
-        { id: 'dende',       name: 'Azeite de dendê',       status: 'available' },
-        { id: 'azeite',      name: 'Azeite de oliva',       status: 'available' },
-        { id: 'sal',         name: 'Sal',                   status: 'available' },
-        { id: 'pimenta',     name: 'Pimenta-do-reino',      status: 'available' },
-        { id: 'pimentadedo', name: 'Pimenta dedo-de-moça',  status: 'available' },
-        { id: 'cominho',     name: 'Cominho',               status: 'available' },
-        { id: 'colorau',     name: 'Colorau',               status: 'available' },
-        { id: 'canela',      name: 'Canela',                status: 'available' },
-        { id: 'acucar',      name: 'Açúcar',                status: 'available' },
-        { id: 'oleo',        name: 'Óleo vegetal',          status: 'available' }
-      ]
-    },
-    {
-      id: 'bebidas', name: 'Bebidas e insumos',
-      items: [
-        { id: 'aguamin', name: 'Água mineral',  status: 'available' },
-        { id: 'aguagas', name: 'Água com gás',  status: 'available' },
-        { id: 'refri',   name: 'Refrigerantes', status: 'available' },
-        { id: 'cachaca', name: 'Cachaça',       status: 'available' },
-        { id: 'vodka',   name: 'Vodka',         status: 'available' },
-        { id: 'gin',     name: 'Gin',           status: 'available' },
-        { id: 'cerveja', name: 'Cerveja',       status: 'available' },
-        { id: 'gelo',    name: 'Gelo',          status: 'available' },
-        { id: 'aguafil', name: 'Água filtrada', status: 'available' }
-      ]
-    }
-  ];
+  // ─── Estoque e cardápio (API) ────────────────────────────────
+  saldo        = signal<EstoqueSaldoApi[]>([]);
+  pratos       = signal<PratoAdminApi[]>([]);
+  erroPainel   = '';
+  salvandoPrato: number | null = null;
 
-  dishCategories: DishCategory[] = [
-    {
-      id: 'principais', name: 'Pratos principais',
-      dishes: [
-        { id: 'd1', name: 'Moqueca de Peixe',                  manuallyUnavailable: false, requiredStock: ['peixe'] },
-        { id: 'd2', name: 'Bobó de Camarão',                   manuallyUnavailable: false, requiredStock: ['camarao'] },
-        { id: 'd3', name: 'Carne do Sol com Purê de Mandioca', manuallyUnavailable: false, requiredStock: ['carnesol'] },
-        { id: 'd4', name: 'Baião de Dois',                     manuallyUnavailable: false, requiredStock: ['feijaofradinho'] },
-        { id: 'd5', name: 'Arroz de Polvo',                    manuallyUnavailable: false, requiredStock: ['polvo'] },
-        { id: 'd6', name: 'Camarão à Baiana',                  manuallyUnavailable: false, requiredStock: ['camarao', 'dende'] }
-      ]
-    },
-    {
-      id: 'entradas', name: 'Entradas',
-      dishes: [
-        { id: 'e1', name: 'Casquinha de Siri',      manuallyUnavailable: false, requiredStock: ['siri'] },
-        { id: 'e2', name: 'Caldo de Sururu',         manuallyUnavailable: false, requiredStock: ['sururu'] },
-        { id: 'e3', name: 'Mini Acarajés',           manuallyUnavailable: false, requiredStock: ['feijaofradinho', 'dende'] },
-        { id: 'e4', name: 'Mini Abarás',             manuallyUnavailable: false, requiredStock: ['feijaofradinho'] },
-        { id: 'e5', name: 'Mini Pastel de Camarão',  manuallyUnavailable: false, requiredStock: ['camarao'] },
-        { id: 'e6', name: 'Porção de Pititinga',     manuallyUnavailable: false, requiredStock: ['pititinga'] }
-      ]
-    },
-    {
-      id: 'sobremesas', name: 'Sobremesas',
-      dishes: [
-        { id: 's1', name: 'Torta de Cocada',         manuallyUnavailable: false, requiredStock: ['cocoral'] },
-        { id: 's2', name: 'Pudim de Tapioca',        manuallyUnavailable: false, requiredStock: ['tapioca'] },
-        { id: 's3', name: 'Bolinho de Estudante',    manuallyUnavailable: false, requiredStock: [] },
-        { id: 's4', name: 'Bala Baiana na Travessa', manuallyUnavailable: false, requiredStock: [] },
-        { id: 's5', name: 'Queijadinha',             manuallyUnavailable: false, requiredStock: ['queijo'] },
-        { id: 's6', name: 'Doce de Leite Talhado',   manuallyUnavailable: false, requiredStock: ['leite'] }
-      ]
-    },
-    {
-      id: 'beb', name: 'Bebidas',
-      dishes: [
-        { id: 'b1', name: 'Água',           manuallyUnavailable: false, requiredStock: ['aguamin'] },
-        { id: 'b2', name: 'Água com gás',   manuallyUnavailable: false, requiredStock: ['aguagas'] },
-        { id: 'b3', name: 'Refrigerante',   manuallyUnavailable: false, requiredStock: ['refri'] },
-        { id: 'b4', name: 'Cerveja',        manuallyUnavailable: false, requiredStock: ['cerveja'] },
-        { id: 'b5', name: 'Sucos naturais', manuallyUnavailable: false, requiredStock: [] }
-      ]
-    },
-    {
-      id: 'drinks', name: 'Drinks',
-      dishes: [
-        { id: 'dr1', name: 'Caipirinha',       manuallyUnavailable: false, requiredStock: ['cachaca', 'limao'] },
-        { id: 'dr2', name: 'Caipiroska',       manuallyUnavailable: false, requiredStock: ['vodka', 'limao'] },
-        { id: 'dr3', name: 'Cravinho',         manuallyUnavailable: false, requiredStock: [] },
-        { id: 'dr4', name: 'Coice de Mula',    manuallyUnavailable: false, requiredStock: [] },
-        { id: 'dr5', name: 'Drinks Tropicais', manuallyUnavailable: false, requiredStock: [] },
-        { id: 'dr6', name: 'Gin Tônica',       manuallyUnavailable: false, requiredStock: ['gin'] }
-      ]
+  /** Só pratos publicados (ATIVO) ou pausados pela cozinha; pratos INATIVO não aparecem aqui. */
+  categoriasPratos = computed<GrupoPratos[]>(() => {
+    const grupos = new Map<number, GrupoPratos>();
+    for (const p of this.pratos()) {
+      if (p.status !== 'ATIVO' && p.status !== 'PAUSADO') continue;
+      if (!grupos.has(p.categoriaId)) {
+        grupos.set(p.categoriaId, { id: String(p.categoriaId), name: p.categoriaNome, dishes: [] });
+      }
+      grupos.get(p.categoriaId)!.dishes.push(p);
     }
-  ];
+    return [...grupos.values()];
+  });
 
   private pedidoApi          = inject(PedidoAdminApiService);
-  private estoqueService     = inject(EstoqueService);
-  private cardapioStatusSvc  = inject(CardapioStatusService);
+  private cozinhaApi         = inject(CozinhaApiService);
   private pedidoTimer: any;
+  private painelTimer: any;
 
   constructor(private router: Router) {}
 
@@ -244,12 +93,15 @@ export class KdsComponent implements OnInit, OnDestroy {
     this.clockInterval = setInterval(() => this.updateClock(), 1000);
     this.carregarPedidos();
     this.pedidoTimer = setInterval(() => this.carregarPedidos(), 10000);
+    this.carregarPainel();
+    this.painelTimer = setInterval(() => this.carregarPainel(), 30000);
   }
 
   ngOnDestroy(): void {
     if (this.clockInterval) clearInterval(this.clockInterval);
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (this.pedidoTimer) clearInterval(this.pedidoTimer);
+    if (this.painelTimer) clearInterval(this.painelTimer);
   }
 
   // ─── Pedidos (API) ───────────────────────────────────────────
@@ -329,6 +181,43 @@ export class KdsComponent implements OnInit, OnDestroy {
   // ─── Navegação ────────────────────────────────────────────────
   goToLogin(): void { this.router.navigate(['/login']); }
 
+  // ─── Estoque / cardápio: dados reais ─────────────────────────
+  async carregarPainel(): Promise<void> {
+    const [saldo, pratos] = await Promise.allSettled([
+      this.cozinhaApi.saldoEstoque(),
+      this.cozinhaApi.listarPratos(),
+    ]);
+    const erros: string[] = [];
+    if (saldo.status === 'fulfilled')  this.saldo.set(saldo.value);
+    else erros.push(this.textoErro(saldo.reason, 'estoque'));
+    if (pratos.status === 'fulfilled') this.pratos.set(pratos.value);
+    else erros.push(this.textoErro(pratos.reason, 'cardápio'));
+    this.erroPainel = erros.join(' ');
+  }
+
+  private textoErro(err: unknown, parte: string): string {
+    if (err instanceof HttpErrorResponse && err.status === 403) {
+      return `Sem permissão para ver o ${parte}.`;
+    }
+    return mensagemDeErro(err, `Não foi possível carregar o ${parte}.`);
+  }
+
+  /** Pausa ou reativa o prato no backend (ATIVO ↔ PAUSADO). Prato pausado some do cardápio do cliente. */
+  async alternarPrato(prato: PratoAdminApi): Promise<void> {
+    if (this.salvandoPrato !== null) return;
+    this.salvandoPrato = prato.id;
+    this.erroPainel = '';
+    try {
+      const atualizado = await this.cozinhaApi.alterarDisponibilidade(prato.id, prato.status !== 'ATIVO');
+      this.pratos.update(lista => lista.map(p => p.id === atualizado.id ? atualizado : p));
+    } catch (err) {
+      this.erroPainel = mensagemDeErro(err, 'Não foi possível alterar o prato.');
+      await this.carregarPainel();
+    } finally {
+      this.salvandoPrato = null;
+    }
+  }
+
   // ─── Dropdown ────────────────────────────────────────────────
   toggleDropdown(): void { this.isDropdownOpen = !this.isDropdownOpen; }
 
@@ -344,67 +233,26 @@ export class KdsComponent implements OnInit, OnDestroy {
       : this.expandedDishCategories.add(id);
   }
 
-  // ─── Toggle simples do item de estoque (disponível ↔ em falta)
-  toggleStockItem(categoryId: string, itemId: string): void {
-    const cat  = this.stockCategories.find(c => c.id === categoryId);
-    const item = cat?.items.find(i => i.id === itemId);
-    if (!item) return;
-    const novoStatus = this.getKdsStockStatus(itemId) === 'available' ? 'em_falta' : 'available';
-    this.estoqueService.toggleStatusKds(itemId, item.name, novoStatus)
-      .catch(err => console.error('[KDS] toggleStockItem erro:', err));
-  }
-
-  // ─── Toggle manual do prato ──────────────────────────────────
-  toggleDish(categoryId: string, dishId: string): void {
-    const cat  = this.dishCategories.find(c => c.id === categoryId);
-    const dish = cat?.dishes.find(d => d.id === dishId);
-    if (!dish) return;
-    const atual = this.cardapioStatusSvc.isIndisponivel(dishId);
-    this.cardapioStatusSvc.setDisponibilidadeKds(dishId, dish.name, !atual)
-      .catch(err => console.error('[KDS] toggleDish erro:', err));
-  }
-
-  // ─── Getters reativos para estoque e cardápio ────────────────
-  getKdsStockStatus(itemId: string): 'available' | 'em_falta' {
-    return this.estoqueService.getStatusKds(itemId);
-  }
-
-  getAdminStockStatus(itemId: string): 'Normal' | 'Baixo' | 'Crítico' {
-    return this.estoqueService.getStatusAdmin(itemId);
-  }
-
-  isDishUnavailable(dishId: string): boolean {
-    return this.cardapioStatusSvc.isIndisponivel(dishId);
-  }
-
   // ─── Helpers estoque ─────────────────────────────────────────
+  nivel(i: EstoqueSaldoApi): NivelEstoque {
+    if (i.saldoAtual <= 0) return 'Crítico';
+    return i.abaixoDoMinimo ? 'Baixo' : 'Normal';
+  }
+
+  /** Ingredientes zerados ou abaixo do mínimo (acende o ponto laranja do botão). */
   get unavailableCount(): number {
-    return this.stockCategories.flatMap(c => c.items)
-      .filter(i => this.getKdsStockStatus(i.id) === 'em_falta').length;
+    return this.saldo().filter(i => this.nivel(i) !== 'Normal').length;
   }
 
-  getStockItemById(id: string): StockItem | undefined {
-    return this.stockCategories.flatMap(c => c.items).find(i => i.id === id);
+  /** Mais urgentes primeiro: crítico, baixo, normal; dentro do mesmo nível, ordem alfabética. */
+  get saldoOrdenado(): EstoqueSaldoApi[] {
+    const peso: Record<NivelEstoque, number> = { 'Crítico': 0, 'Baixo': 1, 'Normal': 2 };
+    return [...this.saldo()].sort((a, b) =>
+      peso[this.nivel(a)] - peso[this.nivel(b)] || a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
-  getDishStatus(dish: Dish): 'available' | 'warning' | 'unavailable' {
-    if (this.isDishUnavailable(dish.id)) return 'unavailable';
-    const hasWarning = dish.requiredStock.some(sid =>
-      this.getKdsStockStatus(sid) === 'em_falta'
-    );
-    return hasWarning ? 'warning' : 'available';
-  }
-
-  categoryHasWarnings(cat: DishCategory): boolean {
-    return cat.dishes.some(d => this.getDishStatus(d) === 'warning');
-  }
-
-  stockCategoryUnavailableCount(cat: StockCategory): number {
-    return cat.items.filter(i => this.getKdsStockStatus(i.id) === 'em_falta').length;
-  }
-
-  dishCategoryUnavailableCount(cat: DishCategory): number {
-    return cat.dishes.filter(d => this.getDishStatus(d) === 'unavailable').length;
+  pratosPausados(g: GrupoPratos): number {
+    return g.dishes.filter(d => d.status === 'PAUSADO').length;
   }
 
   // ─── Helpers pedidos ─────────────────────────────────────────

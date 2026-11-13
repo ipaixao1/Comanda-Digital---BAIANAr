@@ -19,54 +19,48 @@
     <!-- Painel flutuante -->
     <div class="dropdown-panel" *ngIf="isDropdownOpen">
 
-      <!-- ── ESTOQUE POR CATEGORIA ── -->
-      <div class="panel-section" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
-        <h3 class="section-title" style="color:#F29F05">ESTOQUE POR CATEGORIA</h3>
-        <div class="category-list">
-          <div *ngFor="let cat of stockCategories">
+      <p *ngIf="erroPainel" style="color:#E74C3C;font-size:13px;padding:8px 16px;margin:0">{{ erroPainel }}</p>
 
-            <button class="category-btn" (click)="toggleStockCategory(cat.id)">
+      <!-- ── ESTOQUE (saldo real, somente leitura) ── -->
+      <div class="panel-section" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
+        <h3 class="section-title" style="color:#F29F05">ESTOQUE ATUAL</h3>
+        <div class="category-list">
+          <div>
+
+            <button class="category-btn" (click)="toggleStockCategory('ingredientes')">
               <div class="cat-btn-left">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                   fill="none" stroke="#FAFAFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                   class="chevron-icon"
-                  [class.rotated]="expandedStockCategories.has(cat.id)">
+                  [class.rotated]="expandedStockCategories.has('ingredientes')">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
-                <span class="category-name">{{ cat.name }}</span>
+                <span class="category-name">Ingredientes</span>
               </div>
-              <span *ngIf="stockCategoryUnavailableCount(cat) > 0" class="falta-count">
-                {{ stockCategoryUnavailableCount(cat) }} em falta
-              </span>
+              <span *ngIf="unavailableCount > 0" class="falta-count">{{ unavailableCount }} em alerta</span>
             </button>
 
-            <!-- Itens do estoque — abre para baixo -->
-            <div class="items-list" [class.items-expanded]="expandedStockCategories.has(cat.id)">
-              <div *ngFor="let item of cat.items"
+            <div class="items-list" [class.items-expanded]="expandedStockCategories.has('ingredientes')">
+              <div *ngIf="saldo().length === 0" class="stock-item-row">
+                <span class="item-name">Sem dados de estoque.</span>
+              </div>
+              <div *ngFor="let ing of saldoOrdenado"
                 class="stock-item-row"
-                [class.item-unavailable]="getKdsStockStatus(item.id) === 'em_falta'">
+                [class.item-unavailable]="nivel(ing) !== 'Normal'">
 
                 <div class="item-name-wrap">
-                  <span class="item-name"
-                    [class.name-unavailable]="getKdsStockStatus(item.id) === 'em_falta'">
-                    {{ item.name }}
-                  </span>
-                  <!-- Badge do status admin (Baixo/Crítico) vindo da página de estoque -->
+                  <span class="item-name" [class.name-unavailable]="nivel(ing) === 'Crítico'">{{ ing.nome }}</span>
                   <span class="admin-status-badge"
-                    *ngIf="getAdminStockStatus(item.id) !== 'Normal'"
-                    [class.baixo]="getAdminStockStatus(item.id) === 'Baixo'"
-                    [class.critico]="getAdminStockStatus(item.id) === 'Crítico'">
-                    {{ getAdminStockStatus(item.id) }}
+                    *ngIf="nivel(ing) !== 'Normal'"
+                    [class.baixo]="nivel(ing) === 'Baixo'"
+                    [class.critico]="nivel(ing) === 'Crítico'">
+                    {{ nivel(ing) }}
                   </span>
                 </div>
 
-                <!-- Toggle switch — verde quando disponível, cinza quando em falta -->
-                <label class="toggle-switch" (click)="$event.stopPropagation()">
-                  <input type="checkbox"
-                    [checked]="getKdsStockStatus(item.id) !== 'em_falta'"
-                    (change)="toggleStockItem(cat.id, item.id)" />
-                  <span class="toggle-slider"></span>
-                </label>
+                <span class="item-name" style="white-space:nowrap;opacity:.85">
+                  {{ ing.saldoAtual | number:'1.0-2' }} {{ ing.unidadePadrao }}
+                </span>
 
               </div>
             </div>
@@ -75,11 +69,14 @@
         </div>
       </div>
 
-      <!-- ── CARDÁPIO COMPLETO ── -->
+      <!-- ── CARDÁPIO COMPLETO (pausar / reativar pratos) ── -->
       <div class="panel-section">
         <h3 class="section-title" style="color:#F28705">CARDÁPIO COMPLETO</h3>
         <div class="category-list">
-          <div *ngFor="let cat of dishCategories">
+          <div *ngIf="categoriasPratos().length === 0" class="stock-item-row">
+            <span class="item-name">Nenhum prato publicado.</span>
+          </div>
+          <div *ngFor="let cat of categoriasPratos()">
 
             <button class="category-btn" (click)="toggleDishCategory(cat.id)">
               <div class="cat-btn-left">
@@ -91,46 +88,24 @@
                 </svg>
                 <span class="category-name">{{ cat.name }}</span>
               </div>
-              <div *ngIf="categoryHasWarnings(cat)" class="glass-badge">
-                <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24"
-                  fill="none" stroke="#F28705" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span class="glass-badge-text">Ingredientes em falta</span>
-              </div>
+              <span *ngIf="pratosPausados(cat) > 0" class="falta-count">{{ pratosPausados(cat) }} pausado(s)</span>
             </button>
 
-            <!-- Pratos — abre para baixo -->
             <div class="items-list" [class.items-expanded]="expandedDishCategories.has(cat.id)">
               <div *ngFor="let dish of cat.dishes"
                 class="stock-item-row"
-                [class.item-unavailable]="getDishStatus(dish) !== 'available'"
-                [class.item-warning]="getDishStatus(dish) === 'warning'">
+                [class.item-unavailable]="dish.status !== 'ATIVO'">
 
                 <div class="dish-name-wrap">
-                  <svg *ngIf="getDishStatus(dish) === 'warning'"
-                    xmlns="http://www.w3.org/2000/svg" width="11" height="11"
-                    viewBox="0 0 24 24" fill="none" stroke="#F59E0B"
-                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                    style="flex-shrink:0">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                  </svg>
-                  <span class="item-name"
-                    [class.name-unavailable]="getDishStatus(dish) === 'unavailable'"
-                    [class.name-warning]="getDishStatus(dish) === 'warning'">
-                    {{ dish.name }}
-                  </span>
+                  <span class="item-name" [class.name-unavailable]="dish.status !== 'ATIVO'">{{ dish.nome }}</span>
                 </div>
 
-                <!-- Toggle switch — verde quando disponível -->
+                <!-- Verde = vendendo; cinza = pausado (some do cardápio do cliente) -->
                 <label class="toggle-switch" (click)="$event.stopPropagation()">
                   <input type="checkbox"
-                    [checked]="!isDishUnavailable(dish.id)"
-                    (change)="toggleDish(cat.id, dish.id)" />
+                    [checked]="dish.status === 'ATIVO'"
+                    [disabled]="salvandoPrato !== null"
+                    (change)="alternarPrato(dish)" />
                   <span class="toggle-slider"></span>
                 </label>
 
